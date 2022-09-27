@@ -4,29 +4,10 @@ inputs:
   compiler:
     description: 'compiler name to use, e.g. ghc8107, ghc924, ...'
     required: true
-
-# for this we may need to use a javascript action? There is no looping construct in
-# compisit actions.
-# inputs:
-#   steps:
-#     description: 'steps to execute in the nix provisioned environment'
-#     required: true
-
-# We'd be using this action as:
-# build:
-# strategy:
-#   fail-fast: false
-#   matrix:
-#     ghc: ["ghc8107", "ghc924"]
-#     os: [ubuntu-latest, macos-latest]
-
-# runs-on: ${{ matrix.os }}
-# steps:
-#   - uses: input-output-hk/devx/actions/haskell/nix-shell@v1
+    default: "ghc924"
 
 runs:
   using: "composite"
-
   steps:
     - uses: actions/checkout@v1
     - uses: cachix/install-nix-action@v17
