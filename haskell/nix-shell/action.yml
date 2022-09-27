@@ -6,10 +6,6 @@ inputs:
     required: true
     default: "ghc924"
 
-defaults:
-  run:
-    shell: bash
-
 runs:
   using: "composite"
   steps:
@@ -21,9 +17,13 @@ runs:
           substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
     - name: Prepare dev shell
       run: nix develop github:input-output-hk/iohk-nix?rev=3d984c904d6d7f3f2f06c9c1ae8b1180c1a68d5d#${{ inputs.compiler }} --no-write-lock-file --command true
+      shell: bash
     - name: Update Cabal Index
       run: nix develop github:input-output-hk/iohk-nix?rev=3d984c904d6d7f3f2f06c9c1ae8b1180c1a68d5d#${{ inputs.compiler }} --no-write-lock-file --command cabal update
+      shell: bash
     - name: Build dependencies
       run: nix develop github:input-output-hk/iohk-nix?rev=3d984c904d6d7f3f2f06c9c1ae8b1180c1a68d5d#${{ inputs.compiler }} --no-write-lock-file --command cabal build all --only-dependencies -j 
+      shell: bash
     - name: Build project
       run: nix develop github:input-output-hk/iohk-nix?rev=3d984c904d6d7f3f2f06c9c1ae8b1180c1a68d5d#${{ inputs.compiler }} --no-write-lock-file --command cabal build all -j 
+      shell: bash
