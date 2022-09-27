@@ -6,6 +6,10 @@ inputs:
     required: true
     default: "ghc924"
 
+defaults:
+  run:
+    shell: bash
+
 runs:
   using: "composite"
   steps:
