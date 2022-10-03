@@ -86,9 +86,24 @@
                  static-libsodium-vrf = pkgs.libsodium-vrf.overrideDerivation (old: { configureFlags = old.configureFlags ++ [ "--disable-shared" ]; });
                  static-secp256k1 = pkgs.secp256k1.overrideDerivation (old: { configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ]; });
                  static-gmp = (pkgs.gmp.override { withStatic = true; }).overrideDerivation (old: { configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ]; });
-                 
+
              in (__mapAttrs (compiler-nix-name: compiler:
               pkgs.mkShell {
+                shellHook = ''
+                  ${pkgs.figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+                  function cabal() {
+                    case "$1" in 
+                      build) 
+                        ${pkgs.haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal \
+                          $@ \
+                          --constraint='HsOpenSSL +use-pkg-config' 
+                      ;;
+                      *)
+                        ${pkgs.haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
+                      ;;
+                    esac
+                  }
+                '';
                 buildInputs = [
                   compiler
                   pkgs.haskell-nix.cabal-install.${compiler-nix-name}
@@ -113,17 +128,18 @@
                   # dynamically.  This requirement will be gone with gmp-bignum.
                   #
                   shellHook = ''
-                  echo "WARNING: Due to quirks in HsOpenSSL, you want to run the following..."
-                  echo "ln -s ${pkgs.lib.getDev pkgs.openssl}/lib/libcrypto.dylib $HOME/.cabal/store/ghc-8.10.7/lib/"
-                  echo "ln -s ${pkgs.lib.getDev pkgs.openssl}/lib/libssl.dylib    $HOME/.cabal/store/ghc-8.10.7/lib/"
-                  echo ""
+                  ${pkgs.figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+                  ${pkgs.figlet}/bin/figlet -f small "*= static edition =*"
                   echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv and ffi dependencies that point to the /nix/store"
 
                   function cabal() {
                     case "$1" in 
                       build) 
                         ${pkgs.haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal \
-                          $@ --disable-shared --enable-static --ghc-option=-L${static-gmp}/lib --ghc-option=-L${static-libsodium-vrf}/lib --ghc-option=-L${static-secp256k1}/lib
+                          $@ \
+                          --constraint='HsOpenSSL +use-pkg-config' \
+                          --disable-shared --enable-static \
+                          --ghc-option=-L${static-gmp}/lib --ghc-option=-L${static-libsodium-vrf}/lib --ghc-option=-L${static-secp256k1}/lib
                       ;;
                       *)
                         ${pkgs.haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
