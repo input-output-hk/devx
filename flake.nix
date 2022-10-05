@@ -131,7 +131,9 @@
                   ${pkgs.figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
                   ${pkgs.figlet}/bin/figlet -f small "*= static edition =*"
                   echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv and ffi dependencies that point to the /nix/store"
-
+                  export CABAL_DIR=$HOME/.cabal-static
+                  echo "CABAL_DIR set to $CABAL_DIR"
+                  
                   function cabal() {
                     case "$1" in 
                       build) 
@@ -139,7 +141,9 @@
                           $@ \
                           --constraint='HsOpenSSL +use-pkg-config' \
                           --disable-shared --enable-static \
-                          --ghc-option=-L${static-gmp}/lib --ghc-option=-L${static-libsodium-vrf}/lib --ghc-option=-L${static-secp256k1}/lib
+                          --ghc-option=-L${static-gmp}/lib \
+                          --ghc-option=-L${static-libsodium-vrf}/lib \
+                          --ghc-option=-L${static-secp256k1}/lib
                       ;;
                       *)
                         ${pkgs.haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
