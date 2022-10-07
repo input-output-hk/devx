@@ -151,10 +151,9 @@
                   CABAL_PROJECT_LOCAL_TEMPLATE = with static-pkgs; ''
                   package digest
                     extra-lib-dirs: ${static-zlib}/lib
-                  package HsOpenSSL
-                    extra-lib-dirs: ${static-zlib}/lib
-                  package zlib
-                    extra-lib-dirs: ${static-zlib}/lib
+                  constraints:
+                    HsOpenSSL +use-pkg-config,
+                    zlib +pkg-config
                   '';
 
                   shellHook = with static-pkgs; ''
