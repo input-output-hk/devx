@@ -79,7 +79,7 @@
              inherit system;
              inherit (haskellNix) config;
            };
-         in {
+         in rec {
            # These are for checking IOG projects build in an environment
            # without haskell packages built by haskell.nix.
            #
@@ -211,5 +211,6 @@
                     stdenv.cc.cc.lib
                   ]);
                 }))) (compilers static-pkgs.buildPackages)));
+        hydraJobs = devShells;
        });
 }
