@@ -50,6 +50,8 @@
           static-gmp = (final.gmp.override { withStatic = true; }).overrideDerivation (old: {
             configureFlags = old.configureFlags ++ ["--enable-static" "--disable-shared" ];
           });
+          static-openssl = (final.openssl.override { static = true; });
+          static-zlib = final.zlib.override { shared = false; };
         });
          # the haskell inline-r package depends on internals of the R
          # project that have been hidden in R 4.2+. See
@@ -86,7 +88,7 @@
            # nix develop github:input-output-hk/devx#ghc924 --no-write-lock-file -c cabal build
            #
            devShells =
-             let compilers = builtins.removeAttrs pkgs.haskell-nix.compiler
+             let compilers = pkgs: builtins.removeAttrs pkgs.haskell-nix.compiler
                # Exclude old versions of GHC to speed up `nix flake check`
                [ "ghc844"
                  "ghc861" "ghc862" "ghc863" "ghc864" "ghc865"
@@ -102,8 +104,10 @@
                     case "$1" in 
                       build) 
                         ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal \
-                          $@ \
-                          --constraint='HsOpenSSL +use-pkg-config' 
+                          $@
+                      ;;
+                      clean)
+                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
                       ;;
                       *)
                         ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
@@ -119,9 +123,10 @@
                   # it _should_ probably call out to a g++ or clang++ but doesn't.
                   pkgs.stdenv.cc.cc.lib
                 ] ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3 zlib openssl ] ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd);
-              }) compilers //
+              }) (compilers pkgs) //
+              (let static-pkgs = if pkgs.stdenv.hostPlatform.isLinux then pkgs.pkgsCross.musl64 else pkgs; in
               pkgs.lib.mapAttrs' (compiler-nix-name: compiler: 
-                pkgs.lib.nameValuePair "${compiler-nix-name}-static" (pkgs.mkShell {
+                pkgs.lib.nameValuePair "${compiler-nix-name}-static" (static-pkgs.mkShell (rec {
                   # Note [cabal override]:
                   #
                   # We need to override the `cabal` command and pass --ghc-options for the
@@ -134,26 +139,49 @@
                   # open source, and licenses accordingly.  Otherwise we'd have to link gmp
                   # dynamically.  This requirement will be gone with gmp-bignum.
                   #
-                  shellHook = with pkgs; ''
+                  NIX_CABAL_FLAGS = pkgs.lib.optionals static-pkgs.stdenv.hostPlatform.isMusl [
+                    "--with-ghc=x86_64-unknown-linux-musl-ghc"
+                    "--with-ghc-pkg=x86_64-unknown-linux-musl-ghc-pkg"
+                    "--with-hsc2hs=x86_64-unknown-linux-musl-hsc2hs"
+                    # ensure that the linker knows we want a static build product
+                    "--ghc-option=-optl-static"
+                  ];
+                  hardeningDisable = pkgs.lib.optionals static-pkgs.stdenv.hostPlatform.isMusl [ "format" "pie" ];
+
+                  CABAL_PROJECT_LOCAL_TEMPLATE = with static-pkgs; ''
+                  package digest
+                    extra-lib-dirs: ${static-zlib}/lib
+                  package HsOpenSSL
+                    extra-lib-dirs: ${static-zlib}/lib
+                  package zlib
+                    extra-lib-dirs: ${static-zlib}/lib
+                  '';
+
+                  shellHook = with static-pkgs; ''
                   ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
                   ${figlet}/bin/figlet -f small "*= static edition =*"
                   echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv and ffi dependencies that point to the /nix/store"
                   export CABAL_DIR=$HOME/.cabal-static
                   echo "CABAL_DIR set to $CABAL_DIR"
-                  
+                  echo "Quirks:"
+                  echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
+                  echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
                   function cabal() {
                     case "$1" in 
                       build) 
                         ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal \
                           $@ \
-                          --constraint='HsOpenSSL +use-pkg-config' \
+                          $NIX_CABAL_FLAGS \
                           --disable-shared --enable-static \
                           --ghc-option=-L${static-gmp}/lib \
                           --ghc-option=-L${static-libsodium-vrf}/lib \
                           --ghc-option=-L${static-secp256k1}/lib
                       ;;
-                      *)
+                      clean)
                         ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
+                      ;;
+                      *)
+                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $NIX_CABAL_FLAGS $@
                       ;;
                     esac
                   }
@@ -167,19 +195,22 @@
                       esac
                     done
                   }
-                  '';
-                  buildInputs = [
-                    compiler
-                    pkgs.haskell-nix.cabal-install.${compiler-nix-name}
-                    pkgs.pkgconfig
+                  '';                  
+                  buildInputs = (with static-pkgs; [
                     # for libstdc++; ghc not being able to find this properly is bad,
                     # it _should_ probably call out to a g++ or clang++ but doesn't.
-                    pkgs.stdenv.cc.cc.lib
-                  ] ++ map pkgs.lib.getDev (with pkgs; [ static-libsodium-vrf static-secp256k1 static-gmp
-                    R_4_1_3
-                    (zlib.static)
-                    (openssl.override { static = true; })
-                  ] ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd);                  
-                })) compilers);
+                    stdenv.cc.cc.lib
+                  ]) ++ map pkgs.lib.getDev (with static-pkgs; [ static-libsodium-vrf static-secp256k1 static-gmp
+                    # R_4_1_3
+                    static-zlib
+                    static-openssl
+                  ]);
+
+                  nativeBuildInputs = [ (compiler.override { enableShared = false; }) ] ++ (with static-pkgs; [
+                    haskell-nix.cabal-install.${compiler-nix-name}
+                    pkgconfig
+                    stdenv.cc.cc.lib
+                  ]);
+                }))) (compilers static-pkgs.buildPackages)));
        });
 }
