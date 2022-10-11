@@ -99,6 +99,8 @@
              in (__mapAttrs (compiler-nix-name: compiler:
               pkgs.mkShell {
                 shellHook = with pkgs; ''
+                  export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+
                   ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
                   function cabal() {
                     case "$1" in 
