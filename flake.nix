@@ -106,13 +106,13 @@
                     case "$1" in 
                       build) 
                         ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal \
-                          $@
+                          "$@"
                       ;;
                       clean)
-                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
+                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal "$@"
                       ;;
                       *)
-                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
+                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal "$@"
                       ;;
                     esac
                   }
@@ -152,16 +152,17 @@
 
                   CABAL_PROJECT_LOCAL_TEMPLATE = with static-pkgs; ''
                   package digest
-                    extra-lib-dirs: ${static-zlib}/lib
+                    extra-lib-dirs: ${zlib}/lib
                   constraints:
                     HsOpenSSL +use-pkg-config,
                     zlib +pkg-config
                   '';
 
                   shellHook = with static-pkgs; ''
+                  export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "                  
                   ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
                   ${figlet}/bin/figlet -f small "*= static edition =*"
-                  echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv and ffi dependencies that point to the /nix/store"
+                  echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv, ffi, and zlib dependencies that point to the /nix/store"
                   export CABAL_DIR=$HOME/.cabal-static
                   echo "CABAL_DIR set to $CABAL_DIR"
                   echo "Quirks:"
@@ -171,18 +172,19 @@
                     case "$1" in 
                       build) 
                         ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal \
-                          $@ \
+                          "$@" \
                           $NIX_CABAL_FLAGS \
                           --disable-shared --enable-static \
-                          --ghc-option=-L${static-gmp}/lib \
-                          --ghc-option=-L${static-libsodium-vrf}/lib \
-                          --ghc-option=-L${static-secp256k1}/lib
+                          --ghc-option=-L${lib.getLib static-gmp}/lib \
+                          --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
+                          --ghc-option=-L${lib.getLib static-secp256k1}/lib \
+                          --ghc-option=-L${lib.getLib static-openssl}/lib
                       ;;
                       clean)
-                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $@
+                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal "$@"
                       ;;
                       *)
-                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $NIX_CABAL_FLAGS $@
+                        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $NIX_CABAL_FLAGS "$@"
                       ;;
                     esac
                   }
@@ -192,6 +194,7 @@
                       case "$nixlib" in
                         *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
                         *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
+                        *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
                         *) ;;
                       esac
                     done
@@ -201,13 +204,13 @@
                     # for libstdc++; ghc not being able to find this properly is bad,
                     # it _should_ probably call out to a g++ or clang++ but doesn't.
                     stdenv.cc.cc.lib
-                  ]) ++ map pkgs.lib.getDev (with static-pkgs; [ static-libsodium-vrf static-secp256k1 static-gmp
+                  ]) ++ map pkgs.lib.getDev (with static-pkgs; [ libsodium-vrf secp256k1 static-gmp
                     # R_4_1_3
-                    static-zlib
-                    static-openssl
+                    zlib
+                    openssl
                   ]);
 
-                  nativeBuildInputs = [ (compiler.override { enableShared = false; }) ] ++ (with static-pkgs; [
+                  nativeBuildInputs = [ (compiler.override { enableShared = true; }) ] ++ (with static-pkgs; [
                     haskell-nix.cabal-install.${compiler-nix-name}
                     pkgconfig
                     stdenv.cc.cc.lib
