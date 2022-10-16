@@ -146,7 +146,7 @@
                     "--with-ghc-pkg=x86_64-unknown-linux-musl-ghc-pkg"
                     "--with-hsc2hs=x86_64-unknown-linux-musl-hsc2hs"
                     # ensure that the linker knows we want a static build product
-                    "--ghc-option=-optl-static"
+                    "--enable-executable-static"
                   ];
                   hardeningDisable = pkgs.lib.optionals static-pkgs.stdenv.hostPlatform.isMusl [ "format" "pie" ];
 
