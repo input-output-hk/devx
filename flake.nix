@@ -65,6 +65,10 @@
                sha256 = "sha256-Ff9bMzxhCUBgsqUunB2OxVzELdAp45yiKr2qkJUm/tY="; };
              });
          });
+         cddl-tools = (final: prev: {
+          cbor-diag = final.callPackage ./pkgs/cbor-diag { };
+          cddl = final.callPackage ./pkgs/cddl { };          
+         });
        };
        supportedSystems = [
             "x86_64-linux"
@@ -124,6 +128,10 @@
                   # for libstdc++; ghc not being able to find this properly is bad,
                   # it _should_ probably call out to a g++ or clang++ but doesn't.
                   pkgs.stdenv.cc.cc.lib
+
+                  pkgs.cddl
+                  pkgs.cbor-diag
+
                 ] ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3 zlib openssl ] ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd);
               }) (compilers pkgs) //
               (let static-pkgs = if pkgs.stdenv.hostPlatform.isLinux then pkgs.pkgsCross.musl64 else pkgs; in
@@ -214,6 +222,8 @@
                     haskell-nix.cabal-install.${compiler-nix-name}
                     pkgconfig
                     stdenv.cc.cc.lib
+                    cddl
+                    cbor-diag
                   ]);
                 }))) (compilers static-pkgs.buildPackages)));
         hydraJobs = devShells;
