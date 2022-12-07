@@ -134,7 +134,11 @@
 
                 ] ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3 zlib openssl ] ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd);
               }) (compilers pkgs) //
-              (let static-pkgs = if pkgs.stdenv.hostPlatform.isLinux then pkgs.pkgsCross.musl64 else pkgs; in
+              (let static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
+                                 then if pkgs.stdenv.hostPlatform.isAarch64
+                                      then pkgsCross.aarch64-multiplatform-musl
+                                      else pkgs.pkgsCross.musl64
+                                 else pkgs; in
               pkgs.lib.mapAttrs' (compiler-nix-name: compiler: 
                 pkgs.lib.nameValuePair "${compiler-nix-name}-static" (static-pkgs.mkShell (rec {
                   # Note [cabal override]:
@@ -150,9 +154,9 @@
                   # dynamically.  This requirement will be gone with gmp-bignum.
                   #
                   NIX_CABAL_FLAGS = pkgs.lib.optionals static-pkgs.stdenv.hostPlatform.isMusl [
-                    "--with-ghc=x86_64-unknown-linux-musl-ghc"
-                    "--with-ghc-pkg=x86_64-unknown-linux-musl-ghc-pkg"
-                    "--with-hsc2hs=x86_64-unknown-linux-musl-hsc2hs"
+                    "--with-ghc=${if stdenv.hostPlatform.isAarch64 then "aarch64" else "x86_64"}-unknown-linux-musl-ghc"
+                    "--with-ghc-pkg=${if stdenv.hostPlatform.isAarch64 then "aarch64" else "x86_64"}-unknown-linux-musl-ghc-pkg"
+                    "--with-hsc2hs=${if stdenv.hostPlatform.isAarch64 then "aarch64" else "x86_64"}-unknown-linux-musl-hsc2hs"
                     # ensure that the linker knows we want a static build product
                     "--enable-executable-static"
                   ];
