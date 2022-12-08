@@ -1,0 +1,43 @@
+# define a development shell for dynamically linked applications (default)
+{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true }:
+let cabal-install = (pkgs.haskell-nix.tool compiler-nix-name "cabal" "3.8.1.0"); in
+pkgs.mkShell {
+    # The `cabal` overrride in this shell-hook doesn't do much yet. But
+    # we may need to massage cabal a bit, so we'll leave it in here for
+    # consistency with the one in static.nix.
+    shellHook = with pkgs; ''
+        export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+
+        ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+        function cabal() {
+        case "$1" in 
+            build) 
+            ${cabal-install}/bin/cabal "$@"
+            ;;
+            clean)
+            ${cabal-install}/bin/cabal "$@"
+            ;;
+            *)
+            ${cabal-install}/bin/cabal "$@"
+            ;;
+        esac
+        }
+    '';
+    buildInputs = [
+        compiler
+        cabal-install
+        pkgs.pkgconfig
+        # for libstdc++; ghc not being able to find this properly is bad,
+        # it _should_ probably call out to a g++ or clang++ but doesn't.
+        pkgs.stdenv.cc.cc.lib
+
+        pkgs.cddl
+        pkgs.cbor-diag
+
+    ] ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3 zlib openssl ] ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd)
+    # see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
+    ++ pkgs.lib.optional withHLS (pkgs.haskell-nix.tool compiler-nix-name "haskell-language-server" "latest") 
+    # for ghc8107 we need hlint-3.3
+    ++ pkgs.lib.optional withHlint (pkgs.haskell-nix.tool compiler-nix-name "hlint" "3.3")
+    ;
+}
