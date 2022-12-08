@@ -1,4 +1,7 @@
 { pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true  }:
+let tool-version-map = import ./tool-map.nix;
+    tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
+    cabal-install = tool "cabal"; in
 pkgs.mkShell (rec {
     # Note [cabal override]:
     #
@@ -42,7 +45,7 @@ pkgs.mkShell (rec {
     function cabal() {
     case "$1" in 
         build) 
-        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal \
+        ${cabal-install}/bin/cabal \
             "$@" \
             $NIX_CABAL_FLAGS \
             --disable-shared --enable-static \
@@ -52,10 +55,10 @@ pkgs.mkShell (rec {
             --ghc-option=-L${lib.getLib static-openssl}/lib
         ;;
         clean)
-        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal "$@"
+        ${cabal-install}/bin/cabal "$@"
         ;;
         *)
-        ${haskell-nix.cabal-install.${compiler-nix-name}}/bin/cabal $NIX_CABAL_FLAGS "$@"
+        ${cabal-install}/bin/cabal $NIX_CABAL_FLAGS "$@"
         ;;
     esac
     }
@@ -88,9 +91,7 @@ pkgs.mkShell (rec {
         cddl
         cbor-diag
     ])
-    # see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
-    ++ pkgs.lib.optional withHLS (pkgs.haskell-nix.tool compiler-nix-name "haskell-language-server" "latest") 
-    # for ghc8107 we need hlint-3.3
-    ++ pkgs.lib.optional withHlint (pkgs.haskell-nix.tool compiler-nix-name "hlint" "3.3")
+    ++ pkgs.lib.optional withHLS (tool "haskell-language-server")
+    ++ pkgs.lib.optional withHlint (tool "hlint")
     ;    
 })

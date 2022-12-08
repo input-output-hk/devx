@@ -1,6 +1,8 @@
 # define a development shell for dynamically linked applications (default)
 { pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true }:
-let cabal-install = (pkgs.haskell-nix.tool compiler-nix-name "cabal" "3.8.1.0"); in
+let tool-version-map = import ./tool-map.nix;
+    tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
+    cabal-install = tool "cabal"; in
 pkgs.mkShell {
     # The `cabal` overrride in this shell-hook doesn't do much yet. But
     # we may need to massage cabal a bit, so we'll leave it in here for
@@ -35,9 +37,7 @@ pkgs.mkShell {
         pkgs.cbor-diag
 
     ] ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3 zlib openssl ] ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd)
-    # see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
-    ++ pkgs.lib.optional withHLS (pkgs.haskell-nix.tool compiler-nix-name "haskell-language-server" "latest") 
-    # for ghc8107 we need hlint-3.3
-    ++ pkgs.lib.optional withHlint (pkgs.haskell-nix.tool compiler-nix-name "hlint" "3.3")
+    ++ pkgs.lib.optional withHLS (tool "haskell-language-server")
+    ++ pkgs.lib.optional withHlint (tool "hlint")
     ;
 }
