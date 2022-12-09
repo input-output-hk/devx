@@ -1,4 +1,4 @@
-# Developer Experience Repo
+# Developer Experience Repo 
 
 To obtain a development shell for hacking on haskell based projects at use
 
