@@ -87,7 +87,7 @@ pkgs.mkShell (rec {
     nativeBuildInputs = [ (compiler.override { enableShared = true; }) ] ++ (with pkgs; [
         haskell-nix.cabal-install.${compiler-nix-name}
         pkgconfig
-        stdenv.cc.cc.lib
+        stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
         cddl
         cbor-diag
     ])
