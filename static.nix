@@ -26,10 +26,11 @@ pkgs.mkShell (rec {
 
     CABAL_PROJECT_LOCAL_TEMPLATE = with pkgs; ''
     package digest
-    extra-lib-dirs: ${zlib}/lib
+    extra-lib-dirs: ${zlib}/lib ${pcre}/lib
     constraints:
     HsOpenSSL +use-pkg-config,
     zlib +pkg-config
+    pcre-lite +pkg-config
     '';
 
     shellHook = with pkgs; ''
@@ -81,6 +82,7 @@ pkgs.mkShell (rec {
     ]) ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 static-gmp
         # R_4_1_3
         zlib
+        pcre
         openssl
     ]);
 
