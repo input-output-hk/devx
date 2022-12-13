@@ -36,7 +36,18 @@ pkgs.mkShell {
         pkgs.cddl
         pkgs.cbor-diag
 
-    ] ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3 zlib openssl ] ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd)
+    ] ++ map pkgs.lib.getDev (
+        with pkgs;
+        [
+            libsodium-vrf
+            secp256k1
+            R_4_1_3
+            zlib
+            openssl
+            pcre
+        ]
+        ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
+    )
     ++ pkgs.lib.optional withHLS (tool "haskell-language-server")
     ++ pkgs.lib.optional withHlint (tool "hlint")
     ;
