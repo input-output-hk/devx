@@ -1,5 +1,5 @@
 # define a development shell for dynamically linked applications (default)
-{ system, pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true }:
+{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
     cabal-install = tool "cabal"; in
@@ -24,7 +24,7 @@ pkgs.mkShell {
             ;;
         esac
         }
-    '' ++ (if system == "darwin-aarch64" || system == "darwin-x86_64" then ''
+    '' ++ (if pkgs.stdenv.targetPlatform.isMacOS then ''
     # this one is only needed on macOS right now, due to a bug in loading libcrypto.
     export DYLD_LIBRARY_PATH=$(pkg-config --libs-only-L libcrypto|cut -c 3-)
     '' else "");
