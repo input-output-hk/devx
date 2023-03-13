@@ -1,5 +1,6 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -i bash -p awscli zstd
+set -euo pipefail
 
 DEV_SHELLS=(
     "ghc8107"
@@ -13,26 +14,29 @@ DEV_SHELLS=(
     "ghc925-static-minimal"
 )
 
-SYSTEMS=("aarch64-darwin" "aarch64-linux" "x86_64-darwin" "x86_64-linux")
+# TODO: darwin builds need to run non-sandboxed ...
+SYSTEMS=("x86_64-linux") # ("aarch64-darwin" "aarch64-linux" "x86_64-darwin")
 
-# shellcheck disable=SC2034
-AWS_DEFAULT_REGION=us-east-1
-# shellcheck disable=SC2034
-AWS_ACCESS_KEY_ID="$1"
-# shellcheck disable=SC2034
-AWS_SECRET_ACCESS_KEY="$2"
+# `awscli` doesn't seems to provide a stateless mode :')
+aws configure set aws_access_key_id "${AWS_ACCESS_KEY_ID}"
+aws configure set aws_secret_access_key "${AWS_SECRET_ACCESS_KEY}"
 
 # Generated with: % nix key generate-secret --key-name s3.zw3rk.com
-echo "$3" > ./secret-key
+echo "${NIX_STORE_SECRET_KEY}" > ./secret-key
 
 for system in "${SYSTEMS[@]}"; do
     for devShell in "${DEV_SHELLS[@]}"; do
-        nix build ".#devShells.${system}.${devShell}"
+        DEV_SHELL="${system}.${devShell}"
+        FLAKE=".#devShells.${DEV_SHELL} --no-write-lock-file --refresh --system ${system} --accept-flake-config"
+        # shellcheck disable=SC2086
+        nix build ${FLAKE}
         nix store sign --key-file ./secret-key --recursive ./result
         # shellcheck disable=SC2046
-        nix-store --export $(nix-store -qR result) | zstd -z8T8 > "${system}.${devShell}.zstd"
-        nix print-dev-env ".#devShells.${system}.${devShell}" > "${system}.${devShell}.sh"
-        aws --endpoint-url https://s3.zw3rk.com s3 cp "./${system}.${devShell}.sh" s3://devx/
-        aws --endpoint-url https://s3.zw3rk.com s3 cp "./${system}.${devShell}.zstd" s3://devx/
+        nix-store --export $(nix-store -qR ./result) | zstd -z8T8 > "${DEV_SHELL}.zstd"
+        # shellcheck disable=SC2086
+        nix print-dev-env ${FLAKE} > "${DEV_SHELL}.sh"
+        aws --endpoint-url https://s3.zw3rk.com s3 cp "./${DEV_SHELL}.zstd" s3://devx/
+        aws --endpoint-url https://s3.zw3rk.com s3 cp "./${DEV_SHELL}.sh" s3://devx/
+        rm result
     done
 done

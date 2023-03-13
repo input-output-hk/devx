@@ -1,13 +1,14 @@
 # This is a basic workflow to help you get started with Actions
 
-name: prebuild devx closures
+name: Prebuild DevX closures
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "master" branch
-  push:
-    branches:
-      - main
+  # FIXME: disabled while working on it ...
+  # push:
+  #   branches:
+  #     - main
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -21,11 +22,17 @@ jobs:
         uses: cachix/install-nix-action@v17
         with:
           extra_nix_config: |
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk= s3.zw3rk.com:fx41B+c2mUAvQt+wgzD0g/SBesJhUiShi0s6dV549Co=
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
-
+          nix_path: nixpkgs=channel:nixos-unstable
+      # TODO: @angerman do we want to cache /nix/store as a GitHub Action build artifact?
+      # https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
       - name: Checkout repository
         uses: actions/checkout@v3
-
       - name: Compute and upload closure and developer environment on a custom S3 bucket
-        run: ./extra/s3-uploads.sh ${{ secrets.KEY_ID }} ${{ secrets.SECRET }} ${{ secrets.SECRET_KEY }}
+        env:
+          # TODO: @angerman better secrets naming?!
+          AWS_ACCESS_KEY_ID: ${{ secrets.KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET }}
+          NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: ./extra/s3-uploads.sh
