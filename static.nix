@@ -1,8 +1,8 @@
-{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true  }:
+{ system, pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true  }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
     cabal-install = tool "cabal"; in
-pkgs.mkShell (rec {
+pkgs.mkShell ({
     # Note [cabal override]:
     #
     # We need to override the `cabal` command and pass --ghc-options for the
@@ -34,7 +34,7 @@ pkgs.mkShell (rec {
     '';
 
     shellHook = with pkgs; ''
-    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "                  
+    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
     ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
     ${figlet}/bin/figlet -f small "*= static edition =*"
     echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv, ffi, and zlib dependencies that point to the /nix/store"
@@ -44,8 +44,8 @@ pkgs.mkShell (rec {
     echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
     echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     function cabal() {
-    case "$1" in 
-        build) 
+    case "$1" in
+        build)
         ${cabal-install}/bin/cabal \
             "$@" \
             $NIX_CABAL_FLAGS \
@@ -74,7 +74,11 @@ pkgs.mkShell (rec {
         esac
     done
     }
-    '';                  
+
+    '' ++ (if system == "darwin-aarch64" || system == "darwin-x86_64" then ''
+    # this one is only needed on macOS right now, due to a bug in loading libcrypto.
+    export DYLD_LIBRARY_PATH=$(pkg-config --libs-only-L libcrypto|cut -c 3-)
+    '' else "");
     buildInputs = (with pkgs; [
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
@@ -95,5 +99,5 @@ pkgs.mkShell (rec {
     ])
     ++ pkgs.lib.optional withHLS (tool "haskell-language-server")
     ++ pkgs.lib.optional withHlint (tool "hlint")
-    ;    
+    ;
 })
