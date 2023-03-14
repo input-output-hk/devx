@@ -28,5 +28,6 @@ for system in "${SYSTEMS[@]}"; do
     nix print-dev-env ${FLAKE} > "${DEV_SHELL}.sh"
     aws --endpoint-url https://s3.zw3rk.com s3 cp "./${DEV_SHELL}.zstd" s3://devx/
     aws --endpoint-url https://s3.zw3rk.com s3 cp "./${DEV_SHELL}.sh" s3://devx/
-    rm result
+    # cleanup; so we don't run out of disk space, or retain too much in the nix store.
+    rm result "${DEV_SHELL}.zstd" "${DEV_SHELL}.sh"
 done
