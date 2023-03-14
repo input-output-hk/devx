@@ -16,7 +16,13 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      # fail-fast: false # TODO: @angerman do we want that?
+      matrix:
+        devshell: ['ghc8107', 'ghc902', 'ghc925', 'ghc8107-minimal', 'ghc902-minimal', 'ghc925-minimal', 'ghc8107-static-minimal', 'ghc902-static-minimal', 'ghc925-static-minimal']
+        os: [ubuntu-latest, macOS-latest]
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Install Nix with good defaults
         uses: cachix/install-nix-action@v17
@@ -35,4 +41,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET }}
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          FLAKE_DEV_SHELL: ${{ matrix.devshell }}
+          GA_HOST_OS: ${{ matrix.os }}
         run: ./extra/s3-uploads.sh
