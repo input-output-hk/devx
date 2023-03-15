@@ -1,6 +1,10 @@
 #! /bin/bash
 set -euo pipefail
 
+# FIXME: this file should not be longer needed if we succeed to rely only on
+# hydra latest build product!
+# https://input-output-hk.github.io/adrestia/cardano-wallet/contributing/Hydra
+
 # End-user DevX could also be potentially improved through this script: e.g,
 # by helping new users to set up Nix using Determinate Systems new installer,
 # or detect that it's used in a GA context and advise installing Nix with Cachix install Nix action.

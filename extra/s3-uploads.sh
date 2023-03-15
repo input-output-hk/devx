@@ -2,6 +2,10 @@
 #! nix-shell -i bash -p awscli zstd
 set -euo pipefail
 
+# FIXME: this file should not be longer needed if we succeed to rely only on
+# hydra latest build product!
+# https://input-output-hk.github.io/adrestia/cardano-wallet/contributing/Hydra
+
 if [ "$GA_HOST_OS" == "ubuntu-latest" ]; then
     SYSTEMS=("x86_64-linux") # TODO: aarch64-linux
 fi

@@ -1,3 +1,7 @@
+# TODO: the file should not be longer needed if we succeed to rely only on
+# hydra latest build product!
+# https://input-output-hk.github.io/adrestia/cardano-wallet/contributing/Hydra
+
 # Simple workflow for deploying static content to GitHub Pages
 name: Deploy static content to Pages
 

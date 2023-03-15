@@ -1,3 +1,7 @@
+# FIXME: this file should not be longer needed if we succeed to rely only on
+# hydra latest build product!
+# https://input-output-hk.github.io/adrestia/cardano-wallet/contributing/Hydra
+
 # This is a basic workflow to help you get started with Actions
 
 name: Prebuild DevX closures

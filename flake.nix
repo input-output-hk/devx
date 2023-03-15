@@ -5,11 +5,11 @@
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     inputs.flake-utils.url = "github:numtide/flake-utils";
 
-    outputs = { self, nixpkgs, flake-utils, haskellNix }: 
+    outputs = { self, nixpkgs, flake-utils, haskellNix }:
     let overlays = {
          crypto = final: prev: {
           libsodium-vrf = final.callPackage ({ stdenv, lib, fetchFromGitHub, autoreconfHook }:
-            stdenv.mkDerivation rec {
+            stdenv.mkDerivation {
                 name = "libsodium-1.0.18";
 
                 src = fetchFromGitHub {
@@ -68,7 +68,7 @@
          });
          cddl-tools = (final: prev: {
           cbor-diag = final.callPackage ./pkgs/cbor-diag { };
-          cddl = final.callPackage ./pkgs/cddl { };          
+          cddl = final.callPackage ./pkgs/cddl { };
          });
        };
        supportedSystems = [
@@ -76,11 +76,11 @@
             "x86_64-darwin"
             "aarch64-linux"
             "aarch64-darwin"
-       ];       
+       ];
     in flake-utils.lib.eachSystem supportedSystems (system:
-         let 
+         let
            pkgs = import nixpkgs {
-             overlays = [haskellNix.overlay] ++ __attrValues overlays;
+             overlays = [haskellNix.overlay] ++ builtins.attrValues overlays;
              inherit system;
              inherit (haskellNix) config;
            };
@@ -107,23 +107,26 @@
                                     then pkgs.pkgsCross.aarch64-multiplatform-musl
                                     else pkgs.pkgsCross.musl64
                                else pkgs;
-             in (__mapAttrs (compiler-nix-name: compiler:
+             in (builtins.mapAttrs (compiler-nix-name: compiler:
                   import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; }
                   ) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-minimal" (
                     import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; }
                   )) (compilers pkgs)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler: 
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
                     import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; }
                   )) (compilers static-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler: 
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal" (
                     import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
                   )) (compilers static-pkgs.buildPackages)
              );
-        hydraJobs = devShells;
+        # TODO: @angerman should I merge `packages.default` inside `hydraJobs`?
+        # ... not sure that's the right approach?
+        packages.default = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
+        hydraJobs = devShells // { bootstrap-shell = packages.default; };
        });
 
     # --- Flake Local Nix Configuration ----------------------------
@@ -136,6 +139,8 @@
       extra-trusted-public-keys = [
         "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
         "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
+        # TODO: @angerman add s3.zw3rk.com key?
+        # "s3.zw3rk.com:fx41B+c2mUAvQt+wgzD0g/SBesJhUiShi0s6dV549Co="
       ];
       # post-build-hook = "./upload-to-cache.sh";
       allow-import-from-derivation = "true";
