@@ -123,34 +123,24 @@
                     import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
                   )) (compilers static-pkgs.buildPackages)
              );
-        # TODO: @angerman should I merge `packages.default` inside `hydraJobs`?
-        # ... not sure that's the right approach?
-        # packages.default = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
-        hydraJobs = devShells
-                  // pkgs.lib.mapAttrs' (name: drv:
-                    pkgs.lib.nameValuePair "${name}-closure" (
-                      pkgs.runCommand "${name}-closure" {
-                        requiredSystemFeatures = [ "recursive-nix" ];
-                        nativeBuildInputs = [ pkgs.nix pkgs.zstd pkgs.zip ];
-                      }
-                      ''
-                        mkdir -p $out/nix-support
-                        HOME=$(mktemp -d)
-                        # TODO: replace zstd by zip?
-
-                        nix-store --export $(nix-store -qR ${drv}) | zstd -z8T8 > $out/closure.zstd
-                        echo "file binary-dist \"$out/closure.zstd\"" > $out/nix-support/hydra-build-products
-
-                        nix-store --export $(nix-store -qR ${drv}) | zip -9 > $out/closure.zip
-                        echo "file binary-dist \"$out/closure.zstd\"" >> $out/nix-support/hydra-build-products
-
-                        nix --offline --extra-experimental-features "nix-command flakes" \
-                          print-dev-env ${drv.drvPath} >> $out/env.sh
-                        echo "file binary-dist \"$out/env.sh\"" >> $out/nix-support/hydra-build-products
-                      '')
-                  ) devShells;
-
-        # }; # // { bootstrap-shell = packages.default; };
+        hydraJobs = devShells // (pkgs.lib.mapAttrs' (name: drv:
+          pkgs.lib.nameValuePair "${name}-closure"
+          (pkgs.runCommand "${name}-closure" {
+            requiredSystemFeatures = [ "recursive-nix" ];
+            nativeBuildInputs = [ pkgs.nix pkgs.zstd pkgs.zip ];
+          } ''
+            mkdir -p $out/nix-support
+            HOME=$(mktemp -d)
+            nix-store --export $(nix-store -qR ${drv}) | zip -9 > $out/closure.zip
+            # TODO ...
+            # nix store sign --key-file ./secret-key --recursive ./result
+            echo "file binary-dist \"$out/closure.zip\"" >> $out/nix-support/hydra-build-products
+            nix --offline --extra-experimental-features "nix-command flakes" \
+              print-dev-env ${drv.drvPath} >> $out/env.sh
+            echo "file binary-dist \"$out/env.sh\"" >> $out/nix-support/hydra-build-products
+          '')) devShells) // {
+            devx-bootstrap = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
+          };
        });
 
     # --- Flake Local Nix Configuration ----------------------------
@@ -163,8 +153,6 @@
       extra-trusted-public-keys = [
         "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
         "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
-        # TODO: @angerman add s3.zw3rk.com key?
-        # "s3.zw3rk.com:fx41B+c2mUAvQt+wgzD0g/SBesJhUiShi0s6dV549Co="
       ];
       # post-build-hook = "./upload-to-cache.sh";
       allow-import-from-derivation = "true";

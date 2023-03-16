@@ -8,17 +8,6 @@
 { devShells, pkgs, supportedSystems, ... }:
 with builtins;
 let
-  closure = drv:
-    pkgs.runCommand "test" {
-      requiredSystemFeatures = [ "recursive-nix" ];
-      nativeBuildInputs = [ pkgs.nix ];
-    } ''
-      mkdir -p $out/nix-support
-      HOME=$(mktemp -d)
-      # TODO: replace zstd by zip?
-      nix-store --export "${drv}" | zstd -z8T8 > $out/closure.zstd"
-      echo "file binary-dist \"$out/closure.zstd\"" > $out/nix-support/hydra-build-products
-    '';
   # TODO: rather use `pkgs.writeShellApplication` so the script content run
   # against `shellcheck`?
   bootstrapScript = pkgs.writeTextFile {
@@ -45,6 +34,22 @@ let
             extra_nix_config: |
               trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
               substituters = https://cache.iog.io/ https://cache.nixos.org/"
+          # TODO: explain how to use the shell with something better than:
+          #
+          # - name: Add devx-shell
+          #   run: |
+          #     echo $PATH
+          #     cat <<EOF > /usr/local/bin/devx-shell
+          #     #!/bin/bash
+          #     nix develop github:input-output-hk/devx#ghc8107-static-minimal \
+          #       --command /usr/bin/bash <(echo 'eval "\$shellHook\"'; cat "$1")
+          #     EOF
+          #     chmod +x /usr/local/bin/devx-shell
+          # - name: Build
+          #   shell: devx-shell {0}
+          #   run: |
+          #     cabal update
+          #     cabal build
           exit 1
         else
           echo "... we can run https://github.com/DeterminateSystems/nix-installer for you!"
@@ -70,22 +75,21 @@ let
       if [[ "$OS" == darwin* ]]; then OS="darwin"; fi
       if [[ "$OS" == linux*  ]]; then OS="linux"; fi
       SYSTEM="$ARCH-$OS"
-      # TODO: @angerman is it okay to just say that devShell is first CLI arg?!
       DEVSHELL="$1"
 
       # 2. Generate per system / devShell shell snippet...
       ${toString (map (system: toString (attrValues (mapAttrs (name: value: ''
           if [[ "$SYSTEM" == "${system}" && "$DEVSHELL" == "${name}" ]]; then
-            # Check if ${closure value} exists...
-            if [[ ! -e ${value} ]]; then
+            # TODO: @angerman not sure if drvPath is what we want here?
+            if [[ ! -e ${value.drvPath} ]]; then
               echo "Warning: this script should be run (the first time) as a trusted Nix user:"
               echo "https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-trusted-users"
               echo "n.b. root is by default the only trusted user on a fresh nix setup!"
-              # TODO: I should also ensure that zstd is available on user machine ... replace zstd by zip?
-              curl "TODO: the right /latest/ url hydra with closure build product" | zstd -d | nix-store --import
+              # TODO: ... have to add trusted key in nix.conf?!
+              curl "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-25/$DEVSHELL-closure.$SYSTEM/latest/download/1" | unzip | nix-store --import
             fi
-            # TODO: This should rather be the fallback ... and this be just the loading of `nix print-dev-env` output
-            nix develop "github:input-output-hk/devx#$devshell" --no-write-lock-file --refresh
+            # TODO: We should have -source of this in the /nix/store somewhere, with the `flake.nix` file. So we _should_ be able to do `nix develop /nix/store/...-source#$devshell`?
+            curl "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-25/$DEVSHELL-closure.$SYSTEM/latest/download/2" | sh
             exit 0
           fi
         '') devShells))) supportedSystems)}
