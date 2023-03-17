@@ -107,19 +107,35 @@
                                     else pkgs.pkgsCross.musl64
                                else pkgs;
              in (builtins.mapAttrs (compiler-nix-name: compiler:
-                  import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; }
+                  import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = false; }
                   ) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-minimal" (
-                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = false; }
                   )) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; }
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withIOG = false; }
                   )) (compilers static-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = false; }
+                  )) (compilers static-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-iog" (
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = true; }
+                  )) (compilers pkgs)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-minimal-iog" (
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                  )) (compilers pkgs)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-static-iog" (
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withIOG = true; }
+                  )) (compilers static-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal-iog" (
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
                   )) (compilers static-pkgs.buildPackages)
              );
         hydraJobs = devShells;
