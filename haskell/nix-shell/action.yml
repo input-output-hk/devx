@@ -4,7 +4,7 @@ inputs:
   compiler:
     description: 'compiler name to use, e.g. ghc8107, ghc924, ...'
     required: true
-    default: "ghc924"
+    default: "ghc925"
 
 runs:
   using: "composite"
