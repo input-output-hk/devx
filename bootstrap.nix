@@ -76,24 +76,26 @@ let
       if [[ "$OS" == linux*  ]]; then OS="linux"; fi
       SYSTEM="$ARCH-$OS"
       DEVSHELL="$1"
-
-      # 2. Generate per system / devShell shell snippet...
-      ${toString (map (system: toString (attrValues (mapAttrs (name: value: ''
-          if [[ "$SYSTEM" == "${system}" && "$DEVSHELL" == "${name}" ]]; then
-            # TODO: @angerman not sure if drvPath is what we want here?
-            if [[ ! -e ${value.drvPath} ]]; then
-              echo "Warning: this script should be run (the first time) as a trusted Nix user:"
-              echo "https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-trusted-users"
-              echo "n.b. root is by default the only trusted user on a fresh nix setup!"
-              # TODO: ... have to add trusted key in nix.conf?!
-              curl "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-25/$DEVSHELL-closure.$SYSTEM/latest/download/1" | unzip | nix-store --import
-            fi
-            # TODO: We should have -source of this in the /nix/store somewhere, with the `flake.nix` file. So we _should_ be able to do `nix develop /nix/store/...-source#$devshell`?
-            curl "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-25/$DEVSHELL-closure.$SYSTEM/latest/download/2" | sh
-            exit 0
-          fi
-        '') devShells))) supportedSystems)}
-    '';
+  '';
+    # FIXME ...
+    #
+    #   # 2. Generate per system / devShell shell snippet...
+    #   ${toString (map (system: toString (attrValues (mapAttrs (name: value: ''
+    #       if [[ "$SYSTEM" == "${system}" && "$DEVSHELL" == "${name}" ]]; then
+    #         # TODO: @angerman not sure if drvPath is what we want here?
+    #         if [[ ! -e ${value.drvPath} ]]; then
+    #           echo "Warning: this script should be run (the first time) as a trusted Nix user:"
+    #           echo "https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-trusted-users"
+    #           echo "n.b. root is by default the only trusted user on a fresh nix setup!"
+    #           # TODO: ... have to add trusted key in nix.conf?!
+    #           curl "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-25/$DEVSHELL-closure.$SYSTEM/latest/download/1" | unzip | nix-store --import
+    #         fi
+    #         # TODO: We should have -source of this in the /nix/store somewhere, with the `flake.nix` file. So we _should_ be able to do `nix develop /nix/store/...-source#$devshell`?
+    #         curl "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-25/$DEVSHELL-closure.$SYSTEM/latest/download/2" | sh
+    #         exit 0
+    #       fi
+    #     '') devShells))) supportedSystems)}
+    # '';
   };
 
 in pkgs.runCommand "bootstrap-devx" { } ''

@@ -114,10 +114,12 @@
                   pkgs.lib.nameValuePair "${compiler-nix-name}-minimal" (
                     import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; }
                   )) (compilers pkgs)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; }
-                  )) (compilers static-pkgs.buildPackages)
+              # FIXME: HLS is currently broken on `static` flavor but contain in non-`minimal` one
+              # c.f. issue #24 ...
+              # // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+              #     pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
+              #       import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; }
+              #     )) (compilers static-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal" (
                     import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
@@ -132,8 +134,6 @@
             mkdir -p $out/nix-support
             HOME=$(mktemp -d)
             nix-store --export $(nix-store -qR ${drv}) | zip -9 > $out/closure.zip
-            # TODO ...
-            # nix store sign --key-file ./secret-key --recursive ./result
             echo "file binary-dist \"$out/closure.zip\"" >> $out/nix-support/hydra-build-products
             nix --offline --extra-experimental-features "nix-command flakes" \
               print-dev-env ${drv.drvPath} >> $out/env.sh
