@@ -4,7 +4,7 @@ inputs:
   compiler:
     description: 'compiler name to use, e.g. ghc8107, ghc924, ...'
     required: true
-    default: "ghc925"
+    default: "ghc927"
 
 runs:
   using: "composite"
@@ -22,8 +22,8 @@ runs:
       run: nix develop github:input-output-hk/devx#${{ inputs.compiler }} --no-write-lock-file --command cabal update
       shell: bash
     - name: Build dependencies
-      run: nix develop github:input-output-hk/devx#${{ inputs.compiler }} --no-write-lock-file --command cabal build all --only-dependencies -j 
+      run: nix develop github:input-output-hk/devx#${{ inputs.compiler }} --no-write-lock-file --command cabal build all --only-dependencies -j
       shell: bash
     - name: Build project
-      run: nix develop github:input-output-hk/devx#${{ inputs.compiler }} --no-write-lock-file --command cabal build all -j 
+      run: nix develop github:input-output-hk/devx#${{ inputs.compiler }} --no-write-lock-file --command cabal build all -j
       shell: bash
