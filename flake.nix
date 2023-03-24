@@ -109,6 +109,7 @@
                                     then pkgs.pkgsCross.aarch64-multiplatform-musl
                                     else pkgs.pkgsCross.musl64
                                else pkgs;
+                 js-pkgs = pkgs.pkgsCross.ghcjs;
              in (builtins.mapAttrs (compiler-nix-name: compiler:
                   import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = false; }
                   ) (compilers pkgs)
@@ -140,6 +141,15 @@
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal-iog" (
                     import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
                   )) (compilers static-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-js" (
+                    pkgs.crossPkgs.ghcjs.buildPackages.compiler.${compiler-nix-name}
+                    # TODO: import ./ghcjs.nix { pkgs = js-pkgs; inherit compiler compiler-nix-name; }
+                  )) (compilers js-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal" (
+                    import ./ghcjs.nix { pkgs = js-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                  )) (compilers js-pkgs.buildPackages)
              );
         hydraJobs = devShells;
        });
