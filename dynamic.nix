@@ -2,7 +2,10 @@
 { pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true, withIOG ? true }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
-    cabal-install = tool "cabal"; in
+    cabal-install = tool "cabal";
+    # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
+    compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
+in
 pkgs.mkShell {
     # The `cabal` overrride in this shell-hook doesn't do much yet. But
     # we may need to massage cabal a bit, so we'll leave it in here for
@@ -48,8 +51,8 @@ pkgs.mkShell {
         ]
         ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
     )
-    ++ pkgs.lib.optional withHLS (tool "haskell-language-server")
-    ++ pkgs.lib.optional withHlint (tool "hlint")
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961"] "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3]))
