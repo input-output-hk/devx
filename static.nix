@@ -113,6 +113,5 @@ pkgs.mkShell ({
         ++ map pkgs.lib.getDev (with pkgs; [
             libsodium-vrf secp256k1 #R_4_1_3
         ]))
-
     ;
 })
