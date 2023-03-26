@@ -101,7 +101,9 @@
                  "ghc8101" "ghc8102" "ghc8103" "ghc8104" "ghc8105" "ghc8106" "ghc810420210212"
                  "ghc901"
                  "ghc921" "ghc922" "ghc923" "ghc924" "ghc925" "ghc926"
-                 "ghc941" "ghc942" "ghc943" ];
+                 "ghc941" "ghc942" "ghc943"
+                 "ghc96020230302"
+                ];
                  static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
                                then if pkgs.stdenv.hostPlatform.isAarch64
                                     then pkgs.pkgsCross.aarch64-multiplatform-musl
