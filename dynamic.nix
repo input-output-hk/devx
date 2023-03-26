@@ -5,6 +5,26 @@ let tool-version-map = import ./tool-map.nix;
     cabal-install = tool "cabal";
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
+
+    # * wrapped tools:
+    # this wrapped-cabal is for now the identity, but it's the same logic we
+    # have in the static configuration, and we may imagine needing to inject
+    # some flags into cabal (temporarily), hence we'll keep this functionality
+    # here.
+    wrapped-cabal = pkgs.writeShellApplication {
+        name = "cabal";
+        runtimeInputs = [ cabal-install ];
+        text = ''
+        case "$1" in
+            build) cabal "$@"
+            ;;
+            clean) cabal "$@"
+            ;;
+            *) cabal "$@"
+            ;;
+        esac
+        '';
+    };
 in
 pkgs.mkShell {
     # The `cabal` overrride in this shell-hook doesn't do much yet. But
@@ -21,33 +41,19 @@ pkgs.mkShell {
     '';
 
     buildInputs = [
-        (pkgs.writeShellApplication {
-            name = "cabal";
-            runtimeInputs = [ cabal-install ];
-            text = ''
-            case "$1" in
-                build) cabal "$@"
-                ;;
-                clean) cabal "$@"
-                ;;
-                *) cabal "$@"
-                ;;
-            esac
-            '';
-        })
+        wrapped-cabal
         compiler
-        # cabal-install
-        pkgs.pkgconfig
+    ] ++ (with pkgs; [
+        pkgconfig
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
-        pkgs.stdenv.cc.cc.lib
-
-    ] ++ map pkgs.lib.getDev (
+        stdenv.cc.cc.lib
+    ]) ++ map pkgs.lib.getDev (
         with pkgs;
         [
             zlib
-            openssl
             pcre
+            openssl
         ]
         ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
     )
