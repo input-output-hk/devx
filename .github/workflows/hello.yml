@@ -19,6 +19,7 @@ jobs:
       - name: Build hello
         shell: nix develop .#ghc8107-static-minimal --command bash {0}
         run: |
+          cabal update
           cabal unpack hello-1.0.0.2 &&
           cd hello-1.0.0.2 &&
           cabal update &&
