@@ -15,7 +15,7 @@ jobs:
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
       - name: cabal unpack
-        shell: nix develop github:input-output-hk/devx#ghc8107-static-minimal --command {0}
+        shell: nix develop github:input-output-hk/devx#ghc8107-static-minimal
         run: cabal unpack hello-1.0.0.2
       - name: Just with run
         run: nix develop github:input-output-hk/devx#ghc8107-static-minimal --command 'echo TEST'
