@@ -7,6 +7,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Install Nix with good defaults
         uses: cachix/install-nix-action@v17
         with:
@@ -15,7 +17,7 @@ jobs:
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Build hello
-        shell: nix develop ${GITHUB_WORKSPACE}#ghc8107-static-minimal --command bash {0}
+        shell: nix develop .#ghc8107-static-minimal --command bash {0}
         run: |
           cabal unpack hello-1.0.0.2 &&
           cd hello-1.0.0.2 &&
