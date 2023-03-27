@@ -12,7 +12,7 @@ pkgs.mkShell {
 
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
         function cabal() {
-        case "$1" in 
+        case $1 in 
             build) 
             ${cabal-install}/bin/cabal "$@"
             ;;
