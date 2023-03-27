@@ -1,0 +1,23 @@
+name: Test that we can build the hello world example form hackage
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Nix with good defaults
+        uses: cachix/install-nix-action@v17
+        with:
+          extra_nix_config: |
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+            substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
+          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Build hello
+        shell: nix develop github:input-output-hk/devx#ghc8107-static-minimal --command '{0}'
+        run: |
+          cabal unpack hello-1.0.0.2 &&
+          cd hello-1.0.0.2 &&
+          cabal update &&
+          cabal build &&
+          cabal test
