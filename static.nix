@@ -1,8 +1,11 @@
-{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true  }:
+{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true, withIOG ? true }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
-    cabal-install = tool "cabal"; in
-pkgs.mkShell (rec {
+    cabal-install = tool "cabal";
+    # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
+    compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
+in
+pkgs.mkShell ({
     # Note [cabal override]:
     #
     # We need to override the `cabal` command and pass --ghc-options for the
@@ -34,7 +37,7 @@ pkgs.mkShell (rec {
     '';
 
     shellHook = with pkgs; ''
-    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "                  
+    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
     ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
     ${figlet}/bin/figlet -f small "*= static edition =*"
     echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv, ffi, and zlib dependencies that point to the /nix/store"
@@ -43,57 +46,72 @@ pkgs.mkShell (rec {
     echo "Quirks:"
     echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
     echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
-    function cabal() {
-    case "$1" in 
-        build) 
-        ${cabal-install}/bin/cabal \
-            "$@" \
-            $NIX_CABAL_FLAGS \
-            --disable-shared --enable-static \
-            --ghc-option=-L${lib.getLib static-gmp}/lib \
-            --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
-            --ghc-option=-L${lib.getLib static-secp256k1}/lib \
-            --ghc-option=-L${lib.getLib static-openssl}/lib
-        ;;
-        clean|unpack)
-        ${cabal-install}/bin/cabal "$@"
-        ;;
-        *)
-        ${cabal-install}/bin/cabal $NIX_CABAL_FLAGS "$@"
-        ;;
-    esac
-    }
-
-    function fixup-nix-deps() {
-    for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
-        case "$nixlib" in
-        *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
-        *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
-        *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
-        *) ;;
-        esac
-    done
-    }
-    '';                  
+    '';
     buildInputs = (with pkgs; [
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
-    ]) ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 static-gmp
-        # R_4_1_3
+    ]) ++ map pkgs.lib.getDev (with pkgs; [ 
+        static-gmp
+
         zlib
         pcre
         openssl
     ]);
 
-    nativeBuildInputs = [ (compiler.override { enableShared = true; }) ] ++ (with pkgs; [
-        haskell-nix.cabal-install.${compiler-nix-name}
+    nativeBuildInputs = [
+        (pkgs.writeShellApplication {
+            name = "cabal";
+            runtimeInputs = [ cabal-install ];
+            text = with pkgs; ''
+            # We do not want to quote NIX_CABAL_FLAGS
+            # it will leave an empty argument, if they are empty.
+            # shellcheck disable=SC2086
+            case "$1" in
+                build)
+                cabal \
+                    "$@" \
+                    $NIX_CABAL_FLAGS \
+                    --disable-shared --enable-static \
+                    --ghc-option=-L${lib.getLib static-gmp}/lib \
+                    --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
+                    --ghc-option=-L${lib.getLib static-secp256k1}/lib \
+                    --ghc-option=-L${lib.getLib static-openssl}/lib
+                ;;
+                clean|unpack)
+                cabal "$@"
+                ;;
+                *)
+                cabal $NIX_CABAL_FLAGS "$@"
+                ;;
+            esac
+            '';
+        })
+        (pkgs.writeShellApplication {
+            name = "fixup-nix-deps";
+            text = ''
+            for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
+                case "$nixlib" in
+                *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
+                *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
+                *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
+                *) ;;
+                esac
+            done
+            '';
+        })
+        (compiler.override { enableShared = true; })
+    ] ++ (with pkgs; [
+        # haskell-nix.cabal-install.${compiler-nix-name}
         pkgconfig
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
-        cddl
-        cbor-diag
     ])
-    ++ pkgs.lib.optional withHLS (tool "haskell-language-server")
-    ++ pkgs.lib.optional withHlint (tool "hlint")
-    ;    
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961"] "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional withIOG
+        (with pkgs; [ cddl cbor-diag ]
+        ++ map pkgs.lib.getDev (with pkgs; [
+            libsodium-vrf secp256k1 #R_4_1_3
+        ]))
+    ;
 })

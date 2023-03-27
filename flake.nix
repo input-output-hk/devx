@@ -94,36 +94,75 @@
            #
            devShells =
              let compilers = pkgs: builtins.removeAttrs pkgs.haskell-nix.compiler
-               # Exclude old versions of GHC to speed up `nix flake check`
-               [ "ghc844"
-                 "ghc861" "ghc862" "ghc863" "ghc864" "ghc865"
-                 "ghc881" "ghc882" "ghc883" "ghc884"
-                 "ghc8101" "ghc8102" "ghc8103" "ghc8104" "ghc8105" "ghc8106" "ghc810420210212"
-                 "ghc901"
-                 "ghc921" "ghc922" "ghc923" "ghc924" "ghc925"
-                 "ghc941" "ghc942" "ghc943" ];
+                # Exclude old versions of GHC to speed up `nix flake check`
+                [ "ghc844"
+                  "ghc861" "ghc862" "ghc863" "ghc864" "ghc865"
+                  "ghc881" "ghc882" "ghc883" "ghc884"
+                  "ghc8101" "ghc8102" "ghc8103" "ghc8104" "ghc8105" "ghc8106" "ghc810420210212"
+                  "ghc901"
+                  "ghc921" "ghc922" "ghc923" "ghc924" "ghc925" "ghc926"
+                  "ghc941" "ghc942" "ghc943"
+                  "ghc96020230302"
+                ];
+                 js-compilers = pkgs: builtins.removeAttrs (compilers pkgs)
+                 [
+                  "ghc902"
+                  "ghc927"
+                  "ghc944"
+                 ];
                  static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
                                then if pkgs.stdenv.hostPlatform.isAarch64
                                     then pkgs.pkgsCross.aarch64-multiplatform-musl
                                     else pkgs.pkgsCross.musl64
                                else pkgs;
+                 js-pkgs = pkgs.pkgsCross.ghcjs;
              in (builtins.mapAttrs (compiler-nix-name: compiler:
-                  import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; }
+                  import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = false; }
                   ) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-minimal" (
-                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = false; }
                   )) (compilers pkgs)
-              # FIXME: HLS is currently broken on `static` flavor but contain in non-`minimal` one
-              # c.f. issue #24 ...
-              # // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-              #     pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
-              #       import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; }
-              #     )) (compilers static-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withIOG = false; }
+                  )) (compilers static-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = false; }
                   )) (compilers static-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-js" (
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; }
+                  )) (js-compilers js-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal" (
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                  )) (js-compilers js-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-iog" (
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = true; }
+                  )) (compilers pkgs)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-minimal-iog" (
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                  )) (compilers pkgs)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-static-iog" (
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withIOG = true; }
+                  )) (compilers static-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal-iog" (
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                  )) (compilers static-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-js-iog" (
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withIOG = true; }
+                  )) (js-compilers js-pkgs.buildPackages)
+              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
+                  pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal-iog" (
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                  )) (js-compilers js-pkgs.buildPackages)
              );
         hydraJobs = devShells // (pkgs.lib.mapAttrs' (name: drv:
           pkgs.lib.nameValuePair "${name}-closure"
