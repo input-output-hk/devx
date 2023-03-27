@@ -15,7 +15,7 @@ jobs:
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Build hello
-        shell: nix develop .#ghc8107-static-minimal --command bash {0}
+        shell: nix develop ..#ghc8107-static-minimal --command bash {0}
         run: |
           cabal unpack hello-1.0.0.2 &&
           cd hello-1.0.0.2 &&
