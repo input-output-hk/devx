@@ -55,7 +55,7 @@ pkgs.mkShell (rec {
             --ghc-option=-L${lib.getLib static-secp256k1}/lib \
             --ghc-option=-L${lib.getLib static-openssl}/lib
         ;;
-        clean)
+        clean|unpack)
         ${cabal-install}/bin/cabal "$@"
         ;;
         *)

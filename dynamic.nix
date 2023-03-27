@@ -16,7 +16,7 @@ pkgs.mkShell {
             build) 
             ${cabal-install}/bin/cabal "$@"
             ;;
-            clean)
+            clean|unpack)
             ${cabal-install}/bin/cabal "$@"
             ;;
             *)
