@@ -44,7 +44,7 @@ pkgs.mkShell (rec {
     echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
     echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     function cabal() {
-    case $1 in 
+    case "$1" in 
         build) 
         ${cabal-install}/bin/cabal \
             "$@" \
@@ -55,7 +55,10 @@ pkgs.mkShell (rec {
             --ghc-option=-L${lib.getLib static-secp256k1}/lib \
             --ghc-option=-L${lib.getLib static-openssl}/lib
         ;;
-        clean|unpack)
+        clean)
+        ${cabal-install}/bin/cabal "$@"
+        ;;
+        unpack)
         ${cabal-install}/bin/cabal "$@"
         ;;
         *)
