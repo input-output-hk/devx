@@ -4,6 +4,31 @@ let tool-version-map = import ./tool-map.nix;
     cabal-install = tool "cabal";
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);    
+
+    # * wrapped tools:
+    # A cabal-install wrapper that sets the appropriate static flags
+    wrapped-cabal = pkgs.writeShellApplication {
+        name = "cabal";
+        runtimeInputs = [ cabal-install ];
+        text = with pkgs; ''
+        # We do not want to quote NIX_CABAL_FLAGS
+        # it will leave an empty argument, if they are empty.
+        # shellcheck disable=SC2086
+        case "$1" in
+            build)
+            cabal \
+                "$@" \
+                $NIX_CABAL_FLAGS 
+            ;;
+            clean)
+            cabal "$@"
+            ;;
+            *)
+            cabal $NIX_CABAL_FLAGS "$@"
+            ;;
+        esac        
+        '';
+    };    
 in
 pkgs.mkShell ({
     # Note [cabal override]:
@@ -41,29 +66,10 @@ pkgs.mkShell ({
     ${figlet}/bin/figlet -f small "*= JS edition =*"
     export CABAL_DIR=$HOME/.cabal-js
     echo "CABAL_DIR set to $CABAL_DIR"
-    # echo "Quirks:"
-    # echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
-    # echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
-    function cabal() {
-    case "$1" in
-        build)
-        ${cabal-install}/bin/cabal \
-            "$@" \
-            $NIX_CABAL_FLAGS \
-            --disable-shared --enable-static \
-        ;;
-        clean)
-        ${cabal-install}/bin/cabal "$@"
-        ;;
-        *)
-        ${cabal-install}/bin/cabal $NIX_CABAL_FLAGS "$@"
-        ;;
-    esac
-    }
     '';
     buildInputs = [];
 
-    nativeBuildInputs = [ compiler ] ++ (with pkgs; [
+    nativeBuildInputs = [ wrapped-cabal compiler ] ++ (with pkgs; [
         haskell-nix.cabal-install.${compiler-nix-name}
         pkgconfig
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
