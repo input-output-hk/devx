@@ -16,6 +16,9 @@ jobs:
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
+      - name: Import DevX closure
+        shell: bash
+        run: curl "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/1" | unzip | nix-store --import
       - name: Build hello
         shell: nix develop .#ghc8107-static-minimal --accept-flake-config --command bash {0}
         run: |
