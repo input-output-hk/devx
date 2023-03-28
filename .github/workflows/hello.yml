@@ -20,9 +20,10 @@ jobs:
         shell: bash
         run: curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/1" -o - | gunzip | nix-store --import
       - name: Build hello
-        shell: nix develop .#ghc8107-static-minimal --accept-flake-config --command bash {0}
         run: |
-          cabal update
+          curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh &&
+          source env.sh &&
+          cabal update &&
           cabal unpack hello-1.0.0.2 &&
           cd hello-1.0.0.2 &&
           cabal update &&
