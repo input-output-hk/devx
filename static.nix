@@ -4,6 +4,51 @@ let tool-version-map = import ./tool-map.nix;
     cabal-install = tool "cabal";
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
+
+    # * wrapped tools:
+    # fixup-nix-deps allows us to drop dylibs from macOS executables that can be
+    # linked directly.
+    fixup-nix-deps = pkgs.writeShellApplication {
+        name = "fixup-nix-deps";
+        text = ''
+        for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
+            case "$nixlib" in
+            *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
+            *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
+            *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
+            *) ;;
+            esac
+        done
+        '';
+    };
+    # A cabal-install wrapper that sets the appropriate static flags
+    wrapped-cabal = pkgs.writeShellApplication {
+        name = "cabal";
+        runtimeInputs = [ cabal-install ];
+        text = with pkgs; ''
+        # We do not want to quote NIX_CABAL_FLAGS
+        # it will leave an empty argument, if they are empty.
+        # shellcheck disable=SC2086
+        case "$1" in
+            build)
+            cabal \
+                "$@" \
+                $NIX_CABAL_FLAGS \
+                --disable-shared --enable-static \
+                --ghc-option=-L${lib.getLib static-gmp}/lib \
+                --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
+                --ghc-option=-L${lib.getLib static-secp256k1}/lib \
+                --ghc-option=-L${lib.getLib static-openssl}/lib
+            ;;
+            clean|unpack)
+            cabal "$@"
+            ;;
+            *)
+            cabal $NIX_CABAL_FLAGS "$@"
+            ;;
+        esac
+        '';
+    };
 in
 pkgs.mkShell ({
     # Note [cabal override]:
@@ -60,49 +105,12 @@ pkgs.mkShell ({
     ]);
 
     nativeBuildInputs = [
-        (pkgs.writeShellApplication {
-            name = "cabal";
-            runtimeInputs = [ cabal-install ];
-            text = with pkgs; ''
-            # We do not want to quote NIX_CABAL_FLAGS
-            # it will leave an empty argument, if they are empty.
-            # shellcheck disable=SC2086
-            case "$1" in
-                build)
-                cabal \
-                    "$@" \
-                    $NIX_CABAL_FLAGS \
-                    --disable-shared --enable-static \
-                    --ghc-option=-L${lib.getLib static-gmp}/lib \
-                    --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
-                    --ghc-option=-L${lib.getLib static-secp256k1}/lib \
-                    --ghc-option=-L${lib.getLib static-openssl}/lib
-                ;;
-                clean|unpack)
-                cabal "$@"
-                ;;
-                *)
-                cabal $NIX_CABAL_FLAGS "$@"
-                ;;
-            esac
-            '';
-        })
-        (pkgs.writeShellApplication {
-            name = "fixup-nix-deps";
-            text = ''
-            for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
-                case "$nixlib" in
-                *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
-                *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
-                *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
-                *) ;;
-                esac
-            done
-            '';
-        })
+        wrapped-cabal
+        fixup-nix-deps
+        # We are happy to use a _shared_ compiler; we only want the build
+        # products to be static.
         (compiler.override { enableShared = true; })
     ] ++ (with pkgs; [
-        # haskell-nix.cabal-install.${compiler-nix-name}
         pkgconfig
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
