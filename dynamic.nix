@@ -48,6 +48,7 @@ pkgs.mkShell {
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
+        (haskell-nix.roots compiler-nix-name)
     ]) ++ map pkgs.lib.getDev (
         with pkgs;
         [
