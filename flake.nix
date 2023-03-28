@@ -73,9 +73,9 @@
        };
        supportedSystems = [
             "x86_64-linux"
-            "x86_64-darwin"
-            "aarch64-linux"
-            "aarch64-darwin"
+#            "x86_64-darwin"
+#            "aarch64-linux"
+#            "aarch64-darwin"
        ];
     in flake-utils.lib.eachSystem supportedSystems (system:
          let
@@ -168,12 +168,12 @@
           pkgs.lib.nameValuePair "${name}-closure"
           (pkgs.runCommand "${name}-closure" {
             requiredSystemFeatures = [ "recursive-nix" ];
-            nativeBuildInputs = [ pkgs.nix pkgs.zstd pkgs.zip ];
+            nativeBuildInputs = [ pkgs.nix pkgs.zstd pkgs.gzip ];
           } ''
             mkdir -p $out/nix-support
             HOME=$(mktemp -d)
-            nix-store --export $(nix-store -qR ${drv}) | zip -9 > $out/closure.zip
-            echo "file binary-dist \"$out/closure.zip\"" >> $out/nix-support/hydra-build-products
+            nix-store --export $(nix-store -qR ${drv}) | gzip -1 > $out/closure.gz
+            echo "file binary-dist \"$out/closure.gz\"" >> $out/nix-support/hydra-build-products
             nix --offline --extra-experimental-features "nix-command flakes" \
               print-dev-env ${drv.drvPath} >> $out/env.sh
             echo "file binary-dist \"$out/env.sh\"" >> $out/nix-support/hydra-build-products
