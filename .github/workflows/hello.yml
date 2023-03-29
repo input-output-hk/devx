@@ -19,9 +19,11 @@ jobs:
       - name: Install skopeo and jq
         run: |
           nix profile install nixpkgs#skopeo nixpkgs#jq
-      - name: Import DevX closure
+      - name: Download closure
         run: |
           skopeo copy docker://ghcr.io/andreabedini/closure:0 dir:closure && cd closure
+      - name: Import DevX closure
+        run: |
           zstd -d < $(jq -r .layers[0].digest[7:] < manifest.json) | nix-store --import
       - name: Download env.sh
         run: |
