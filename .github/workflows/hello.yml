@@ -17,7 +17,9 @@ jobs:
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Import DevX closure
-        run: nix-env -i skopeo jq
+        run: |
+          nix profile install nixpkgs#skopeo
+          nix profile install nixpkgs#jq
       - name: Import DevX closure
         run: |
           skopeo copy docker://ghcr.io/andreabedini/closure:0 dir:closure && cd closure
