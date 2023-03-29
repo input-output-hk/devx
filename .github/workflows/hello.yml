@@ -26,7 +26,7 @@ jobs:
           key: ${{ runner.os }}-closure
       - name: Import DevX closure
         shell: bash
-        run: zstd -d closure.zstd | nix-store --import
+        run: zstd --stdout -d closure.zstd | nix-store --import
       - name: Download env.sh
         run: |
           curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh
