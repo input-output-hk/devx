@@ -18,7 +18,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Import DevX closure
         shell: bash
-        run: curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/1" -o - | gunzip | nix-store --import
+        run: curl -L "https://r2.zw3rk.com/closure.gz" -o - | gunzip | nix-store --import
       - name: Build hello
         run: |
           curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh &&
