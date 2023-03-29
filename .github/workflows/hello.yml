@@ -20,15 +20,12 @@ jobs:
         run: |
           curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o jq
           chmod +x jq
-      - name: Install skopeo
-        run: |
-          nix profile install nixpkgs#skopeo
       - name: Download closure
         run: |
-          skopeo copy docker://ghcr.io/andreabedini/closure:0 dir:closure
+          ./fetch-docker.sh andreabedini/closure 0 > closure.zstd
       - name: Import DevX closure
         run: |
-          cd closure && zstd -d < $(../jq -r .layers[0].digest[7:] < manifest.json) | nix-store --import
+          zstd -d < closure.zstd | nix-store --import
       - name: Download env.sh
         run: |
           curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh
