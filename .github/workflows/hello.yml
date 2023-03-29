@@ -16,9 +16,17 @@ jobs:
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
+      - name: Download closure.zstd
+        run: |
+          curl -L "https://r2.zw3rk.com/closure.zstd" -o closure.zstd
+      - name: Cache closure.zstd
+        uses: actions/cache@v2
+        with:
+          path: closure.zstd
+          key: ${{ runner.os }}-closure
       - name: Import DevX closure
         shell: bash
-        run: curl -L "https://r2.zw3rk.com/closure.zstd" -o - | zstd -d | nix-store --import
+        run: zstd -d closure.zstd | nix-store --import
       - name: Download env.sh
         run: |
           curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh
