@@ -16,9 +16,12 @@ jobs:
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
-      - name: Install skopeo and jq
+      - name: Install jq
         run: |
-          nix profile install nixpkgs#skopeo nixpkgs#jq
+          nix profile install nixpkgs#jq
+      - name: Install skopeo
+        run: |
+          nix profile install nixpkgs#skopeo
       - name: Download closure
         run: |
           skopeo copy docker://ghcr.io/andreabedini/closure:0 dir:closure
