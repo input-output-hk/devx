@@ -21,7 +21,7 @@ jobs:
         run: curl -L "https://r2.zw3rk.com/closure.zstd" -o - | zstd -d | nix-store --import
       - name: Download env.sh
         run: |
-          curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh &&
+          curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh
       - name: cabal update
         run: |
           source env.sh &&
