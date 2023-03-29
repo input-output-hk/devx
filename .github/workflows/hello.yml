@@ -17,8 +17,11 @@ jobs:
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Import DevX closure
-        shell: bash
-        run: curl -L "https://r2.zw3rk.com/closure.zstd" -o - | zstd -d | nix-store --import
+        run: nix-env -i skopeo jq
+      - name: Import DevX closure
+        run: |
+          skopeo copy docker://ghcr.io/andreabedini/closure:0 dir:closure && cd closure
+          zstd -d < $(jq -r .layers[0].digest[7:] < manifest.json) | nix-store --import
       - name: Download env.sh
         run: |
           curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh
