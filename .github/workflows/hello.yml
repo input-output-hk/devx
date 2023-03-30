@@ -23,14 +23,14 @@ jobs:
       - name: Download and import closure
         run: |
           curl -L https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-39/ghc8107-static-minimal-closure.x86_64-linux/latest/download/1 -o - | zstd -d | nix-store --import | tee store-paths.txt
-          export ENV_SH=$(tail -n 1 store-paths.txt)
+          ln -s $(tail -n 1 store-paths.txt) env.sh
       - name: cabal update
         run: |
-          source $ENV_SH &&
+          source env.sh &&
           cabal update
       - name: build hello
         run: |
-          source $ENV_SH &&
+          source env.sh &&
           cabal unpack hello-1.0.0.2 &&
           cd hello-1.0.0.2 &&
           cabal update &&
