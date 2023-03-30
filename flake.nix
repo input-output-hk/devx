@@ -165,18 +165,23 @@
                   )) (js-compilers js-pkgs.buildPackages)
              );
         hydraJobs = devShells // (pkgs.lib.mapAttrs' (name: drv:
-          pkgs.lib.nameValuePair "${name}-closure"
+          let
+            envSh = pkgs.runCommand "${name}-env.sh" {
+                requiredSystemFeatures = [ "recursive-nix" ];
+                nativeBuildInputs = [ pkgs.nix ];
+              } ''
+              nix --offline --extra-experimental-features "nix-command flakes" \
+                print-dev-env ${drv.drvPath} >> $out
+            '';
+          in pkgs.lib.nameValuePair "${name}-closure"
           (pkgs.runCommand "${name}-closure" {
             requiredSystemFeatures = [ "recursive-nix" ];
-            nativeBuildInputs = [ pkgs.nix pkgs.zstd pkgs.gzip ];
+            nativeBuildInputs = [ pkgs.nix pkgs.zstd ];
           } ''
             mkdir -p $out/nix-support
             HOME=$(mktemp -d)
-            nix-store --export $(nix-store -qR ${drv}) | gzip -1 > $out/closure.gz
-            echo "file binary-dist \"$out/closure.gz\"" >> $out/nix-support/hydra-build-products
-            nix --offline --extra-experimental-features "nix-command flakes" \
-              print-dev-env ${drv.drvPath} >> $out/env.sh
-            echo "file binary-dist \"$out/env.sh\"" >> $out/nix-support/hydra-build-products
+            nix-store --export $(nix-store -qR ${envSh}) | zstd -z8T8 > $out/closure.zstd
+            echo "file binary-dist \"$out/closure.zstd\"" >> $out/nix-support/hydra-build-products
           '')) devShells) // {
             devx-bootstrap = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
           };
