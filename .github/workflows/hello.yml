@@ -20,22 +20,17 @@ jobs:
         run: |
           curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o jq
           chmod +x jq
-      - name: Download closure
+      - name: Download and import closure
         run: |
-          ./fetch-docker.sh andreabedini/closure 0 > closure.zstd
-      - name: Import DevX closure
-        run: |
-          zstd -d < closure.zstd | nix-store --import
-      - name: Download env.sh
-        run: |
-          curl -L "https://ci.zw3rk.com/job/input-output-hk-devx/pullrequest-38/ghc8107-static-minimal-closure.x86_64-linux/latest/download/2" -o env.sh
+          ./fetch-docker.sh andreabedini/closure 0 | nix-store --import | tee store-paths.txt
+          export ENV_SH=tail -n 1 store-paths.txt
       - name: cabal update
         run: |
-          source env.sh &&
+          source $ENV_SH &&
           cabal update
       - name: build hello
         run: |
-          source env.sh &&
+          source $ENV_SH &&
           cabal unpack hello-1.0.0.2 &&
           cd hello-1.0.0.2 &&
           cabal update &&
