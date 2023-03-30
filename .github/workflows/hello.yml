@@ -22,7 +22,7 @@ jobs:
           chmod +x jq
       - name: Download and import closure
         run: |
-          ./fetch-docker.sh andreabedini/closure 0 | zstd -d | nix-store --import | tee store-paths.txt
+          ./fetch-docker.sh andreabedini/closure 1 | zstd -d | nix-store --import | tee store-paths.txt
           ln -s $(tail -n 1 store-paths.txt) env.sh
       - name: cabal update
         run: |
