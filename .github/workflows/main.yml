@@ -12,16 +12,25 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        devshell:
+        platform:
+          #- x86_64-darwin  
+          - x86_64-linux 
+          #- aarch64-darwin  
+          #- aarch64-linux 
+        compiler-nix-name:
           #- ghc8107
-          #- ghc902
-          #- ghc927
-          #- ghc8107-minimal
-          #- ghc902-minimal
-          #- ghc927-minimal
-          #- ghc8107-static-minimal
-          #- ghc902-static-minimal
-          - ghc927-static-minimal
+          - ghc927
+          #- ghc961
+        target-platform:
+          #- ""
+          - "-static"
+          #- "-js"
+        variant:
+          #- ""
+          - "-minimal"
+        iog:
+          - ""
+          #- "-iog"
         os:
           - ubuntu-latest
           #- macOS-latest
@@ -49,5 +58,5 @@ jobs:
       - name: Compute and upload closure and developer environment to ghcr.io
         env:
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          FLAKE_DEV_SHELL: ${{ matrix.devshell }}
+          DEV_SHELL: ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }}
         run: ./extra/ghcr-upload.sh
