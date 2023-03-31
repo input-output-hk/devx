@@ -3,6 +3,10 @@ on:
   push:
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: devx {0}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,22 +21,23 @@ jobs:
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Install jq
+        shell: bash
         run: |
           curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 -o jq
           chmod +x jq
       - name: Download and import closure
+        shell: bash
         run: |
-          ./fetch-docker.sh andreabedini/closure 1 | zstd -d | nix-store --import | tee store-paths.txt
+          ./fetch-docker.sh input-output-hk/devx latest | zstd -d | nix-store --import | tee store-paths.txt
           sudo ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
           sudo cp extra/devx /usr/bin
       - name: cabal update
-        shell: devx {0}
         run: cabal update
-      - name: build hello
-        shell: devx {0}
+      - name: unapck hello
         run: |
-          cabal unpack hello-1.0.0.2 &&
-          cd hello-1.0.0.2 &&
-          cabal update &&
-          cabal build &&
-          cabal test
+          cabal unpack
+          cd hello-1.0.0.2
+      - name: build hello
+        run: cabal build
+      - name: test hello
+        run: cabal test
