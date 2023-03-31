@@ -13,7 +13,7 @@ SYSTEMS=("x86_64-linux")
 
 for system in "${SYSTEMS[@]}"; do
     DEV_SHELL="${system}.${FLAKE_DEV_SHELL}"
-    FLAKE=".#closures.x86_64-linux.${DEV_SHELL}-closure --no-write-lock-file --refresh --system ${system} --accept-flake-config"
+    FLAKE=".#closures.${DEV_SHELL}-closure --no-write-lock-file --refresh --system ${system} --accept-flake-config"
     # shellcheck disable=SC2086
     nix build ${FLAKE}
 #    nix store sign --key-file ./secret-key --recursive ./result
