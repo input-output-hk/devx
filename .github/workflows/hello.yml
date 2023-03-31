@@ -23,8 +23,8 @@ jobs:
       - name: Download and import closure
         run: |
           ./fetch-docker.sh andreabedini/closure 1 | zstd -d | nix-store --import | tee store-paths.txt
-          ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
-          cp extra/devx /usr/bin
+          sudo ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
+          sudo cp extra/devx /usr/bin
       - name: cabal update
         shell: devx
         run: cabal update
