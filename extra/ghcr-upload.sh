@@ -1,6 +1,6 @@
 #! /usr/bin/env nix-shell
 #! nix-shell -i bash -p zstd
-set -euo pipefail
+set -euox pipefail
 
 # FIXME: this file should not be longer needed if we succeed to rely only on
 # hydra latest build product!
