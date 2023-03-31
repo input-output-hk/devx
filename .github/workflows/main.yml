@@ -37,4 +37,4 @@ jobs:
         env:
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
           FLAKE_DEV_SHELL: ${{ matrix.devshell }}
-        run: ./extra/ghcr-uploads.sh
+        run: ./extra/ghcr-upload.sh
