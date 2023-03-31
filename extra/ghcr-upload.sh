@@ -26,7 +26,7 @@ for system in "${SYSTEMS[@]}"; do
     #nix-store --export $(nix-store -qR ./result) | zstd -z8T8 > "${DEV_SHELL}.zstd"
     # shellcheck disable=SC2086
     #nix print-dev-env ${FLAKE} > "${DEV_SHELL}.sh"
-    skopeo copy dir:$(./extra/mk-docker-manifest.sh result/container.zstd) docker://ghcr.io/input-output-hk/devx:latest
+    skopeo copy dir:$(./extra/mk-docker-manifest.sh result/closure.zstd) docker://ghcr.io/input-output-hk/devx:latest
 
     # cleanup; so we don't run out of disk space, or retain too much in the nix store.
     rm result
