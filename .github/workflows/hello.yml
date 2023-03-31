@@ -26,10 +26,10 @@ jobs:
           sudo ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
           sudo cp extra/devx /usr/bin
       - name: cabal update
-        shell: devx
+        shell: devx {0}
         run: cabal update
       - name: build hello
-        shell: devx
+        shell: devx {0}
         run: |
           cabal unpack hello-1.0.0.2 &&
           cd hello-1.0.0.2 &&
