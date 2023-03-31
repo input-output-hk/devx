@@ -56,7 +56,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Compute and upload closure and developer environment to ghcr.io
-        if: matrix.target-platform != "-js" || matrix.compiler-nix-name == "ghc961"
+        if: matrix.target-platform != '-js' || matrix.compiler-nix-name == 'ghc961'
         env:
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEV_SHELL: ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }}
