@@ -34,6 +34,12 @@ jobs:
         os:
           - ubuntu-latest
           #- macOS-latest
+        exclude:
+          - compiler-nix-name: ghc8107
+            target-platform: "-js"
+          - compiler-nix-name: ghc927
+            target-platform: "-js"
+        
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
     permissions:
@@ -56,7 +62,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Compute and upload closure and developer environment to ghcr.io
-        if: matrix.target-platform != '-js' || matrix.compiler-nix-name == 'ghc961'
         env:
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DEV_SHELL: ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }}
