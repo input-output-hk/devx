@@ -36,8 +36,9 @@ jobs:
       - name: unapck hello
         run: |
           cabal unpack hello
-          cd hello-1.0.0.2
       - name: build hello
+        working-directory: hello-1.0.0.2
         run: cabal build
       - name: test hello
+        working-directory: hello-1.0.0.2
         run: cabal test
