@@ -35,7 +35,7 @@ jobs:
         run: cabal update
       - name: unapck hello
         run: |
-          cabal unpack
+          cabal unpack hello
           cd hello-1.0.0.2
       - name: build hello
         run: cabal build
