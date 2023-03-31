@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 set +x
+pwd
 
 source /usr/bin/devx-env.sh
-exec bash "$@"
+source "$@"
