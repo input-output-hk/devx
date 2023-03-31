@@ -34,6 +34,11 @@ jobs:
         os:
           - ubuntu-latest
           #- macOS-latest
+        exclude:
+          - compiler-nix-name: ghc8107
+            target-platform: "-js"
+          - compiler-nix-name: ghc927
+            target-platform: "-js"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
