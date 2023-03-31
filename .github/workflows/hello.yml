@@ -5,7 +5,7 @@ on:
 
 defaults:
   run:
-    shell: source /usr/bin/devx-env.sh && source {0}
+    shell: source /usr/bin/devx-env.sh && bash {0}
 
 jobs:
   build:
