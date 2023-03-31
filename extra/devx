@@ -3,5 +3,4 @@
 set +x
 
 source /usr/bin/devx-env.sh
-exec "$@"
-
+exec bash "$@"
