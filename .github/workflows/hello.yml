@@ -9,6 +9,30 @@ defaults:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        platform:
+          #- x86_64-darwin  
+          - x86_64-linux 
+          #- aarch64-darwin  
+          #- aarch64-linux 
+        compiler-nix-name:
+          #- ghc8107
+          - ghc927
+          - ghc961
+        target-platform:
+          #- ""
+          - "-static"
+          - "-js"
+        variant:
+          #- ""
+          - "-minimal"
+        iog:
+          - ""
+          - "-iog"
+        os:
+          - ubuntu-latest
+          #- macOS-latest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,7 +52,7 @@ jobs:
       - name: Download and import closure
         shell: bash
         run: |
-          ./fetch-docker.sh input-output-hk/devx latest | zstd -d | nix-store --import | tee store-paths.txt
+          ./fetch-docker.sh input-output-hk/devx ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }} | zstd -d | nix-store --import | tee store-paths.txt
           sudo ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
           sudo cp extra/devx /usr/bin
       - name: cabal update

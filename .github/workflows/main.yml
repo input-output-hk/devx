@@ -10,7 +10,6 @@ env:
 jobs:
   build:
     strategy:
-      fail-fast: true
       matrix:
         platform:
           #- x86_64-darwin  
