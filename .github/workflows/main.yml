@@ -20,17 +20,17 @@ jobs:
         compiler-nix-name:
           #- ghc8107
           - ghc927
-          #- ghc961
+          - ghc961
         target-platform:
           #- ""
           - "-static"
-          #- "-js"
+          - "-js"
         variant:
           #- ""
           - "-minimal"
         iog:
           - ""
-          #- "-iog"
+          - "-iog"
         os:
           - ubuntu-latest
           #- macOS-latest
