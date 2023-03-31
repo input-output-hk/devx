@@ -8,7 +8,7 @@ INPUT_SIZE=$(stat -c%s $INPUT)
 INPUT_TYPE=$(file --mime-type $INPUT)
 
 WORKDIR=$(mktemp -d)
-cp -v $INPUT $WORKDIR/$INPUT_HASH
+cp -v $INPUT $WORKDIR/$INPUT_HASH >&2
 
 # this is the empty config
 touch $WORKDIR/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
