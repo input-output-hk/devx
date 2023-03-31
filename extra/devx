@@ -1,8 +1,4 @@
 #!/usr/bin/bash
 
-set +x
-pwd
-
 source /usr/bin/devx-env.sh
 source "$1"
-echo "PWD=\"$(pwd)\"" >> $GITHUB_ENV
