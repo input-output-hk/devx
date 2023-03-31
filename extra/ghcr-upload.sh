@@ -4,4 +4,7 @@ set -euo pipefail
 
 FLAKE=".#closures.${DEV_SHELL}-closure --no-write-lock-file --refresh --accept-flake-config"
 nix build ${FLAKE}
+df -h
+nix-collect-garbage -d
+df -h
 skopeo copy "dir:$(./extra/mk-docker-manifest.sh result/closure.zstd)" "docker://ghcr.io/input-output-hk/devx:${DEV_SHELL}"
