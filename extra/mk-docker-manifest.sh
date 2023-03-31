@@ -33,6 +33,4 @@ EOF
 
 echo 'Directory Transport Version: 1.1' > $WORKDIR/version
 
-echo "Now run: skopeo copy dir:$WORKDIR DEST" >&2
-
-echo $WORKDIR
+echo "$WORKDIR"
