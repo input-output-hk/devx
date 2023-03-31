@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set +x
+
 source /usr/bin/devx-env.sh
-source "$@"
+exec "$@"
 
