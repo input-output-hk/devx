@@ -16,17 +16,7 @@ for system in "${SYSTEMS[@]}"; do
     FLAKE=".#closures.${DEV_SHELL}-closure --no-write-lock-file --refresh --system ${system} --accept-flake-config"
     # shellcheck disable=SC2086
     nix build ${FLAKE}
-#    nix store sign --key-file ./secret-key --recursive ./result
-    # shellcheck disable=SC2046
-    # nix path-info --derivation .#devShells.x86_64-linux.ghc8107-static-minimal
-    # nix print-dev-env .#devShells.x86_64-linux.ghc8107-static-minimal
-    #nix --offline --extra-experimental-features "nix-command flakes" \
-    #            print-dev-env (./result >> $out
-
-    #nix-store --export $(nix-store -qR ./result) | zstd -z8T8 > "${DEV_SHELL}.zstd"
-    # shellcheck disable=SC2086
-    #nix print-dev-env ${FLAKE} > "${DEV_SHELL}.sh"
-    skopeo copy dir:$(./extra/mk-docker-manifest.sh result/closure.zstd) docker://ghcr.io/input-output-hk/devx:latest
+    skopeo copy "dir:$(./extra/mk-docker-manifest.sh result/closure.zstd)" "docker://ghcr.io/input-output-hk/devx:latest"
 
     # cleanup; so we don't run out of disk space, or retain too much in the nix store.
     rm result
