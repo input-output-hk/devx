@@ -1,5 +1,5 @@
 #!/usr/bin/bash
 
 source /usr/bin/devx-env.sh
-bash "$@"
+source "$@"
 
