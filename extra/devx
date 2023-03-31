@@ -4,4 +4,5 @@ set +x
 pwd
 
 source /usr/bin/devx-env.sh
-eval $(< "$1")
+source "$1"
+echo "PWD=\"$(pwd)\"" >> $GITHUB_ENV
