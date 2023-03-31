@@ -34,11 +34,10 @@ jobs:
       - name: cabal update
         run: cabal update
       - name: unapck hello
-        run: |
-          cabal unpack hello
+        run: cabal unpack hello
       - name: build hello
         working-directory: hello-1.0.0.2
-        run: cabal build
+        run: cabal buildx
       - name: test hello
         working-directory: hello-1.0.0.2
         run: cabal test
