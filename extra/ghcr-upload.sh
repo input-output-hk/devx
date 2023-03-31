@@ -26,7 +26,8 @@ for system in "${SYSTEMS[@]}"; do
     #nix-store --export $(nix-store -qR ./result) | zstd -z8T8 > "${DEV_SHELL}.zstd"
     # shellcheck disable=SC2086
     #nix print-dev-env ${FLAKE} > "${DEV_SHELL}.sh"
+    ls -l result/
 
     # cleanup; so we don't run out of disk space, or retain too much in the nix store.
-    rm result "${DEV_SHELL}.zstd" "${DEV_SHELL}.sh"
+    rm result
 done
