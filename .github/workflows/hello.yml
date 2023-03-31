@@ -37,7 +37,7 @@ jobs:
         run: cabal unpack hello
       - name: build hello
         working-directory: hello-1.0.0.2
-        run: cabal buildx
+        run: cabal build
       - name: test hello
         working-directory: hello-1.0.0.2
         run: cabal test
