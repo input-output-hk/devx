@@ -7,8 +7,9 @@ INPUT_HASH=$(nix hash file --base16 $INPUT)
 INPUT_SIZE=$(stat -c%s $INPUT)
 INPUT_TYPE=$(file --mime-type $INPUT)
 
-WORKDIR=$(mktemp -d)
-sudo mv $INPUT $WORKDIR/$INPUT_HASH >&2
+WORKDIR=container
+mkdir $WORKDIR
+cp -v $INPUT $WORKDIR/$INPUT_HASH >&2
 
 # this is the empty config
 touch $WORKDIR/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
