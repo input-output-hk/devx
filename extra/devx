@@ -4,4 +4,4 @@ set +x
 pwd
 
 source /usr/bin/devx-env.sh
-source "$@"
+eval $(< "$1")
