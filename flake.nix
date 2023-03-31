@@ -164,7 +164,8 @@
                     import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
                   )) (js-compilers js-pkgs.buildPackages)
              );
-        hydraJobs = devShells // (pkgs.lib.mapAttrs' (name: drv:
+        hydraJobs = devShells;
+        closures = (pkgs.lib.mapAttrs' (name: drv:
           let
             envSh = pkgs.runCommand "${name}-env.sh" {
                 requiredSystemFeatures = [ "recursive-nix" ];
