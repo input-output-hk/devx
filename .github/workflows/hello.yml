@@ -58,7 +58,7 @@ jobs:
       - name: Download and import closure
         shell: bash
         run: |
-          ./fetch-docker.sh input-output-hk/devx ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }} | zstd -d | nix-store --import | tee store-paths.txt
+          ./fetch-docker.sh input-output-hk/devx ${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }}-env.${{ matrix.platform }} | zstd -d | nix-store --import | tee store-paths.txt
           sudo ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
           sudo cp extra/devx /usr/bin
       - name: Check cabal wrapper
