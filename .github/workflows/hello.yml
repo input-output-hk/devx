@@ -61,6 +61,12 @@ jobs:
           ./fetch-docker.sh input-output-hk/devx ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }} | zstd -d | nix-store --import | tee store-paths.txt
           sudo ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
           sudo cp extra/devx /usr/bin
+      - name: Check cabal wrapper
+        run: |
+          echo "NIX_CABAL_FLAGS=$NIX_CABAL_FLAGS"
+          which cabal
+          file $(which cabal)
+          cat $(which cabal)
       - name: cabal update
         run: cabal update
       - name: unapck hello
