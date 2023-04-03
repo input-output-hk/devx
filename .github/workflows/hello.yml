@@ -39,6 +39,8 @@ jobs:
             target-platform: "-js"
           - compiler-nix-name: ghc927
             target-platform: "-js"
+          - platform: x86_64-darwin
+            target-platform: "-static"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
