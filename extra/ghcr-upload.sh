@@ -2,6 +2,6 @@
 #! nix-shell -i bash -p zstd
 set -euo pipefail
 
-FLAKE=".#closures.${DEV_SHELL}-closure --no-write-lock-file --refresh --accept-flake-config"
-nix build ${FLAKE}
-skopeo copy "dir:$(./extra/mk-docker-manifest.sh result/closure.zstd)" "docker://ghcr.io/input-output-hk/devx:${DEV_SHELL}"
+nix build ".#hydraJobs.${DEV_SHELL}-env"
+nix-store --export $(nix-store -qR result) | zstd -z8T8 > closure.zstd
+skopeo copy "dir:$(./extra/mk-docker-manifest.sh closure.zstd)" "docker://ghcr.io/input-output-hk/devx:${DEV_SHELL}"
