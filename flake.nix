@@ -164,16 +164,22 @@
                     import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
                   )) (js-compilers js-pkgs.buildPackages)
              );
-        hydraJobs = devShells;
-        closures = (pkgs.lib.mapAttrs' (name: drv:
-          let
-            envSh = pkgs.runCommand "${name}-env.sh" {
+        hydraJobs = devShells //
+          (pkgs.lib.mapAttrs' (name: drv:
+            pkgs.lib.nameValuePair "${name}-env" (
+            pkgs.runCommand "${name}-env.sh" {
                 requiredSystemFeatures = [ "recursive-nix" ];
                 nativeBuildInputs = [ pkgs.nix ];
               } ''
               nix --offline --extra-experimental-features "nix-command flakes" \
                 print-dev-env ${drv.drvPath} >> $out
-            '';
+            '')) devShells) // {
+            devx-bootstrap = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
+          };
+
+        closures = (pkgs.lib.mapAttrs' (name: drv:
+          let
+            envSh = hydraJobs."${name}-env};
           in pkgs.lib.nameValuePair "${name}-closure"
           (pkgs.runCommand "${name}-closure" {
             requiredSystemFeatures = [ "recursive-nix" ];
@@ -183,9 +189,7 @@
             HOME=$(mktemp -d)
             nix-store --export $(nix-store -qR ${envSh}) | zstd -z8T8 > $out/closure.zstd
             echo "file binary-dist \"$out/closure.zstd\"" >> $out/nix-support/hydra-build-products
-          '')) devShells) // {
-            devx-bootstrap = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
-          };
+          '')) devShells);
        });
 
     # --- Flake Local Nix Configuration ----------------------------
