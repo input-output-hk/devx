@@ -69,6 +69,7 @@ pkgs.mkShell ({
     "--with-hsc2hs=${if pkgs.stdenv.hostPlatform.isAarch64 then "aarch64" else "x86_64"}-unknown-linux-musl-hsc2hs"
     # ensure that the linker knows we want a static build product
     "--enable-executable-static"
+    " "
     ];
     hardeningDisable = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isMusl [ "format" "pie" ];
 
