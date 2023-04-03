@@ -64,5 +64,5 @@ jobs:
       - name: Compute and upload closure and developer environment to ghcr.io
         env:
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DEV_SHELL: ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }}
+          DEV_SHELL: ${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }}-env.${{ matrix.platform }}
         run: ./extra/ghcr-upload.sh
