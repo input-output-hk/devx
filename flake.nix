@@ -176,6 +176,7 @@
             '')) devShells) // {
             devx-bootstrap = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
           };
+       });
 
     # --- Flake Local Nix Configuration ----------------------------
     nixConfig = {
