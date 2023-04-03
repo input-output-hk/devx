@@ -43,10 +43,10 @@ pkgs.mkShell ({
     # open source, and licenses accordingly.  Otherwise we'd have to link gmp
     # dynamically.  This requirement will be gone with gmp-bignum.
     #
-    NIX_CABAL_FLAGS = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isGhcjs [
-    "--with-ghc=javascript-unknown-linux-ghcjs-ghc"
-    "--with-ghc-pkg=javascript-unknown-linux-ghcjs-pkg"
-    "--with-hsc2hs=javascript-unknown-linux-ghcjs-hsc2hs"
+    NIX_CABAL_FLAGS = [
+    "--with-ghc=javascript-unknown-ghcjs-ghc"
+    "--with-ghc-pkg=javascript-unknown-ghcjs-ghc-pkg"
+    "--with-hsc2hs=javascript-unknown-ghcjs-hsc2hs"
     # ensure that the linker knows we want a static build product
     # "--enable-executable-static"
     ];
