@@ -25,6 +25,7 @@ jobs:
           - ""
           - "-static"
           - "-js"
+          - "mingw32"
         variant:
           - ""
           - "-minimal"
