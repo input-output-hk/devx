@@ -41,6 +41,10 @@ jobs:
             target-platform: "-js"
           - platform: x86_64-darwin
             target-platform: "-static"
+          - target-platform: "-static"
+            variant: ""
+          - target-platform: ghc961
+            variant: ""
         
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}

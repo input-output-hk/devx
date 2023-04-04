@@ -13,20 +13,20 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          #- x86_64-darwin  
+          - x86_64-darwin  
           - x86_64-linux 
           #- aarch64-darwin  
           #- aarch64-linux 
         compiler-nix-name:
-          #- ghc8107
+          - ghc8107
           - ghc927
           - ghc961
         target-platform:
-          #- ""
+          - ""
           - "-static"
           - "-js"
         variant:
-          #- ""
+          - ""
           - "-minimal"
         iog:
           - ""
@@ -41,6 +41,11 @@ jobs:
             target-platform: "-js"
           - platform: x86_64-darwin
             target-platform: "-static"
+          - target-platform: "-static"
+            variant: ""
+          - target-platform: ghc961
+            variant: ""
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
