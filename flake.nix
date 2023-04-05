@@ -171,7 +171,7 @@
                 requiredSystemFeatures = [ "recursive-nix" ];
                 nativeBuildInputs = [ pkgs.nix ];
               } ''
-              nix --offline --extra-experimental-features "nix-command flakes" \
+              nix --show-trace --offline --extra-experimental-features "nix-command flakes" \
                 print-dev-env ${drv.drvPath} >> $out
             '')) devShells) // {
             devx-bootstrap = import ./bootstrap.nix { inherit devShells pkgs supportedSystems; };
