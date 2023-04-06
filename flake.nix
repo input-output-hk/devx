@@ -103,9 +103,6 @@
                   "ghc921" "ghc922" "ghc923" "ghc924" "ghc925" "ghc926"
                   "ghc941" "ghc942" "ghc943"
                   "ghc96020230302"
-                  # TODO remove this
-                  # Skip these while testing recursive nix issue
-                  "ghc8107" "ghc902" "ghc927" "ghc944"
                 ];
                  js-compilers = pkgs: builtins.removeAttrs (compilers pkgs)
                  [
