@@ -114,9 +114,6 @@
                    pkgs.lib.optionalAttrs (__elem system ["x86_64-linux" "x86_64-darwin"])
                    (builtins.removeAttrs (compilers pkgs)
                      [
-                      "ghc902"
-                      "ghc927"
-                      "ghc944"
                      ]);
                  static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
                                then if pkgs.stdenv.hostPlatform.isAarch64
