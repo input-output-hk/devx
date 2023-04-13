@@ -74,6 +74,8 @@ jobs:
           sudo ln -s $(tail -n 1 store-paths.txt) /usr/bin/devx-env.sh
           sudo cp extra/devx /usr/bin
           cat /usr/bin/devx
+          ls -l /usr/bin/devx-env.sh
+          cat /usr/bin/devx-env.sh
       - name: Check cabal wrapper
         run: |
           echo "NIX_CABAL_FLAGS=$NIX_CABAL_FLAGS"
