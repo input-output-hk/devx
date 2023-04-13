@@ -13,25 +13,25 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          #- x86_64-darwin  
+          - x86_64-darwin  
           - x86_64-linux 
-          #- aarch64-darwin  
-          #- aarch64-linux 
+          - aarch64-darwin  
+          - aarch64-linux 
         compiler-nix-name:
           - ghc8107
           - ghc927
           - ghc961
         target-platform:
           - ""
-          #- "-static"
-          #- "-js"
+          - "-static"
+          - "-js"
           - "-windows"
         variant:
           - ""
-          #- "-minimal"
+          - "-minimal"
         iog:
           - ""
-          #- "-iog"
+          - "-iog"
         os:
           - ubuntu-latest
           #- macOS-latest
