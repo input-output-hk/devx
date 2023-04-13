@@ -3,7 +3,7 @@
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix/hkm/aarch64-musl";
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
-    inputs.flake-utils.url = "github:numtide/flake-utils";
+    inputs.flake-utils.url = "github:hamishmack/flake-utils/hkm/nested-hydraJobs";
 
     outputs = { self, nixpkgs, flake-utils, haskellNix }:
     let overlays = {
