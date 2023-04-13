@@ -46,6 +46,10 @@ jobs:
             variant: ""
           - target-platform: ghc961
             variant: ""
+          - platform: aarch64-darwin
+            target-platform: "-windows"
+          - platform: aarch64-linux
+            target-platform: "-windows"
 
     runs-on: ubuntu-latest
     steps:

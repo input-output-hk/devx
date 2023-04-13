@@ -14,9 +14,9 @@ jobs:
       matrix:
         platform:
           #- x86_64-darwin  
-          #- x86_64-linux 
+          - x86_64-linux 
           #- aarch64-darwin  
-          - aarch64-linux 
+          #- aarch64-linux 
         compiler-nix-name:
           - ghc8107
           - ghc927
@@ -46,6 +46,10 @@ jobs:
             variant: ""
           - target-platform: ghc961
             variant: ""
+          - platform: aarch64-darwin
+            target-platform: "-windows"
+          - platform: aarch64-linux
+            target-platform: "-windows"
         
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
