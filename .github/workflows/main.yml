@@ -22,8 +22,8 @@ jobs:
           - ghc927
           - ghc961
         target-platform:
-          #- ""
-          - "-static"
+          - ""
+          #- "-static"
           #- "-js"
           #- "-mingw32"
         variant:
