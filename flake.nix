@@ -147,11 +147,11 @@
                   )) (js-compilers js-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-windows" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs.buildPackages; inherit compiler compiler-nix-name; }
+                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; }
                   )) (windows-compilers windows-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-windows-minimal" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
                   )) (windows-compilers windows-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-iog" (
@@ -179,11 +179,11 @@
                   )) (js-compilers js-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-windows-iog" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs.buildPackages; inherit compiler compiler-nix-name; withIOG = true; }
+                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; withIOG = true; }
                   )) (windows-compilers windows-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-windows-minimal-iog" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
                   )) (windows-compilers windows-pkgs.buildPackages)
              );
         hydraJobs = devShells //
