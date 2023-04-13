@@ -195,7 +195,7 @@
               } ''
               nix --offline --extra-experimental-features "nix-command flakes" \
                 print-dev-env ${drv.drvPath} >> $out
-            '')) (pkgs.lib.optionalAttrs (!pkgs.stdenv.hostPlatform.isDarwin) devShells)) // {
+            '')) devShells) // {
           };
        });
 
