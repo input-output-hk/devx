@@ -29,6 +29,12 @@ let tool-version-map = import ./tool-map.nix;
         esac        
         '';
     };    
+    wrapped-hsc2hs = pkgs.pkgsBuildBuild.writeShellApplication {
+        name = "${compiler.targetPrefix}hsc2hs";
+        text = ''
+          ${compiler}/bin/${compiler.targetPrefix}hsc2hs --cross-compile "$@"
+        '';
+    };
 in
 pkgs.mkShell ({
     # Note [cabal override]:
@@ -47,7 +53,6 @@ pkgs.mkShell ({
     "--with-ghc=javascript-unknown-ghcjs-ghc"
     "--with-ghc-pkg=javascript-unknown-ghcjs-ghc-pkg"
     "--with-hsc2hs=javascript-unknown-ghcjs-hsc2hs"
-    "--hsc2hs-option=--cross-compile"
     # ensure that the linker knows we want a static build product
     # "--enable-executable-static"
     ];
@@ -70,7 +75,7 @@ pkgs.mkShell ({
     '';
     buildInputs = [];
 
-    nativeBuildInputs = [ wrapped-cabal compiler ] ++ (with pkgs; [
+    nativeBuildInputs = [ wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
         haskell-nix.cabal-install.${compiler-nix-name}
         pkgconfig
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
