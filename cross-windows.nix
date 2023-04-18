@@ -47,6 +47,8 @@ pkgs.pkgsBuildBuild.mkShell ({
     "--with-ghc=x86_64-w64-mingw32-ghc"
     "--with-ghc-pkg=x86_64-w64-mingw32-ghc-pkg"
     "--with-hsc2hs=x86_64-w64-mingw32-hsc2hs"
+    "--hsc2hs-option=--cross-compile"
+    "--hsc2hs-option=--via-asm"
     # ensure that the linker knows we want a static build product
     # "--enable-executable-static"
     ];

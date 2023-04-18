@@ -47,6 +47,7 @@ pkgs.mkShell ({
     "--with-ghc=javascript-unknown-ghcjs-ghc"
     "--with-ghc-pkg=javascript-unknown-ghcjs-ghc-pkg"
     "--with-hsc2hs=javascript-unknown-ghcjs-hsc2hs"
+    "--hsc2hs-option=--cross-compile"
     # ensure that the linker knows we want a static build product
     # "--enable-executable-static"
     ];
