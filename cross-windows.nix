@@ -79,8 +79,8 @@ pkgs.pkgsBuildBuild.mkShell ({
         stdenv.cc
         pkgsBuildBuild.haskell-nix.cabal-install.${compiler-nix-name}
         pkgsBuildBuild.pkgconfig
-        (tool "happy")
-        (tool "alex")
+        (pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name "happy" "1.20.1.1")
+        (pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name "alex" "3.2.7.3")
         stdenv.cc.cc.lib ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")
     ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961"] "HLint")) (tool "hlint")

@@ -78,8 +78,8 @@ pkgs.mkShell ({
     nativeBuildInputs = [ wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
         haskell-nix.cabal-install.${compiler-nix-name}
         pkgconfig
-        (tool "happy")
-        (tool "alex")
+        (pkgs.haskell-nix.tool compiler-nix-name "happy" "1.20.1.1")
+        (pkgs.haskell-nix.tool compiler-nix-name "alex" "3.2.7.3")
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")
