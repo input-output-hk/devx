@@ -31,10 +31,10 @@ pkgs.mkShell {
     # we may need to massage cabal a bit, so we'll leave it in here for
     # consistency with the one in static.nix.
     shellHook = with pkgs; ''
-    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
-    ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
-    export CABAL_DIR=$HOME/.cabal
-    echo "CABAL_DIR set to $CABAL_DIR"
+        export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+        ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+        export CABAL_DIR=$HOME/.cabal
+        echo "CABAL_DIR set to $CABAL_DIR"
     '';
     # this one is only needed on macOS right now, due to a bug in loading libcrypto.
     + lib.optionalString stdenv.hostPlatform.isMacOS
