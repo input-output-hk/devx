@@ -35,7 +35,7 @@ pkgs.mkShell {
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
         export CABAL_DIR=$HOME/.cabal
         echo "CABAL_DIR set to $CABAL_DIR"
-    '';
+    ''
     # this one is only needed on macOS right now, due to a bug in loading libcrypto.
     + lib.optionalString stdenv.hostPlatform.isMacOS
     ''
