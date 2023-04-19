@@ -5,6 +5,55 @@ let tool-version-map = import ./tool-map.nix;
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
+    inherit (pkgs.haskell-nix.iserv-proxy-exes.${compiler-nix-name}) iserv-proxy iserv-proxy-interpreter;
+
+    wineIservWrapperScript = pkgs.pkgsBuildBuild.writeScriptBin "iserv-wrapper" ''
+        #!${pkgs.pkgsBuildBuild.stdenv.shell}
+        set -euo pipefail
+        # unset the configureFlags.
+        # configure should have run already
+        # without restting it, wine might fail
+        # due to a too large environment.
+        unset configureFlags
+        PORT=$((5000 + $RANDOM % 5000))
+        (>&2 echo "---> Starting ${iserv-proxy-interpreter.exeName} on port $PORT")
+        REMOTE_ISERV=$(mktemp -d)
+        ln -s ${iserv-proxy-interpreter}/bin/* $REMOTE_ISERV
+        # Normally this would come from comp-builder.nix
+        pkgsHostTargetAsString="${pkgs.lib.concatStringsSep " " ([
+          pkgs.libffi
+          pkgs.gmp
+          pkgs.windows.mcfgthreads
+          pkgs.windows.mingw_w64_pthreads
+          pkgs.buildPackages.gcc.cc
+        ] ++ pkgs.lib.optionals withIOG [
+          (pkgs.libsodium-vrf or pkgs.libsodium)
+          pkgs.openssl.bin
+          pkgs.secp256k1
+        ])}"
+        for p in $pkgsHostTargetAsString; do
+          find "$p" -iname '*.dll' -exec ln -sf {} $REMOTE_ISERV \;
+          find "$p" -iname '*.dll.a' -exec ln -sf {} $REMOTE_ISERV \;
+        done
+        # Some DLLs have a `lib` prefix but we attempt to load them without the prefix.
+        # This was a problem for `double-conversion` package when used in TH code.
+        # Creating links from the `X.dll` to `libX.dll` works around this issue.
+        (
+        cd $REMOTE_ISERV
+        for l in lib*.dll; do
+          ln -s "$l" "''${l#lib}"
+        done
+        )
+        # Not sure why this `unset` helps.  It might avoids some kind of overflow issue.  We see `wine` fail to start when building `cardano-wallet-cli` test `unit`.
+        unset pkgsHostTargetAsString
+        WINEDLLOVERRIDES="winemac.drv=d" WINEDEBUG=warn-all,fixme-all,-menubuilder,-mscoree,-ole,-secur32,-winediag WINEPREFIX=$TMP ${pkgs.pkgsBuildBuild.winePackages.minimal}/bin/wine64 $REMOTE_ISERV/${iserv-proxy-interpreter.exeName} tmp $PORT &
+        (>&2 echo "---| ${iserv-proxy-interpreter.exeName} should have started on $PORT")
+        RISERV_PID="$!"
+        ${iserv-proxy}/bin/iserv-proxy $@ 127.0.0.1 "$PORT"
+        (>&2 echo "---> killing ${iserv-proxy-interpreter.exeName}...")
+        kill $RISERV_PID
+      '';
+
     # * wrapped tools:
     # A cabal-install wrapper that sets the appropriate static flags
     wrapped-cabal = pkgs.pkgsBuildBuild.writeShellApplication {
@@ -33,6 +82,18 @@ let tool-version-map = import ./tool-map.nix;
         name = "${compiler.targetPrefix}hsc2hs";
         text = ''
           ${compiler}/bin/${compiler.targetPrefix}hsc2hs --cross-compile --via-asm "$@"
+        '';
+    };
+    wrapped-ghc = pkgs.pkgsBuildBuild.writeShellApplication {
+        name = "${compiler.targetPrefix}ghc";
+        text = ''
+          ${compiler}/bin/${compiler.targetPrefix}ghc \
+            -fexternal-interpreter \
+            -pgmi ${wineIservWrapperScript}/bin/iserv-wrapper \
+            -L${pkgs.windows.mingw_w64_pthreads}/lib \
+            -L${pkgs.windows.mingw_w64_pthreads}/bin \
+            -L${pkgs.gmp}/lib \
+            "$@"
         '';
     };
 in
@@ -74,7 +135,7 @@ pkgs.pkgsBuildBuild.mkShell ({
     '';
     buildInputs = [];
 
-    nativeBuildInputs = [ wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
+    nativeBuildInputs = [ wrapped-ghc wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
         buildPackages.bintools.bintools
         stdenv.cc
         pkgsBuildBuild.haskell-nix.cabal-install.${compiler-nix-name}
