@@ -4,41 +4,11 @@
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix/hkm/aarch64-musl";
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     inputs.flake-utils.url = "github:hamishmack/flake-utils/hkm/nested-hydraJobs";
+    inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
 
-    outputs = { self, nixpkgs, flake-utils, haskellNix }:
+    outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix }:
     let overlays = {
-         crypto = final: prev: {
-          libsodium-vrf = final.callPackage ({ stdenv, lib, fetchFromGitHub, autoreconfHook }:
-            stdenv.mkDerivation {
-                name = "libsodium-1.0.18";
-
-                src = fetchFromGitHub {
-                    owner = "input-output-hk";
-                    repo = "libsodium";
-                    rev = "11bb20dba02b013bf1d83e3c16c51eab2ff07efc";
-                    sha256 = "1h9fcwra610vmh0inkdkqs3bfs83xl5dk146dqx440wwh9pn4n4w";
-                };
-
-                nativeBuildInputs = [ autoreconfHook ];
-
-                configureFlags = [ "--enable-static" ];
-
-                outputs = [ "out" "dev" ];
-                separateDebugInfo = stdenv.isLinux && stdenv.hostPlatform.libc != "musl";
-
-                enableParallelBuilding = true;
-
-                doCheck = true;
-
-                meta = with lib; {
-                    description = "A modern and easy-to-use crypto library - VRF fork";
-                    homepage = "http://doc.libsodium.org/";
-                    license = licenses.isc;
-                    maintainers = [ "tdammers" "nclarke" ];
-                    platforms = platforms.all;
-                };
-            }) {};
-        };
+        inherit (iohk-nix.overlays) crypto;
         # add static-$pkg for a few packages to be able to pull them im explicitly.
         static-libs = (final: prev: {
           static-libsodium-vrf = final.libsodium-vrf.overrideDerivation (old: {
@@ -73,7 +43,7 @@
        };
        supportedSystems = [
             "x86_64-linux"
-            # "x86_64-darwin"
+            "x86_64-darwin"
             "aarch64-linux"
             # "aarch64-darwin"
        ];

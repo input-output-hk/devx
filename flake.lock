@@ -429,6 +429,24 @@
         "type": "github"
       }
     },
+    "iohk-nix": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_5"
+      },
+      "locked": {
+        "lastModified": 1680659925,
+        "narHash": "sha256-2MW2IEYCe6uE55ljxQ4I2KP9JGtEKd6OPCHiHrEJQbQ=",
+        "owner": "input-output-hk",
+        "repo": "iohk-nix",
+        "rev": "335752283302344536e09095d09e4ac7538067b2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "input-output-hk",
+        "repo": "iohk-nix",
+        "type": "github"
+      }
+    },
     "iserv-proxy": {
       "flake": false,
       "locked": {
@@ -776,6 +794,20 @@
         "type": "github"
       }
     },
+    "nixpkgs_5": {
+      "locked": {
+        "lastModified": 1677021523,
+        "narHash": "sha256-0EhZjJ3rq8ZTTJ6Trrf/9hYtnIry0OsyY2NKoQoOS5Q=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5a5adc2ad7009851d7d0fc26311e42a93b171d2e",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "type": "indirect"
+      }
+    },
     "nosys": {
       "locked": {
         "lastModified": 1667881534,
@@ -812,6 +844,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
+        "iohk-nix": "iohk-nix",
         "nixpkgs": [
           "haskellNix",
           "nixpkgs-unstable"
