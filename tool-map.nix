@@ -3,6 +3,9 @@
 # for hlint however, we need hlint-3.3 for ghc-8.10.7.
 let fixed-versions = { "hlint" = { "ghc8107" = "3.3"; }; }; in
 compiler-nix-name: tool:
+  # for HLS, we rely on the cabal.project configuration from the upstream project to have the correct configuration.
+  # Building HLS from hackage requires setting all those constraints as well, and just isn't practical to do for each
+  # HLS release. Therefore we rely on the HLS upstream repository to provide the proper configuration information.
   if tool == "haskell-language-server"
     then {pkgs, ...}: rec {
       # Use the github source of HLS that is tested with haskell.nix CI
