@@ -13,9 +13,9 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          #- x86_64-darwin
+          - x86_64-darwin
           - x86_64-linux
-          #- aarch64-darwin
+          - aarch64-darwin
           #- aarch64-linux
         compiler-nix-name:
           - ghc8107
@@ -25,16 +25,13 @@ jobs:
           - ""
           - "-static"
           - "-js"
-          - "-windows"
+          #- "-windows"
         variant:
           - ""
           - "-minimal"
         iog:
           - ""
           - "-iog"
-        os:
-          - ubuntu-latest
-          #- macOS-latest
         exclude:
           - compiler-nix-name: ghc8107
             target-platform: "-js"
@@ -51,7 +48,7 @@ jobs:
           - platform: aarch64-linux
             target-platform: "-windows"
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
