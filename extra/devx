@@ -2,5 +2,5 @@
 
 set -euo pipefail
 
-source /usr/bin/devx-env.sh
+source /usr/local/bin/devx-env.sh
 source "$1"
