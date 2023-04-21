@@ -48,7 +48,7 @@ jobs:
           - platform: aarch64-linux
             target-platform: "-windows"
         
-    runs-on: ${{ matrix.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
