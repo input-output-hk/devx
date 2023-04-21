@@ -80,18 +80,12 @@
                   "ghc927"
                   "ghc944"
                  ];
-                 windows-compilers = pkgs:
-                   pkgs.lib.optionalAttrs (__elem system ["x86_64-linux" "x86_64-darwin"])
-                   (builtins.removeAttrs (compilers pkgs)
-                     [
-                     ]);
                  static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
                                then if pkgs.stdenv.hostPlatform.isAarch64
                                     then pkgs.pkgsCross.aarch64-multiplatform-musl
                                     else pkgs.pkgsCross.musl64
                                else pkgs;
                  js-pkgs = pkgs.pkgsCross.ghcjs;
-                 windows-pkgs = pkgs.pkgsCross.mingwW64;
              in (builtins.mapAttrs (compiler-nix-name: compiler:
                   import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = false; }
                   ) (compilers pkgs)
@@ -116,14 +110,6 @@
                     import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
                   )) (js-compilers js-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows-minimal" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-iog" (
                     import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = true; }
                   )) (compilers pkgs)
@@ -147,14 +133,6 @@
                   pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal-iog" (
                     import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
                   )) (js-compilers js-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows-iog" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; withIOG = true; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows-minimal-iog" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
              );
         hydraJobs = devShells //
           (pkgs.lib.mapAttrs' (name: drv:
