@@ -14,8 +14,8 @@ jobs:
       matrix:
         platform:
           - x86_64-darwin
-          #- x86_64-linux
-          #- aarch64-darwin
+          - x86_64-linux
+          - aarch64-darwin
           #- aarch64-linux
         compiler-nix-name:
           - ghc8107
@@ -23,11 +23,11 @@ jobs:
           - ghc961
         target-platform:
           - ""
-          #- "-static"
-          #- "-js"
+          - "-static"
+          - "-js"
           #- "-windows"
         variant:
-          #- ""
+          - ""
           - "-minimal"
         iog:
           - ""
