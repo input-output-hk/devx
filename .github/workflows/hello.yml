@@ -15,7 +15,7 @@ jobs:
         platform:
           - x86_64-darwin
           - x86_64-linux
-          - aarch64-darwin
+          #- aarch64-darwin
           #- aarch64-linux
         compiler-nix-name:
           - ghc8107
@@ -48,7 +48,7 @@ jobs:
           - platform: aarch64-linux
             target-platform: "-windows"
 
-    runs-on: ${{ matrix.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-12' }}
+    runs-on: ${{ matrix.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
