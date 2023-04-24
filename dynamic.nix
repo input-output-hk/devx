@@ -60,7 +60,7 @@ pkgs.mkShell {
         ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
     )
     ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961"] "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (!pkgs.stdenv.hostPlatform.isDarwin) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3]))
