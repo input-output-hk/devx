@@ -16,6 +16,7 @@ jobs:
           - x86_64-darwin
           - x86_64-linux
           - aarch64-darwin
+          # Currently broken
           #- aarch64-linux
         compiler-nix-name:
           - ghc8107
@@ -25,6 +26,7 @@ jobs:
           - ""
           - "-static"
           - "-js"
+          # Coming soon.
           #- "-windows"
         variant:
           - ""
@@ -33,16 +35,21 @@ jobs:
           - ""
           - "-iog"
         exclude:
+          # Just cross compiling javascript with ghc 9.6.1 for now
           - compiler-nix-name: ghc8107
             target-platform: "-js"
           - compiler-nix-name: ghc927
             target-platform: "-js"
+          # Static builds not working for darwin yet
           - platform: x86_64-darwin
             target-platform: "-static"
+          # Static tools not working right now (so just building "-static-minimal" for now)
           - target-platform: "-static"
             variant: ""
+          # hlint and hls not working on ghc 9.6.1 yet
           - target-platform: ghc961
             variant: ""
+          # Windows cross compilation only works on x86_64 right now.
           - platform: aarch64-darwin
             target-platform: "-windows"
           - platform: aarch64-linux
