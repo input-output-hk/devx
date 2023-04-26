@@ -1,6 +1,6 @@
-{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true, withIOG ? true  }:
+{ pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
 let tool-version-map = import ./tool-map.nix;
-    tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
+    tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);    
@@ -20,7 +20,7 @@ let tool-version-map = import ./tool-map.nix;
                 "$@" \
                 $NIX_CABAL_FLAGS 
             ;;
-            clean)
+            clean|unpack)
             cabal "$@"
             ;;
             *)
@@ -29,6 +29,12 @@ let tool-version-map = import ./tool-map.nix;
         esac        
         '';
     };    
+    wrapped-hsc2hs = pkgs.pkgsBuildBuild.writeShellApplication {
+        name = "${compiler.targetPrefix}hsc2hs";
+        text = ''
+          ${compiler}/bin/${compiler.targetPrefix}hsc2hs --cross-compile "$@"
+        '';
+    };
 in
 pkgs.mkShell ({
     # Note [cabal override]:
@@ -43,10 +49,10 @@ pkgs.mkShell ({
     # open source, and licenses accordingly.  Otherwise we'd have to link gmp
     # dynamically.  This requirement will be gone with gmp-bignum.
     #
-    NIX_CABAL_FLAGS = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isGhcjs [
-    "--with-ghc=javascript-unknown-linux-ghcjs-ghc"
-    "--with-ghc-pkg=javascript-unknown-linux-ghcjs-pkg"
-    "--with-hsc2hs=javascript-unknown-linux-ghcjs-hsc2hs"
+    NIX_CABAL_FLAGS = [
+    "--with-ghc=javascript-unknown-ghcjs-ghc"
+    "--with-ghc-pkg=javascript-unknown-ghcjs-ghc-pkg"
+    "--with-hsc2hs=javascript-unknown-ghcjs-hsc2hs"
     # ensure that the linker knows we want a static build product
     # "--enable-executable-static"
     ];
@@ -69,9 +75,11 @@ pkgs.mkShell ({
     '';
     buildInputs = [];
 
-    nativeBuildInputs = [ wrapped-cabal compiler ] ++ (with pkgs; [
+    nativeBuildInputs = [ wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
         haskell-nix.cabal-install.${compiler-nix-name}
         pkgconfig
+        (tool "happy")
+        (tool "alex")
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")

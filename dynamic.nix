@@ -1,7 +1,7 @@
 # define a development shell for dynamically linked applications (default)
-{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true, withIOG ? true }:
+{ pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true }:
 let tool-version-map = import ./tool-map.nix;
-    tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
+    tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
@@ -18,7 +18,7 @@ let tool-version-map = import ./tool-map.nix;
         case "$1" in
             build) cabal "$@"
             ;;
-            clean) cabal "$@"
+            clean|unpack) cabal "$@"
             ;;
             *) cabal "$@"
             ;;
@@ -33,6 +33,8 @@ pkgs.mkShell {
     shellHook = with pkgs; ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+        export CABAL_DIR=$HOME/.cabal
+        echo "CABAL_DIR set to $CABAL_DIR"
     ''
     # this one is only needed on macOS right now, due to a bug in loading libcrypto.
     + lib.optionalString stdenv.hostPlatform.isMacOS
@@ -57,8 +59,8 @@ pkgs.mkShell {
         ]
         ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
     )
-    ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961"] "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [ libsodium-vrf secp256k1 R_4_1_3]))

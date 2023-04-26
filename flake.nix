@@ -3,7 +3,7 @@
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
-    inputs.flake-utils.url = "github:numtide/flake-utils";
+    inputs.flake-utils.url = "github:hamishmack/flake-utils/hkm/nested-hydraJobs";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix }:
@@ -48,13 +48,12 @@
             "aarch64-darwin"
        ];
     in flake-utils.lib.eachSystem supportedSystems (system:
-         let
+      let
            pkgs = import nixpkgs {
              overlays = [haskellNix.overlay] ++ builtins.attrValues overlays;
              inherit system;
              inherit (haskellNix) config;
            };
-         in rec {
            # These are for checking IOG projects build in an environment
            # without haskell packages built by haskell.nix.
            #
@@ -62,7 +61,7 @@
            #
            # nix develop github:input-output-hk/devx#ghc924 --no-write-lock-file -c cabal build
            #
-           devShells =
+           devShellsWithToolsModule = toolsModule:
              let compilers = pkgs: builtins.removeAttrs pkgs.haskell-nix.compiler
                 # Exclude old versions of GHC to speed up `nix flake check`
                 [ "ghc844"
@@ -71,14 +70,14 @@
                   "ghc8101" "ghc8102" "ghc8103" "ghc8104" "ghc8105" "ghc8106" "ghc810420210212"
                   "ghc901"
                   "ghc921" "ghc922" "ghc923" "ghc924" "ghc925" "ghc926"
-                  "ghc941" "ghc942" "ghc943"
+                  "ghc941" "ghc942" "ghc943" "ghc944"
                   "ghc96020230302"
-                ];
+                 ];
                  js-compilers = pkgs: builtins.removeAttrs (compilers pkgs)
                  [
                   "ghc902"
                   "ghc927"
-                  "ghc944"
+                  "ghc945"
                  ];
                  static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
                                then if pkgs.stdenv.hostPlatform.isAarch64
@@ -87,54 +86,71 @@
                                else pkgs;
                  js-pkgs = pkgs.pkgsCross.ghcjs;
              in (builtins.mapAttrs (compiler-nix-name: compiler:
-                  import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = false; }
+                  import ./dynamic.nix { inherit pkgs compiler compiler-nix-name toolsModule; withIOG = false; }
                   ) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-minimal" (
-                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = false; }
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = false; }
                   )) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withIOG = false; }
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name toolsModule; withIOG = false; }
                   )) (compilers static-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = false; }
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = false; }
                   )) (compilers static-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-js" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; }
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name toolsModule; }
                   )) (js-compilers js-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; }
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; }
                   )) (js-compilers js-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-iog" (
-                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withIOG = true; }
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name toolsModule; withIOG = true; }
                   )) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-minimal-iog" (
-                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                    import ./dynamic.nix { inherit pkgs compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = true; }
                   )) (compilers pkgs)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-iog" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withIOG = true; }
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name toolsModule; withIOG = true; }
                   )) (compilers static-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal-iog" (
-                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                    import ./static.nix { pkgs = static-pkgs; inherit compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = true; }
                   )) (compilers static-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-js-iog" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withIOG = true; }
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name toolsModule; withIOG = true; }
                   )) (js-compilers js-pkgs.buildPackages)
               // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
                   pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal-iog" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
+                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = true; }
                   )) (js-compilers js-pkgs.buildPackages)
              );
-        hydraJobs = devShells;
+        devShells = devShellsWithToolsModule {};
+        # Eval must be done on linux when we use hydra to build environment
+        # scripts for other platforms.  That way a linux GHA can download the
+        # cached files without needing access to the actual build platform.
+        devShellsWithEvalOnLinux = devShellsWithToolsModule { evalSystem = "x86_64-linux"; };
+      in {
+        inherit devShells;
+        hydraJobs = devShells //
+          (pkgs.lib.mapAttrs' (name: drv:
+            pkgs.lib.nameValuePair "${name}-env" (
+            pkgs.runCommand "${name}-env.sh" {
+                requiredSystemFeatures = [ "recursive-nix" ];
+                nativeBuildInputs = [ pkgs.nix ];
+              } ''
+              nix --offline --extra-experimental-features "nix-command flakes" \
+                print-dev-env ${drv.drvPath} >> $out
+            '')) devShellsWithEvalOnLinux) // {
+          };
        });
 
     # --- Flake Local Nix Configuration ----------------------------
