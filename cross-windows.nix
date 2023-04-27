@@ -146,7 +146,7 @@ pkgs.pkgsBuildBuild.mkShell ({
     ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
     ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
-        (with pkgs; [ cddl cbor-diag ]
+        (with pkgs.pkgsBuildBuild; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [
             libblst libsodium-vrf secp256k1 #R_4_1_3
         ]))
