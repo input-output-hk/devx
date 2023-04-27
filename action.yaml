@@ -2,23 +2,23 @@ name: 'Setup IOG devx'
 description: 'Adds a `devx` shell includes `ghc` and `cabal`'
 inputs:
   platform:
-    description: One of x86_64-linux, x86_64-darwin, aarch64-linux, aarch64-darwin
+    description: 'One of x86_64-linux, x86_64-darwin, aarch64-linux, aarch64-darwin'
     default: 'x86_64-linux'
 
   target-platform:
-    description: One of "" (native), "-static", "-windows" or "-js"
+    description: 'One of "" (native), "-static", "-windows" or "-js"'
     default: ''
 
   compiler-nix-name:
-    description: The version of GHC to use
+    description: 'The version of GHC to use'
     default: 'ghc961'
 
   minimal:
-    description: Set to `false` to get hlint and hls
+    description: 'Set to `false` to get hlint and hls'
     default: true
 
   iog:
-    description: Set to `true` to get libsodum, libsecp256k1 and libblst
+    description: 'Set to `true` to get libsodum, libsecp256k1 and libblst'
     default: false
 
 runs:
