@@ -37,9 +37,10 @@ pkgs.mkShell {
         echo "CABAL_DIR set to $CABAL_DIR"
     ''
     # this one is only needed on macOS right now, due to a bug in loading libcrypto.
+    # The build will error with -6 due to "loading libcrypto in an unsafe way"
     + lib.optionalString stdenv.hostPlatform.isMacOS
     ''
-    export DYLD_LIBRARY_PATH="${lib.getLib openssl}"
+    export DYLD_LIBRARY_PATH="${lib.getLib openssl}/lib"
     '';
 
     buildInputs = [
