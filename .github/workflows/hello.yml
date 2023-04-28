@@ -79,6 +79,10 @@ jobs:
           cabal build${{ matrix.target-platform == '-static' && ' --enable-executable-static' || '' }}
           mkdir bin
           cp dist-newstyle/build/*/*/hello-1.0.0.2/build/hello/hello${{ matrix.target-platform == '-windows' && '.exe' || '' }} bin
+      - name: Fix up the nix dependencies
+        working-directory: hello-1.0.0.2
+        if: (matrix.platform == 'x86_64-darwin' || matrix.platform == 'aarch64-darwin') && matrix.target-platform == ''
+        run: fixup-nix-deps bin/hello
       - name: Upload hello executable
         uses: actions/upload-artifact@v3
         with:
