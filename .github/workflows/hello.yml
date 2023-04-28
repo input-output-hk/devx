@@ -151,4 +151,6 @@ jobs:
         run: |
           ls -l .
           chmod +x hello
+          ls -l
+          file hello
           ./hello
