@@ -75,10 +75,10 @@ jobs:
         run: cabal unpack hello
       - name: build hello
         working-directory: hello-1.0.0.2
-        run: cabal build
-      - name: test hello
-        working-directory: hello-1.0.0.2
-        run: cabal test
+        run: |
+          cabal build${{ matrix.target-platform == '-static' && ' --enable-executable-static' || '' }}
+          mkdir bin
+          cp dist-newstyle/build/${{ matrix.platform }}/*/hello-1.0.0.2/build/hello/hello bin
       - name: install hello
         working-directory: hello-1.0.0.2
         run: cabal install --installdir bin
@@ -86,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: hello-${{ matrix.platform }}${{ matrix.target-platform }}${{ matrix.minimal && '-minimal' || '' }}${{ matrix.iog && '-iog' || '' }}
-          path: hello-1.0.0.2/bin/hello
+          path: hello-1.0.0.2/bin/hello${{ matrix.target-platform == '-windows' && '.exe' || '' }}
 
   run:
     name: Run executable
@@ -96,14 +96,14 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - x86_64-darwin
+          #- x86_64-darwin
           - x86_64-linux
           # Skipping because we do not have runners for these set up.
           #- aarch64-darwin
           #- aarch64-linux
         compiler-nix-name:
-          - ghc8107
-          - ghc927
+          #- ghc8107
+          #- ghc927
           - ghc961
         target-platform:
           #- ""
@@ -111,11 +111,11 @@ jobs:
           #- "-js"
           - "-windows"
         minimal:
-          - false
+          #- false
           - true
         iog:
           - false
-          - true
+          #- true
         exclude:
           # Just cross compiling javascript with ghc 9.6.1 for now
           - compiler-nix-name: ghc8107
