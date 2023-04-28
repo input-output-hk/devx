@@ -78,10 +78,7 @@ jobs:
         run: |
           cabal build${{ matrix.target-platform == '-static' && ' --enable-executable-static' || '' }}
           mkdir bin
-          cp dist-newstyle/build/${{ matrix.platform }}/*/hello-1.0.0.2/build/hello/hello${{ matrix.target-platform == '-windows' && '.exe' || '' }} bin
-      - name: install hello
-        working-directory: hello-1.0.0.2
-        run: cabal install --installdir bin
+          cp dist-newstyle/build/*/*/hello-1.0.0.2/build/hello/hello${{ matrix.target-platform == '-windows' && '.exe' || '' }} bin
       - name: Upload hello executable
         uses: actions/upload-artifact@v3
         with:
