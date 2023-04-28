@@ -145,4 +145,6 @@ jobs:
           name: hello-${{ matrix.platform }}${{ matrix.target-platform }}${{ matrix.minimal && '-minimal' || '' }}${{ matrix.iog && '-iog' || '' }}
       - shell: bash
         name: Run hello executable
-        run: ./hello
+        run: |
+          chmod +x hello
+          ./hello
