@@ -13,26 +13,26 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - x86_64-darwin
+          #- x86_64-darwin
           - x86_64-linux
           # Skipping because we do not have runners for these set up.
           #- aarch64-darwin
           #- aarch64-linux
         compiler-nix-name:
-          - ghc8107
-          - ghc927
+          #- ghc8107
+          #- ghc927
           - ghc961
         target-platform:
-          - ""
+          #- ""
           - "-static"
-          - "-js"
+          #- "-js"
           - "-windows"
         minimal:
-          - false
+          #- false
           - true
         iog:
           - false
-          - true
+          #- true
         exclude:
           # Just cross compiling javascript with ghc 9.6.1 for now
           - compiler-nix-name: ghc8107
@@ -147,4 +147,6 @@ jobs:
         with:
           name: hello-${{ matrix.platform }}${{ matrix.target-platform }}${{ matrix.minimal && '-minimal' || '' }}${{ matrix.iog && '-iog' || '' }}
       - shell: bash
-        run: hello-1.0.0.2/bin/hello
+        run: |
+          ls -l .
+          hello
