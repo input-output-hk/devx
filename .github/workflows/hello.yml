@@ -79,9 +79,9 @@ jobs:
       - name: test hello
         working-directory: hello-1.0.0.2
         run: cabal test
-      - name: build hello
+      - name: install hello
         working-directory: hello-1.0.0.2
-        run: cabal install bin
+        run: cabal install --installdir bin
       - name: Upload hello executable
         uses: actions/upload-artifact@v3
         with:
