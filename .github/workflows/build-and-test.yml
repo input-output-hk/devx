@@ -65,7 +65,7 @@ jobs:
     name: Run executable
     needs: build
 
-    runs-on: ${{ inputs.target-platform == '-windows' && ' windows-latest' || (inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest') }}
+    runs-on: ${{ inputs.target-platform == '-windows' && 'windows-latest' || (inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest') }}
     steps:
       - name: Download hello executable
         uses: actions/download-artifact@v3
