@@ -59,8 +59,8 @@ jobs:
 
     - name: Inspect build product
       working-directory: hello-1.0.0.2
-      if: ${{ inputs.platform == 'x86_64-linux' }}
-      run: nix-shell -p patchelf --run 'patchelf --print-interpreter hello; patchelf --print-needed hello'
+      if: ${{ inputs.platform == 'x86_64-linux' && inputs.target-platform == '' }}
+      run: nix-shell -p patchelf --run 'patchelf --print-interpreter bin/hello; patchelf --print-needed bin/hello'
 
     - name: Upload hello executable
       uses: actions/upload-artifact@v3
