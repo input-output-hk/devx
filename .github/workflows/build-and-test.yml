@@ -24,7 +24,6 @@ on:
         type: boolean
         default: false
 
-
 jobs:
   build:
     defaults:
