@@ -24,12 +24,16 @@ on:
         type: boolean
         default: false
 
+
 jobs:
   build:
+    defaults:
+      run:
+        shell: devx {0}
     runs-on: ${{ inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Install GHC and Cabal
       uses: input-output-hk/actions/devx@latest
       with:
@@ -68,8 +72,5 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
-      - shell: bash
-        name: Run hello executable
-        run: |
-          chmod +x hello
-          ./hello
+      - name: Run hello executable
+        run: ./hello
