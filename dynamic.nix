@@ -7,6 +7,26 @@ let tool-version-map = import ./tool-map.nix;
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
     # * wrapped tools:
+    # fixup-nix-deps allows us to drop dylibs from macOS executables that can be
+    # linked directly.
+    #
+    # FIXME: this is the same as in static.nix; and we should probably put this into
+    #        a shared file. It will also not work for anything that has more than 
+    #        the system libs linked.
+    fixup-nix-deps = pkgs.writeShellApplication {
+        name = "fixup-nix-deps";
+        text = ''
+        for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
+            case "$nixlib" in
+            *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
+            *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
+            *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
+            *) ;;
+            esac
+        done
+        '';
+    };
+
     # this wrapped-cabal is for now the identity, but it's the same logic we
     # have in the static configuration, and we may imagine needing to inject
     # some flags into cabal (temporarily), hence we'll keep this functionality
