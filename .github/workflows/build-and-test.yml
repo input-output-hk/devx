@@ -56,6 +56,12 @@ jobs:
       working-directory: hello-1.0.0.2
       if: (inputs.platform == 'x86_64-darwin' || inputs.platform == 'aarch64-darwin') && inputs.target-platform == ''
       run: fixup-nix-deps bin/hello
+
+    - name: Inspect build product
+      working-directory: hello-1.0.0.2
+      if: ${{ inputs.platform == 'x86_64-linux' }}
+      run: nix-shell -p patchelf --run 'patchelf --print-interpreter hello; patchelf --print-needed hello'
+
     - name: Upload hello executable
       uses: actions/upload-artifact@v3
       with:
