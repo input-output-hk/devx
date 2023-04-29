@@ -51,6 +51,7 @@ jobs:
         cabal build${{ inputs.target-platform == '-static' && ' --enable-executable-static' || '' }}
         mkdir bin
         cp dist-newstyle/build/*/*/hello-1.0.0.2/build/hello/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }} bin
+        ls -lah hello-1.0.0.2/bin/
     - name: Fix up the nix dependencies
       working-directory: hello-1.0.0.2
       if: (inputs.platform == 'x86_64-darwin' || inputs.platform == 'aarch64-darwin') && inputs.target-platform == ''
@@ -72,6 +73,4 @@ jobs:
         with:
           name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
       - name: Run hello executable
-        run: |
-          ls -lah .
-          ./hello
+        run: ./hello
