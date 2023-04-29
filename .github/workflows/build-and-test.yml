@@ -72,4 +72,6 @@ jobs:
         with:
           name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
       - name: Run hello executable
-        run: ./hello
+        run: |
+          ls -lah .
+          ./hello
