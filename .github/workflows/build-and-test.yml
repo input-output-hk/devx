@@ -1,0 +1,75 @@
+name: Build and Test
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        description: 'build platform'
+        type: string
+      target-platform:
+        required: true
+        description: 'target platform'
+        type: string
+      compiler-nix-name:
+        required: true
+        description: 'compiler name in nix format. e.g. ghc8107'
+        type: string
+      minimal:
+        description: 'without hls, hlint, ...'
+        type: boolean
+        default: true
+      iog:
+        description: 'without iog libs: libsodium, libsecp256k1, libblst, ...'
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ${{ inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install GHC and Cabal
+      uses: input-output-hk/actions/devx@latest
+      with:
+        platform: ${{ inputs.platform }}
+        target-platform: ${{ inputs.target-platform }}
+        compiler-nix-name: ${{ inputs.compiler-nix-name }}
+        minimal: ${{ inputs.minimal }}
+        iog: ${{ inputs.iog }}
+    - name: cabal update
+      run: cabal update
+    - name: unapck hello
+      run: cabal unpack hello
+    - name: build hello
+      working-directory: hello-1.0.0.2
+      run: |
+        cabal build${{ inputs.target-platform == '-static' && ' --enable-executable-static' || '' }}
+        mkdir bin
+        cp dist-newstyle/build/*/*/hello-1.0.0.2/build/hello/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }} bin
+    - name: Fix up the nix dependencies
+      working-directory: hello-1.0.0.2
+      if: (inputs.platform == 'x86_64-darwin' || inputs.platform == 'aarch64-darwin') && inputs.target-platform == ''
+      run: fixup-nix-deps bin/hello
+    - name: Upload hello executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
+        path: hello-1.0.0.2/bin/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }}
+
+  run:
+    name: Run executable
+    needs: build
+
+    runs-on: ${{ inputs.target-platform == '-windows' && ' windows-latest' || (inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest') }}
+    steps:
+      - name: Download hello executable
+        uses: actions/download-artifact@v3
+        with:
+          name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
+      - shell: bash
+        name: Run hello executable
+        run: |
+          chmod +x hello
+          ./hello
