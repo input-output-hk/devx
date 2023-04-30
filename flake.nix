@@ -169,7 +169,7 @@
                     shell: devx {0}
                 '';
                 homepage = "https://github.com/input-output-hk/devx";
-                license = pkgs.licenses.asl20;
+                license = pkgs.lib.licenses.asl20;
                 platforms = pkgs.lib.platforms.unix;
               };
             })) devShellsWithEvalOnLinux) // {
