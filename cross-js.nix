@@ -1,9 +1,9 @@
-{ pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
-    compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);    
+    compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
     # * wrapped tools:
     # A cabal-install wrapper that sets the appropriate static flags
@@ -18,7 +18,7 @@ let tool-version-map = import ./tool-map.nix;
             build)
             cabal \
                 "$@" \
-                $NIX_CABAL_FLAGS 
+                $NIX_CABAL_FLAGS
             ;;
             clean|unpack)
             cabal "$@"
@@ -26,9 +26,9 @@ let tool-version-map = import ./tool-map.nix;
             *)
             cabal $NIX_CABAL_FLAGS "$@"
             ;;
-        esac        
+        esac
         '';
-    };    
+    };
     wrapped-hsc2hs = pkgs.pkgsBuildBuild.writeShellApplication {
         name = "${compiler.targetPrefix}hsc2hs";
         text = ''
@@ -67,11 +67,12 @@ pkgs.mkShell ({
     '';
 
     shellHook = with pkgs; ''
-    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
-    ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
-    ${figlet}/bin/figlet -f small "*= JS edition =*"
-    export CABAL_DIR=$HOME/.cabal-js
-    echo "CABAL_DIR set to $CABAL_DIR"
+        export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+        ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+        ${figlet}/bin/figlet -f small "*= JS edition =*"
+        echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
+        export CABAL_DIR=$HOME/.cabal-js
+        echo "CABAL_DIR set to $CABAL_DIR"
     '';
     buildInputs = [];
 

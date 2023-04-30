@@ -1,6 +1,9 @@
 name: Prebuild DevX closures
 on:
   push:
+    branches:
+      - main
+
   workflow_dispatch:
 
 env:
@@ -54,14 +57,14 @@ jobs:
             target-platform: "-windows"
           - platform: aarch64-linux
             target-platform: "-windows"
-        
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
       - name: Install Nix with good defaults
-        uses: cachix/install-nix-action@v17
+        uses: cachix/install-nix-action@v20
         with:
           extra_nix_config: |
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
@@ -70,7 +73,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Log in to the Container registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2.1.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
