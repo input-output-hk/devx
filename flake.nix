@@ -149,7 +149,7 @@
               } ''
               nix --offline --extra-experimental-features "nix-command flakes" \
                 print-dev-env ${drv.drvPath} >> $out
-            ''; in (import { system = "x86_64-linux"; }).writeTextFile {
+            ''; in (import nixpkgs { system = "x86_64-linux"; }).writeTextFile {
               name = "devx";
               executable = true;
               text = ''
