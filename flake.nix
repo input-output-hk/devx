@@ -149,7 +149,12 @@
               } ''
               nix --offline --extra-experimental-features "nix-command flakes" \
                 print-dev-env ${drv.drvPath} >> $out
-            ''; in (import nixpkgs { system = "x86_64-linux"; }).writeTextFile {
+            '';
+            # this needs to be linux.  It would be great if we could have this
+            # eval platform agnostic, but flakes don't permit this.  A the
+            # platform where we build the docker images is linux (github
+            # ubuntu runners), this needs to be evaluable on linux.
+            in (import nixpkgs { system = "x86_64-linux"; }).writeTextFile {
               name = "devx";
               executable = true;
               text = ''
