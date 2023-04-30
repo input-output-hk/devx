@@ -29,7 +29,8 @@ jobs:
           - ""
           - "-static"
           - "-js"
-          - "-windows"
+          # Coming soon.
+          #- "-windows"
         variant:
           - ""
           - "-minimal"
