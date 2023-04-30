@@ -165,13 +165,36 @@
         hydraJobs = devShells //
           (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-env" (
-            pkgs.runCommand "${name}-env.sh" {
+            let env = pkgs.runCommand "${name}-env.sh" {
                 requiredSystemFeatures = [ "recursive-nix" ];
                 nativeBuildInputs = [ pkgs.nix ];
               } ''
               nix --offline --extra-experimental-features "nix-command flakes" \
                 print-dev-env ${drv.drvPath} >> $out
-            '')) devShellsWithEvalOnLinux) // {
+            ''; in pkgs.writeTextFile {
+              name = "devx";
+              executable = true;
+              text = ''
+                #!/bin/bash
+
+                set -euo pipefail
+
+                source ${env}
+                source "$1"
+              '';
+              meta = {
+                description = "DevX shell";
+                longDescription = ''
+                  The DevX shell is supposed to be used with GitHub Actions, and
+                  can be used by setting the default shell to:
+
+                    shell: devx {0}
+                '';
+                homepage = "https://github.com/input-output-hk/devx";
+                license = pkgs.licenses.asl20;
+                platforms = pkgs.lib.platforms.unix;
+              };
+            })) devShellsWithEvalOnLinux) // {
           };
        });
 
