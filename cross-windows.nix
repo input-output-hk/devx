@@ -1,4 +1,4 @@
-{ pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true, withIOG ? true  }:
+{ self, pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true, withIOG ? true  }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
     cabal-install = tool "cabal";
@@ -127,11 +127,12 @@ pkgs.pkgsBuildBuild.mkShell ({
     '';
 
     shellHook = with pkgs; ''
-    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
-    ${pkgsBuildBuild.figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
-    ${pkgsBuildBuild.figlet}/bin/figlet -f small "*= Windows =*"
-    export CABAL_DIR=$HOME/.cabal-windows
-    echo "CABAL_DIR set to $CABAL_DIR"
+      export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+      ${pkgsBuildBuild.figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+      ${pkgsBuildBuild.figlet}/bin/figlet -f small "*= Windows =*"
+      Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}.
+      export CABAL_DIR=$HOME/.cabal-windows
+      echo "CABAL_DIR set to $CABAL_DIR"
     '';
     buildInputs = [];
 

@@ -1,4 +1,4 @@
-{ pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
@@ -82,21 +82,22 @@ pkgs.mkShell ({
     '';
 
     shellHook = with pkgs; ''
-    export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
-    ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
-    ${figlet}/bin/figlet -f small "*= static edition =*"
-    echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv, ffi, and zlib dependencies that point to the /nix/store"
-    export CABAL_DIR=$HOME/.cabal-static
-    echo "CABAL_DIR set to $CABAL_DIR"
-    echo "Quirks:"
-    echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
-    echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
+        export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+        ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+        ${figlet}/bin/figlet -f small "*= static edition =*"
+        Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}.
+        echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv, ffi, and zlib dependencies that point to the /nix/store"
+        export CABAL_DIR=$HOME/.cabal-static
+        echo "CABAL_DIR set to $CABAL_DIR"
+        echo "Quirks:"
+        echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
+        echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     '';
     buildInputs = (with pkgs; [
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
-    ]) ++ map pkgs.lib.getDev (with pkgs; [ 
+    ]) ++ map pkgs.lib.getDev (with pkgs; [
         static-gmp
 
         zlib

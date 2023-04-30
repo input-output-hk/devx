@@ -1,5 +1,5 @@
 # define a development shell for dynamically linked applications (default)
-{ pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
@@ -11,7 +11,7 @@ let tool-version-map = import ./tool-map.nix;
     # linked directly.
     #
     # FIXME: this is the same as in static.nix; and we should probably put this into
-    #        a shared file. It will also not work for anything that has more than 
+    #        a shared file. It will also not work for anything that has more than
     #        the system libs linked.
     fixup-nix-deps = pkgs.writeShellApplication {
         name = "fixup-nix-deps";
@@ -53,6 +53,7 @@ pkgs.mkShell {
     shellHook = with pkgs; ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
+        Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}.
         export CABAL_DIR=$HOME/.cabal
         echo "CABAL_DIR set to $CABAL_DIR"
     ''
@@ -65,6 +66,7 @@ pkgs.mkShell {
 
     buildInputs = [
         wrapped-cabal
+        fixup-nix-deps
         compiler
     ] ++ (with pkgs; [
         pkgconfig
