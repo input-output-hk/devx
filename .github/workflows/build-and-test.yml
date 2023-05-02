@@ -108,4 +108,6 @@ jobs:
         run: ls -lah .
 
       - name: Run hello executable
+        env:
+          LD_DEBUG: all
         run: ./hello
