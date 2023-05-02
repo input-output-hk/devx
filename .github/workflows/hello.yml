@@ -5,6 +5,7 @@ on:
 
 jobs:
   test:
+    name: "build ${{ matrix.platform }}${{ matrix.target-platform }}-${{ matrix.compiler-nix-name }}${{ matrix.minimal && '-minimal' || '' }}${{ matrix.iog && '-iog' || '' }}"
     strategy:
       fail-fast: false
       matrix:

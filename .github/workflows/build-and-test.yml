@@ -26,6 +26,7 @@ on:
 
 jobs:
   build:
+    name: Build text executable
     defaults:
       run:
         shell: devx {0}
@@ -86,13 +87,13 @@ jobs:
     - name: Upload hello executable
       uses: actions/upload-artifact@v3
       with:
-        name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
+        name: hello-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
         path: |
           hello-1.0.0.2/bin/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }}
           hello-1.0.0.2/bin/libs
 
   run:
-    name: Run executable
+    name: Run test executable
     needs: build
 
     runs-on: ${{ inputs.target-platform == '-windows' && 'windows-latest' || (inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest') }}
@@ -100,7 +101,7 @@ jobs:
       - name: Download hello executable
         uses: actions/download-artifact@v3
         with:
-          name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
+          name: hello-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
 
       # see https://github.com/actions/upload-artifact#permission-loss
       # windows doesn't care \o/
