@@ -73,6 +73,7 @@ jobs:
               fi
             done
           done'
+        nix-shell -p patchelf --run 'patchelf --set-rpath \'$ORIGIN/libs\' bin/hello'
 
     - name: Upload hello executable
       uses: actions/upload-artifact@v3
