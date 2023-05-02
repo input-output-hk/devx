@@ -16,19 +16,19 @@ jobs:
           #- aarch64-linux
         compiler-nix-name:
           - ghc8107
-          # - ghc927
-          # - ghc961
+          - ghc927
+          - ghc961
         target-platform:
           - ""
           - "-static"
-          # - "-js"
+          - "-js"
           - "-windows"
         minimal:
-          # - false
+          - false
           - true
         iog:
           - false
-          # - true
+          - true
         exclude:
           # Just cross compiling javascript with ghc 9.6.1 for now
           - compiler-nix-name: ghc8107
