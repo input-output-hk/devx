@@ -105,7 +105,9 @@ jobs:
 
       - name: Restore Executable Permission
         if: ${{ inputs.target-platform != '-windows' }}
-        run: ls -lah .
+        run: |
+          ls -lah .
+          ldd hello
 
       - name: Run hello executable
         env:
