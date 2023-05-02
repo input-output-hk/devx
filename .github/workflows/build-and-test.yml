@@ -69,7 +69,7 @@ jobs:
             for path in $(patchelf --print-rpath bin/hello|tr : \ ); do
               if [ -f "$path/$lib" ]
                 then cp "$path/$lib" bin/libs/
-                if [ patchelf --print-interpreter "bin/libs/$lib" ]; then
+                if patchelf --print-interpreter "bin/libs/$lib" >/dev/null 2>&1; then
                   patchelf --set-interpreter /lib/ld-linux.so.2 "bin/libs/$lib"
                 fi
                 break
