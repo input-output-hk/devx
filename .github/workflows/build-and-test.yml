@@ -64,12 +64,23 @@ jobs:
         nix-shell -p patchelf --run 'patchelf --print-interpreter                                    bin/hello'
         nix-shell -p patchelf --run 'patchelf --print-needed                                         bin/hello'
         nix-shell -p patchelf --run 'patchelf --set-interpreter /lib/ld-linux.so.2                   bin/hello'
+        nix-shell -p patchelf --run 'mkdir -p bin/libs
+          for lib in $(patchelf --print-needed bin/hello); do
+            for path in $(patchelf --print-rpath bin/hello|tr ':' ' '); do
+              if [ -f "$path/$lib" ]
+                then cp "$path/$lib" bin/libs/
+                break
+              fi
+            done
+          done'
 
     - name: Upload hello executable
       uses: actions/upload-artifact@v3
       with:
         name: hello-${{ inputs.platform }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
-        path: hello-1.0.0.2/bin/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }}
+        path: |
+          hello-1.0.0.2/bin/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }}
+          hello-1.0.0.2/bin/libs
 
   run:
     name: Run executable
