@@ -63,23 +63,23 @@ jobs:
       run: |
         nix-shell -p patchelf --run 'patchelf --print-interpreter                                    bin/hello'
         nix-shell -p patchelf --run 'patchelf --print-needed                                         bin/hello'
-        nix-shell -p patchelf --run 'patchelf --set-interpreter /lib/ld-linux.so.2                   bin/hello'
-        nix-shell -p patchelf --run 'mkdir -p bin/libs
-          for lib in $(patchelf --print-needed bin/hello); do
-            for path in $(patchelf --print-rpath bin/hello|tr : \ ); do
-              if [ -f "$path/$lib" ]
-                if [ ! "$lib" == "libc.so.6" ]; then
-                  continue
-                fi
-                then cp "$path/$lib" bin/libs/
-                if patchelf --print-interpreter "bin/libs/$lib" >/dev/null 2>&1; then
-                  patchelf --set-interpreter /lib/ld-linux.so.2 "bin/libs/$lib"
-                fi
-                break
-              fi
-            done
-          done'
-        nix-shell -p patchelf --run 'patchelf --set-rpath /lib64:\$ORIGIN/libs bin/hello'
+        nix-shell -p patchelf --run 'patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2          bin/hello'
+        # nix-shell -p patchelf --run 'mkdir -p bin/libs
+        #   for lib in $(patchelf --print-needed bin/hello); do
+        #     for path in $(patchelf --print-rpath bin/hello|tr : \ ); do
+        #       if [ -f "$path/$lib" ]
+        #         if [ ! "$lib" == "libc.so.6" ]; then
+        #           continue
+        #         fi
+        #         then cp "$path/$lib" bin/libs/
+        #         if patchelf --print-interpreter "bin/libs/$lib" >/dev/null 2>&1; then
+        #           patchelf --set-interpreter /lib/ld-linux.so.2 "bin/libs/$lib"
+        #         fi
+        #         break
+        #       fi
+        #     done
+        #   done'
+        nix-shell -p patchelf --run 'patchelf --add-rpath /lib64 bin/hello'
 
     - name: Upload hello executable
       uses: actions/upload-artifact@v3
