@@ -90,7 +90,6 @@ pkgs.mkShell ({
         export CABAL_DIR=$HOME/.cabal-static
         echo "CABAL_DIR set to $CABAL_DIR"
         echo "Quirks:"
-        echo "${pkgs.lib.getDev pkgs.libsodium-vrf}"
         echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
         echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     '';
@@ -98,19 +97,22 @@ pkgs.mkShell ({
     # these are _target_ libs, e.g. ones we want to link the build
     # product against. These are also the ones that showup in the
     # PKG_CONFIG_PATH.
-    buildInputs = (with pkgs; [
+    buildInputs = with pkgs; ([
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
-    ]) ++ map pkgs.lib.getDev (with pkgs; [
+    ]) ++ map lib.getDev ([
         static-gmp
 
         zlib
         pcre
         openssl
-    ] ++ pkgs.lib.optionals withIOG (with pkgs; [
-        libblst libsodium-vrf secp256k1 #R_4_1_3
-    ]));
+    ] ++ lib.optionals withIOG [
+        libblst
+        libsodium-vrf
+        secp256k1
+        #R_4_1_3
+    ]);
 
     # these are _native_ libs, we need to drive the compilation environment
     # they will _not_ be part of the final build product.
