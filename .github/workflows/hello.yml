@@ -3,12 +3,9 @@ on:
   push:
   workflow_dispatch:
 
-defaults:
-  run:
-    shell: devx {0}
-
 jobs:
-  build:
+  test:
+    name: "build ${{ matrix.platform }}${{ matrix.target-platform }}-${{ matrix.compiler-nix-name }}${{ matrix.minimal && '-minimal' || '' }}${{ matrix.iog && '-iog' || '' }}"
     strategy:
       fail-fast: false
       matrix:
@@ -26,8 +23,7 @@ jobs:
           - ""
           - "-static"
           - "-js"
-          # Comming soon.
-          #- "-windows"
+          - "-windows"
         minimal:
           - false
           - true
@@ -54,26 +50,14 @@ jobs:
             target-platform: "-windows"
           - platform: aarch64-linux
             target-platform: "-windows"
+          # Also broken for darwin.
+          - platform: x86_64-darwin
+            target-platform: "-windows"
 
-    runs-on: ${{ matrix.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Install GHC and Cabal
-        uses: input-output-hk/actions/devx@latest
-        with:
-          platform: ${{ matrix.platform }}
-          target-platform: ${{ matrix.target-platform }}
-          compiler-nix-name: ${{ matrix.compiler-nix-name }}
-          minimal: ${{ matrix.minimal }}
-          iog: ${{ matrix.iog }}
-      - name: cabal update
-        run: cabal update
-      - name: unapck hello
-        run: cabal unpack hello
-      - name: build hello
-        working-directory: hello-1.0.0.2
-        run: cabal build
-      - name: test hello
-        working-directory: hello-1.0.0.2
-        run: cabal test
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      platform: ${{ matrix.platform }}
+      target-platform: ${{ matrix.target-platform }}
+      compiler-nix-name: ${{ matrix.compiler-nix-name }}
+      minimal: ${{ matrix.minimal }}
+      iog: ${{ matrix.iog }}
