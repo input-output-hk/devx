@@ -93,6 +93,7 @@ pkgs.mkShell ({
 
     shellHook = with pkgs; ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+        export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}";
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
         ${figlet}/bin/figlet -f small "*= static edition =*"
         echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
