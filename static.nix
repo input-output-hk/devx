@@ -77,7 +77,7 @@ pkgs.mkShell ({
       extra-lib-dirs: ${zlib}/lib ${pcre}/lib
     constraints:
       HsOpenSSL +use-pkg-config,
-      zlib +pkg-config
+      zlib +pkg-config,
       pcre-lite +pkg-config
     '';
 
