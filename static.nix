@@ -74,11 +74,11 @@ pkgs.mkShell ({
 
     CABAL_PROJECT_LOCAL_TEMPLATE = with pkgs; ''
     package digest
-    extra-lib-dirs: ${zlib}/lib ${pcre}/lib
+      extra-lib-dirs: ${zlib}/lib ${pcre}/lib
     constraints:
-    HsOpenSSL +use-pkg-config,
-    zlib +pkg-config
-    pcre-lite +pkg-config
+      HsOpenSSL +use-pkg-config,
+      zlib +pkg-config
+      pcre-lite +pkg-config
     '';
 
     shellHook = with pkgs; ''
