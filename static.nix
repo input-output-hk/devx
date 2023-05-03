@@ -90,7 +90,7 @@ pkgs.mkShell ({
         export CABAL_DIR=$HOME/.cabal-static
         echo "CABAL_DIR set to $CABAL_DIR"
         echo "Quirks:"
-        echo "${pkgs.libsodium-vrf}"
+        echo "${pkgs.libsodium-vrf.drvPath}"
         echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
         echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     '';
