@@ -81,6 +81,16 @@ pkgs.mkShell ({
     pcre-lite +pkg-config
     '';
 
+    # This is required to prevent
+    #
+    #    WARNING: [...]ghc is loading libcrypto in an unsafe way
+    #    [...]
+    #    The build process terminated with exit code -6
+    #
+    # We want to load the libcrypto from the openssl path, not from
+    # the system path.
+    DYLD_LIBRARY_PATH= with pkgs; "${lib.getLib openssl}/lib"
+
     shellHook = with pkgs; ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
@@ -89,6 +99,7 @@ pkgs.mkShell ({
         echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv, ffi, and zlib dependencies that point to the /nix/store"
         export CABAL_DIR=$HOME/.cabal-static
         echo "CABAL_DIR set to $CABAL_DIR"
+        echo "DYLD_LIBRARY_PATH set to $DYLD_LIBRARY_PATH"
         echo "Quirks:"
         echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
         echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
