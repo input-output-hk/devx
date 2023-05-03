@@ -108,7 +108,7 @@ pkgs.mkShell ({
         zlib
         pcre
         openssl
-    ] ++ pkgs.lib.optional withIOG (with pkgs; [
+    ] ++ pkgs.lib.optionals withIOG (with pkgs; [
         libblst libsodium-vrf secp256k1 #R_4_1_3
     ]));
 
