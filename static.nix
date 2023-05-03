@@ -89,7 +89,7 @@ pkgs.mkShell ({
     #
     # We want to load the libcrypto from the openssl path, not from
     # the system path.
-    DYLD_LIBRARY_PATH= with pkgs; "${lib.getLib openssl}/lib"
+    DYLD_LIBRARY_PATH= with pkgs; "${lib.getLib openssl}/lib";
 
     shellHook = with pkgs; ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
