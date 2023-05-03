@@ -93,6 +93,10 @@ pkgs.mkShell ({
         echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
         echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     '';
+    
+    # these are _target_ libs, e.g. ones we want to link the build
+    # product against. These are also the ones that showup in the
+    # PKG_CONFIG_PATH.
     buildInputs = (with pkgs; [
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
@@ -103,11 +107,12 @@ pkgs.mkShell ({
         zlib
         pcre
         openssl
-    ]) ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ]
-          ++ map pkgs.lib.getDev (with pkgs; [
-            libblst libsodium-vrf secp256k1 #R_4_1_3
-          ]));
+    ] ++ pkgs.lib.optional withIOG (with pkgs; [
+        libblst libsodium-vrf secp256k1 #R_4_1_3
+    ]));
 
+    # these are _native_ libs, we need to drive the compilation environment
+    # they will _not_ be part of the final build product.
     nativeBuildInputs = [
         wrapped-cabal
         fixup-nix-deps
@@ -120,5 +125,6 @@ pkgs.mkShell ({
     ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
     ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ])
     ;
 })
