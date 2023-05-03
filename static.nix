@@ -50,7 +50,7 @@ let tool-version-map = import ./tool-map.nix;
         '';
     };
 in
-pkgs.mkShell ({
+pkgs.mkShell (rec {
     # Note [cabal override]:
     #
     # We need to override the `cabal` command and pass --ghc-options for the
