@@ -44,7 +44,6 @@ let tool-version-map = import ./tool-map.nix;
           ln -s "$l" "''${l#lib}"
         done
         )
-        # Not sure why this `unset` helps.  It might avoids some kind of overflow issue.  We see `wine` fail to start when building `cardano-wallet-cli` test `unit`.
         WINEDLLOVERRIDES="winemac.drv=d" WINEDEBUG=warn-all,fixme-all,-menubuilder,-mscoree,-ole,-secur32,-winediag WINEPREFIX=$TMP ${pkgs.pkgsBuildBuild.winePackages.minimal}/bin/wine64 $REMOTE_ISERV/${iserv-proxy-interpreter.exeName} tmp $PORT &
         (>&2 echo "---| ${iserv-proxy-interpreter.exeName} should have started on $PORT")
         RISERV_PID="$!"
@@ -98,6 +97,8 @@ let tool-version-map = import ./tool-map.nix;
     wine-test-wrapper = pkgs.pkgsBuildBuild.writeScriptBin "${compiler.targetPrefix}test-wrapper" ''
         #!${pkgs.pkgsBuildBuild.stdenv.shell}
         set -euo pipefail
+        # Link all the DLLs we might need into one place so we can add
+        # just that one location to WINEPATH.
         DLLS=$(mktemp -d)
         for p in ${pkgs.lib.concatStringsSep " " dllPkgs}; do
           find "$p" -iname '*.dll' -exec ln -sf {} $DLLS \;
@@ -136,11 +137,10 @@ pkgs.pkgsBuildBuild.mkShell ({
     ];
 
     CABAL_PROJECT_LOCAL_TEMPLATE = ''
-    package digest
     constraints:
-    HsOpenSSL +use-pkg-config,
-    zlib +pkg-config
-    pcre-lite +pkg-config
+      HsOpenSSL +use-pkg-config,
+      zlib +pkg-config,
+      pcre-lite +pkg-config
     '';
 
     shellHook = with pkgs; ''
