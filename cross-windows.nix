@@ -131,7 +131,8 @@ pkgs.pkgsBuildBuild.mkShell ({
     "--with-ghc=x86_64-w64-mingw32-ghc"
     "--with-ghc-pkg=x86_64-w64-mingw32-ghc-pkg"
     "--with-hsc2hs=x86_64-w64-mingw32-hsc2hs"
-    # Test wrapper that will run cabal tests with wine (from wine-test-wrapper)
+    # We use the test-wrapper option here so that tests are executed through
+    # WINE, as we can't run windows test natively.
     "--test-wrapper=x86_64-w64-mingw32-test-wrapper"
     # ensure that the linker knows we want a static build product
     # "--enable-executable-static"
