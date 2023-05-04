@@ -104,6 +104,9 @@ let tool-version-map = import ./tool-map.nix;
           find "$p" -iname '*.dll' -exec ln -sf {} $DLLS \;
           find "$p" -iname '*.dll.a' -exec ln -sf {} $DLLS \;
         done
+        # Some DLLs have a `lib` prefix but we attempt to load them without the prefix.
+        # This was a problem for `double-conversion` package when used in TH code.
+        # Creating links from the `X.dll` to `libX.dll` works around this issue.
         (
         cd $DLLS
         for l in lib*.dll; do
