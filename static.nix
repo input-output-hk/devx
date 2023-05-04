@@ -15,6 +15,7 @@ let tool-version-map = import ./tool-map.nix;
             case "$nixlib" in
             *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
             *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
+            *libc++.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libc++.dylib   "$1" ;;
             *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
             *) ;;
             esac
@@ -50,7 +51,7 @@ let tool-version-map = import ./tool-map.nix;
         '';
     };
 in
-pkgs.mkShell ({
+pkgs.mkShell (rec {
     # Note [cabal override]:
     #
     # We need to override the `cabal` command and pass --ghc-options for the
@@ -81,30 +82,53 @@ pkgs.mkShell ({
       pcre-lite +pkg-config
     '';
 
+    # This is required to prevent
+    #
+    #    WARNING: [...]ghc is loading libcrypto in an unsafe way
+    #    [...]
+    #    The build process terminated with exit code -6
+    #
+    # We want to load the libcrypto from the openssl path, not from
+    # the system path.
+    DYLD_LIBRARY_PATH= with pkgs; "${lib.getLib openssl}/lib";
+
     shellHook = with pkgs; ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
+        export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}";
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
         ${figlet}/bin/figlet -f small "*= static edition =*"
         echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
         echo "NOTE (macos): you can use fixup-nix-deps FILE, to fix iconv, ffi, and zlib dependencies that point to the /nix/store"
         export CABAL_DIR=$HOME/.cabal-static
         echo "CABAL_DIR set to $CABAL_DIR"
+        echo "DYLD_LIBRARY_PATH set to $DYLD_LIBRARY_PATH"
         echo "Quirks:"
         echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
         echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     '';
-    buildInputs = (with pkgs; [
+    
+    # these are _target_ libs, e.g. ones we want to link the build
+    # product against. These are also the ones that showup in the
+    # PKG_CONFIG_PATH.
+    buildInputs = with pkgs; ([
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
-    ]) ++ map pkgs.lib.getDev (with pkgs; [
+    ]) ++ map lib.getDev ([
         static-gmp
 
         zlib
         pcre
         openssl
+    ] ++ lib.optionals withIOG [
+        libblst
+        libsodium-vrf
+        secp256k1
+        #R_4_1_3
     ]);
 
+    # these are _native_ libs, we need to drive the compilation environment
+    # they will _not_ be part of the final build product.
     nativeBuildInputs = [
         wrapped-cabal
         fixup-nix-deps
@@ -117,10 +141,6 @@ pkgs.mkShell ({
     ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
     ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
-    ++ pkgs.lib.optional withIOG
-        (with pkgs; [ cddl cbor-diag ]
-        ++ map pkgs.lib.getDev (with pkgs; [
-            libblst libsodium-vrf secp256k1 #R_4_1_3
-        ]))
+    ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ])
     ;
 })
