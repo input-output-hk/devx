@@ -126,6 +126,7 @@ pkgs.mkShell (rec {
         secp256k1
         #R_4_1_3      # for plutus
         postgresql    # for db-sync
+        icu           # for cardano-cli
     ]);
 
     # these are _native_ libs, we need to drive the compilation environment
