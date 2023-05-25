@@ -6,7 +6,7 @@ operating systems (and architectures).
 
 It requires [`nix` to be installed](https://nixos.org/download.html).
 
-On a system with `nix`, (linux, macOS, windows WSL) you can use
+Once you have `nix`, (linux, macOS, windows WSL) you can use
 
 ```bash
 nix develop github:input-output-hk/devx#ghc8107 --no-write-lock-file --refresh
