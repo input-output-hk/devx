@@ -31,7 +31,7 @@ There are multiple compilers available, and usually the latest for each series
 from 8.10 to 9.6 (a slight delay between the official release announcement and
 the compiler showing up in the devx shell is expected due to integration work
 necessary). The current available ones are: `ghc8107`, `ghc902`, `ghc945`, and
-`ghc961`.
+`ghc961` (these are the same ones as in [haskell.nix](https://github.com/input-output-hk/haskell.nix) and may contain patches for defects in the official releases).
 
 ### Flavours
 There are various flavours available as suffixes to the compiler names (e.g. `#ghc8107-minimal-iog`).
