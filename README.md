@@ -1,7 +1,7 @@
 # The Developer Experience Shell
 
 This repo contains a `nix develop` shell for haskell. Its primary purpose is to
-help get a development shell for haskell products quickly and across multiple
+help get a development shell for haskell quickly and across multiple
 operating systems (and architectures).
 
 It requires [`nix` to be installed](https://nixos.org/download.html).
