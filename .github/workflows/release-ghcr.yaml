@@ -1,0 +1,39 @@
+name: Test cardano-node upload to ghci.io
+
+on:
+  push:
+    branches:
+      - '**'
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "Upload to ghcr.io"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Nix with good defaults
+      uses: input-output-hk/install-nix-action@v20
+      with:
+        extra_nix_config: |
+          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=
+          substituters = https://cache.iog.io/ https://cache.nixos.org/
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: Download images from cache
+      run: |
+        nix build --builders "" --max-jobs 0 github:input-output-hk/cardano-node#dockerImage -o dockerImage
+        nix build --builders "" --max-jobs 0 github:input-output-hk/cardano-node#submitApiDockerImage -o submitApiDockerImage        
+    - name: Log in to the Container registry
+      uses: docker/login-action@v2.1.0
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload dockerImage
+        env:
+          IMAGE_NAME: dockerImage
+      run: .github/workflows/release-docker-upload.sh
+    - name: Upload submitApiDockerImage
+        env:
+          IMAGE_NAME: submitApiDockerImage
+      run: .github/workflows/release-ghcr-upload.sh
