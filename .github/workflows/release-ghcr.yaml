@@ -7,6 +7,10 @@ on:
 
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build:
     name: "Upload to ghcr.io"
@@ -31,9 +35,9 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload dockerImage
       env:
-        IMAGE_NAME: dockerImage
+        IMAGE_FILE: dockerImage
       run: .github/workflows/release-docker-upload.sh
     - name: Upload submitApiDockerImage
       env:
-        IMAGE_NAME: submitApiDockerImage
+        IMAGE_FILE: submitApiDockerImage
       run: .github/workflows/release-ghcr-upload.sh
