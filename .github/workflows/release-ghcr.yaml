@@ -30,10 +30,10 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload dockerImage
-        env:
-          IMAGE_NAME: dockerImage
+      env:
+        IMAGE_NAME: dockerImage
       run: .github/workflows/release-docker-upload.sh
     - name: Upload submitApiDockerImage
-        env:
-          IMAGE_NAME: submitApiDockerImage
+      env:
+        IMAGE_NAME: submitApiDockerImage
       run: .github/workflows/release-ghcr-upload.sh
