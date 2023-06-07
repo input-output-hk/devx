@@ -83,8 +83,8 @@ pkgs.mkShell ({
         (tool "alex")
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
-    ++ pkgs.lib.optional (withHLS && (compiler-not-in ["ghc961"] "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961"] "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHLS) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961" "ghc962"] "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [
