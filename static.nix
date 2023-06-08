@@ -36,6 +36,7 @@ let tool-version-map = import ./tool-map.nix;
                 "$@" \
                 $NIX_CABAL_FLAGS \
                 --disable-shared --enable-static \
+                --ghc-option=-fPIC \
                 --ghc-option=-L${lib.getLib static-gmp}/lib \
                 --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
                 --ghc-option=-L${lib.getLib static-secp256k1}/lib \
@@ -136,7 +137,7 @@ pkgs.mkShell (rec {
         fixup-nix-deps
         # We are happy to use a _shared_ compiler; we only want the build
         # products to be static.
-        (compiler.override { enableShared = true; })
+        (compiler.override { enableShared = true; enableRelocatedStaticLibs = true; })
     ] ++ (with pkgs; [
         pkgconfig
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
