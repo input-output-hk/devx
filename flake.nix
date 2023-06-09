@@ -81,7 +81,7 @@
                   "ghc945"
                  ];
                  windows-compilers = pkgs:
-                   pkgs.lib.optionalAttrs (__elem system ["x86_64-linux" "x86_64-darwin"])
+                   pkgs.lib.optionalAttrs (__elem system ["x86_64-linux"])
                    (builtins.removeAttrs (compilers pkgs)
                      [
                      ]);

@@ -82,7 +82,7 @@ jobs:
           # fixed output of the derivation is already in the `/nix/store` and will
           # not try to fetch it using the platform we do not have a builder for.
           if [[ "${{ matrix.platform }}" != "x86_64-linux" && "${{ matrix.target-platform }}" = "-js" ]]; then
-            nix build ".#hydraJobs.x86_64-linux.${{ matrix.compiler-nix-name }}-js-minimal" --show-trace
+            nix build --builders "" --max-jobs 0 ".#hydraJobs.x86_64-linux.${{ matrix.compiler-nix-name }}-js-minimal" --show-trace
           fi
       - name: Compute and upload closure and developer environment to ghcr.io
         env:
