@@ -137,7 +137,7 @@ pkgs.mkShell (rec {
         fixup-nix-deps
         # We are happy to use a _shared_ compiler; we only want the build
         # products to be static.
-        (compiler.override { enableShared = true; enableRelocatedStaticLibs = true; })
+        (compiler.override { enableShared = true; enableRelocatedStaticLibs = true; enableNUMA = false; })
     ] ++ (with pkgs; [
         pkgconfig
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
