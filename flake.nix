@@ -1,7 +1,7 @@
 {
     description = "Minimal devshell flake for haskell";
 
-    inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
+    inputs.haskellNix.url = "github:input-output-hk/haskell.nix/angerman-patch-3";
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     inputs.flake-utils.url = "github:hamishmack/flake-utils/hkm/nested-hydraJobs";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
