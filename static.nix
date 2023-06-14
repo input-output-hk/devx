@@ -126,6 +126,7 @@ pkgs.mkShell (rec {
         secp256k1
         #R_4_1_3      # for plutus
         postgresql    # for db-sync
+        icu           # for cardano-cli
     ]);
 
     # these are _native_ libs, we need to drive the compilation environment
@@ -140,8 +141,8 @@ pkgs.mkShell (rec {
         pkgconfig
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
-    ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc961"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in (pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc961" "ghc962"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ])
     ;
 })
