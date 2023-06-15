@@ -1,8 +1,11 @@
 name: Test cardano-node upload to ghci.io
 
 on:
+  release:
+    types:
+      - published
   push:
-    branches:
+    tags:
       - '**'
 
   workflow_dispatch:
@@ -36,10 +39,4 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload dockerImage
-      env:
-        IMAGE_FILE: dockerImage
-      run: .github/workflows/release-ghcr-upload.sh
-    - name: Upload submitApiDockerImage
-      env:
-        IMAGE_FILE: submitApiDockerImage
       run: .github/workflows/release-ghcr-upload.sh
