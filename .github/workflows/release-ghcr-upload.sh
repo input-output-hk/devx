@@ -1,4 +1,4 @@
-#! /usr/bin/env nix-shell
+#! /usr/bin/env bash
 set -euox pipefail
 
 if ! { [ "${GITHUB_REF:-}" == "refs/heads/hkm/cardano-node-ghcr-test" ] || [[ "${GITHUB_REF:-}" = refs/heads/release* ]]; }; then
