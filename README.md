@@ -6,6 +6,10 @@ operating systems (and architectures).
 
 It requires [`nix` to be installed](https://nixos.org/download.html).
 
+Once you have `nix` installed you can check that everything is working correctly using:
+* Make sure your user is a member of the `nixbld` group using `groups | grep nixbld`.
+* Make sure the `nix-daemon` is running using `systemctl status nix-daemon`.
+
 Once you have `nix`, (linux, macOS, windows WSL) you can use
 
 ```bash
@@ -30,7 +34,7 @@ nix develop github:input-output-hk/devx#ghc8107 --no-write-lock-file --refresh -
 There are multiple compilers available, and usually the latest for each series
 from 8.10 to 9.6 (a slight delay between the official release announcement and
 the compiler showing up in the devx shell is expected due to integration work
-necessary). The current available ones are: `ghc8107`, `ghc902`, `ghc928`,``ghc945`, and
+necessary). The current available ones are: `ghc8107`, `ghc902`, `ghc928`,`ghc945`, and
 `ghc962` (these are the same ones as in [haskell.nix](https://github.com/input-output-hk/haskell.nix) and may contain patches for defects in the official releases).
 
 ### Flavours
