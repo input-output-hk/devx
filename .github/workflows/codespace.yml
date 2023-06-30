@@ -1,0 +1,47 @@
+name: Build and push Docker image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  CR_PAT: ${{ secrets.CR_PAT }}
+  IMAGE_NAME: iog-devx
+  REGISTRY: ghcr.io/input-output-hk
+  DEFAULT_TAG: latest
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: ['x86_64-linux', 'x86_64-darwin', 'aarch64-linux', 'aarch64-darwin']
+        target-platform: ['', '-static', '-windows', '-js']
+        compiler-nix-name: ['ghc961']
+        minimal: [true, false]
+        iog: [true, false]
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v2.1.0
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.minimal }}${{ matrix.iog }}
+        build-args: |
+          platform=${{ matrix.platform }}
+          target-platform=${{ matrix.target-platform }}
+          compiler-nix-name=${{ matrix.compiler-nix-name }}
+          minimal=${{ matrix.minimal }}
+          iog=${{ matrix.iog }}
