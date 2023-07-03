@@ -6,6 +6,11 @@ operating systems (and architectures).
 
 It requires [`nix` to be installed](https://nixos.org/download.html).
 
+Once you have `nix` installed you can check that everything is working correctly:
+* Make sure to add `experimental-features = nix-command flakes` and `accept-flake-config = true` lines to `$XDG_CONFIG_HOME/nix/nix.conf` file ;
+* Make sure your `$USER` is trusted `grep 'trusted-users' /etc/nix/nix.conf`, otherwise add it to `/etc/nix/nix.conf` and restart `nix-daemon` ;
+* Make sure the `nix-daemon` is running using `systemctl status nix-daemon` (if your OS is `systemd`-based).
+
 Once you have `nix`, (linux, macOS, windows WSL) you can use
 
 ```bash
@@ -25,12 +30,26 @@ or
 nix develop github:input-output-hk/devx#ghc8107 --no-write-lock-file --refresh --system aarch64-darwin
 ```
 
+## `direnv` integration
+
+If you use [`direnv`](https://direnv.net), you can integrate this shell with:
+```
+# https://github.com/nix-community/nix-direnv A fast, persistent use_nix/use_flake implementation for direnv:
+if ! has nix_direnv_version || ! nix_direnv_version 2.3.0; then
+  source_url "https://raw.githubusercontent.com/nix-community/nix-direnv/2.3.0/direnvrc" "sha256-Dmd+j63L84wuzgyjITIfSxSD57Tx7v51DMxVZOsiUD8="
+fi
+# https://github.com/input-output-hk/devx Slightly opinionated shared GitHub Action for Cardano-Haskell projects 
+use flake "github:input-output-hk/devx#ghc8107-iog"
+```
+
+Refer to [`direnv` and `devx`](./docs/direnv.md) guide for more information.
+
 ## Compilers and Flavours
 
 There are multiple compilers available, and usually the latest for each series
 from 8.10 to 9.6 (a slight delay between the official release announcement and
 the compiler showing up in the devx shell is expected due to integration work
-necessary). The current available ones are: `ghc8107`, `ghc902`, `ghc928`,``ghc945`, and
+necessary). The current available ones are: `ghc8107`, `ghc902`, `ghc928`,`ghc945`, and
 `ghc962` (these are the same ones as in [haskell.nix](https://github.com/input-output-hk/haskell.nix) and may contain patches for defects in the official releases).
 
 ### Flavours
