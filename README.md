@@ -6,9 +6,10 @@ operating systems (and architectures).
 
 It requires [`nix` to be installed](https://nixos.org/download.html).
 
-Once you have `nix` installed you can check that everything is working correctly using:
-* Make sure your user is a member of the `nixbld` group using `groups | grep nixbld`.
-* Make sure the `nix-daemon` is running using `systemctl status nix-daemon`.
+Once you have `nix` installed you can check that everything is working correctly:
+* Make sure to add `experimental-features = nix-command flakes` and `accept-flake-config = true` lines to `$XDG_CONFIG_HOME/nix/nix.conf` file ;
+* Make sure your `$USER` is trusted `grep 'trusted-users' /etc/nix/nix.conf`, otherwise add it to `/etc/nix/nix.conf` and restart `nix-daemon` ;
+* Make sure the `nix-daemon` is running using `systemctl status nix-daemon` (if your OS is `systemd`-based).
 
 Once you have `nix`, (linux, macOS, windows WSL) you can use
 
