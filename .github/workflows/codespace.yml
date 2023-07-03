@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform: ['x86_64-linux', 'x86_64-darwin', 'aarch64-linux', 'aarch64-darwin']
+        platform: ['x86_64-linux']
         target-platform: ['', '-static', '-windows', '-js']
         compiler-nix-name: ['ghc961']
         minimal: [true, false]
