@@ -29,6 +29,20 @@ or
 nix develop github:input-output-hk/devx#ghc8107 --no-write-lock-file --refresh --system aarch64-darwin
 ```
 
+## `direnv` integration
+
+If you use [`direnv`](https://direnv.net), you can integrate this shell with:
+```
+# https://github.com/nix-community/nix-direnv A fast, persistent use_nix/use_flake implementation for direnv:
+if ! has nix_direnv_version || ! nix_direnv_version 2.3.0; then
+  source_url "https://raw.githubusercontent.com/nix-community/nix-direnv/2.3.0/direnvrc" "sha256-Dmd+j63L84wuzgyjITIfSxSD57Tx7v51DMxVZOsiUD8="
+fi
+# https://github.com/input-output-hk/devx Slightly opinionated shared GitHub Action for Cardano-Haskell projects 
+use flake "github:input-output-hk/devx#ghc8107-iog"
+```
+
+Refer to [`direnv` and `devx`](./docs/direnv.md) guide for more information.
+
 ## Compilers and Flavours
 
 There are multiple compilers available, and usually the latest for each series
