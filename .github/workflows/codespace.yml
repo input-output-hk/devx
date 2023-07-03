@@ -19,7 +19,7 @@ jobs:
       matrix:
         platform: ['x86_64-linux']
         target-platform: ['', '-static', '-windows', '-js']
-        compiler-nix-name: ['ghc961']
+        compiler-nix-name: ['ghc8107','ghc962']
         minimal: [true, false]
         iog: [true, false]
     steps:
