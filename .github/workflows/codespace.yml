@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
 
 env:
-  CR_PAT: ${{ secrets.CR_PAT }}
   IMAGE_NAME: iog-devx
   REGISTRY: ghcr.io/input-output-hk
   DEFAULT_TAG: latest
