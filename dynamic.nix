@@ -54,7 +54,10 @@ pkgs.mkShell {
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
         echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
-        export CABAL_DIR=$HOME/.cabal
+        # change the CABAL_HOME so it doesn't confict with the default .cabal store outside of the shell
+        # which might have a different environment (and thus cflags, ldflags, ...) rendering them mutually
+        # incompatbile.
+        export CABAL_DIR=$HOME/.cabal-devx
         echo "CABAL_DIR set to $CABAL_DIR"
     ''
     # this one is only needed on macOS right now, due to a bug in loading libcrypto.
