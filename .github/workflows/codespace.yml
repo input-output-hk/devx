@@ -13,6 +13,8 @@ env:
 
 jobs:
   build_and_push:
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     strategy:
       matrix:
