@@ -20,7 +20,7 @@ jobs:
     # But, since the purpose of GitHub Codespace is to serve a complete development environment,
     # the user is likely to always expect HLS (I don't see the point otherwise).
     # Therefore, it doesn't seem useful to build an image on the `-minimal` flavor (without HLS),
-    # or the `-static` one (especially since the latter currently requires `-minimal` to works).
+    # or the `-static` one (especially since the latter currently requires `-minimal` to work).
     # Likely, we consider using `-iog` as the default and do not generate other images.
     # Then the user choices left would be between native, `-windows` or `-js` target platforms,
     # and the GHC version (currently `ghc8107` and `ghc962`).
