@@ -44,6 +44,28 @@ use flake "github:input-output-hk/devx#ghc8107-iog"
 
 Refer to [`direnv` and `devx`](./docs/direnv.md) guide for more information.
 
+## VSCode DevContainer / GitHub CodeSpace support
+
+To make this developer shell available in VSCode DevContainer or GitHub CodeSpace, simply add a file named `.devcontainer/devcontainer.json` with the following content:
+```json
+{
+   "image":"ghcr.io/input-output-hk/devx-devcontainer:ghc8107-iog",
+   "customizations":{
+      "vscode":{
+         "extensions":[
+            "haskell.haskell"
+         ],
+         "settings":{
+            "haskell.manageHLS":"PATH"
+         }
+      }
+   }
+}
+```
+This configuration will work immediately in GitHub CodeSpace! For local VSCode DevContainer, you need Docker and the VSCode extension https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers. For guidance on this, you can follow the official Microsoft tutorial at https://code.visualstudio.com/docs/devcontainers/tutorial.
+
+List of images available: `ghc8107-iog`, `ghc962-iog`, `ghc8107-js-iog`, `ghc962-js-iog`, `ghc8107-windows-iog`, `ghc962-windows-iog`
+
 ## Compilers and Flavours
 
 There are multiple compilers available, and usually the latest for each series
