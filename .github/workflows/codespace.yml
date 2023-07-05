@@ -16,6 +16,14 @@ jobs:
     permissions:
       packages: write
     runs-on: ubuntu-latest
+    # We want a GitHub Codespace image for each combination of devx developer shell option.
+    # But, since the purpose of GitHub Codespace is to serve a complete development environment,
+    # the user is likely to always expect HLS (I don't see the point otherwise).
+    # Therefore, it doesn't seem useful to build an image on the `-minimal` flavor (without HLS),
+    # or the `-static` one (especially since the latter currently requires `-minimal` to work).
+    # Likely, we consider using `-iog` as the default and do not generate other images.
+    # Then the user choices left would be between native, `-windows` or `-js` target platforms,
+    # and the GHC version (currently `ghc8107` and `ghc962`).
     strategy:
       matrix:
         platform: ['x86_64-linux']
@@ -39,7 +47,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}-iog
         build-args: |
           platform=${{ matrix.platform }}
           target-platform=${{ matrix.target-platform }}
