@@ -32,7 +32,7 @@ nix develop github:input-output-hk/devx#ghc8107 --no-write-lock-file --refresh -
 
 ## `direnv` integration
 
-If you use [`direnv`](https://direnv.net), you can integrate this shell with:
+If you use [`direnv`](https://direnv.net), you can integrate this shell by creating an `.envrc` file with the following content:
 ```
 # https://github.com/nix-community/nix-direnv A fast, persistent use_nix/use_flake implementation for direnv:
 if ! has nix_direnv_version || ! nix_direnv_version 2.3.0; then
@@ -62,7 +62,9 @@ To make this developer shell available in VSCode DevContainer or GitHub CodeSpac
    }
 }
 ```
-This configuration will work immediately in GitHub CodeSpace! For local VSCode DevContainer, you need Docker and the VSCode extension https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers. For guidance on this, you can follow the official Microsoft tutorial at https://code.visualstudio.com/docs/devcontainers/tutorial.
+This configuration will work immediately in GitHub CodeSpace! For local VSCode DevContainer, you need Docker and the [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers). For guidance on this, you can follow the [Microsoft tutorial](https://code.visualstudio.com/docs/devcontainers/tutorial).
+
+It's also advise to enable GitHub CodeSpace prebuilds in your repository settings, follow the instructions provided in the [GitHub documentation](https://docs.github.com/en/codespaces/prebuilding-your-codespaces/configuring-prebuilds). This will significantly enhance your development experience by reducing the setup time when opening a new CodeSpace.
 
 List of images available: `ghc8107-iog`, `ghc962-iog`, `ghc8107-js-iog`, `ghc962-js-iog`, `ghc8107-windows-iog`, `ghc962-windows-iog`
 
