@@ -139,6 +139,8 @@ pkgs.pkgsBuildBuild.mkShell ({
     nativeBuildInputs = [ wrapped-ghc wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
         buildPackages.bintools.bintools
         stdenv.cc
+        windows.mingw_w64_pthreads
+        openssl
         pkgsBuildBuild.haskell-nix.cabal-install.${compiler-nix-name}
         pkgsBuildBuild.pkgconfig
         (pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name "happy" "1.20.1.1")
