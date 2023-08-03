@@ -49,7 +49,7 @@ jobs:
     - run: |
         mv /usr/local/bin/devx /usr/local/bin/devx.orig
         echo "#!/bin/bash" > /usr/local/bin/devx
-        cat /usr/local/bin/devx.orig > /usr/local/bin/devx
+        cat /usr/local/bin/devx.orig >> /usr/local/bin/devx
         chmod +x /usr/local/bin/devx
         file /usr/local/bin/devx
         head -n10 /usr/local/bin/devx
