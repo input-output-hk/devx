@@ -46,6 +46,7 @@ jobs:
         compiler-nix-name: ${{ inputs.compiler-nix-name }}
         minimal: ${{ inputs.minimal }}
         iog: ${{ inputs.iog }}
+    - run: sudo chmod +x /usr/local/bin/devx
     - name: cabal update
       run: cabal update
     - name: unapck hello
