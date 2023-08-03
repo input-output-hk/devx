@@ -47,6 +47,7 @@ jobs:
         minimal: ${{ inputs.minimal }}
         iog: ${{ inputs.iog }}
     - run: sudo chmod +x /usr/local/bin/devx
+      shell: bash
     - name: cabal update
       run: cabal update
     - name: unapck hello
