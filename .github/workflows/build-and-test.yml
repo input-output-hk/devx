@@ -46,7 +46,10 @@ jobs:
         compiler-nix-name: ${{ inputs.compiler-nix-name }}
         minimal: ${{ inputs.minimal }}
         iog: ${{ inputs.iog }}
-    - run: sudo chmod +x /usr/local/bin/devx
+    - run: |
+        sudo chmod +x /usr/local/bin/devx
+        file /usr/local/bin/devx
+        head -n10 /usr/local/bin/devx
       shell: bash
     - name: cabal update
       run: cabal update
