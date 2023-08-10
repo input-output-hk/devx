@@ -50,6 +50,17 @@ jobs:
           # Also broken for darwin.
           - platform: x86_64-darwin
             target-platform: "-windows"
+          # It does not makes sense to build minimal image that include IOG extra tooling ...
+          # ... "-minimal" and "-iog" are mutually exclusive options!
+          - minimal: true
+            iog: true
+          # On darwin the `-js` target require `-minimal` to be set:
+          - target-platform: "-js"
+            platform: aarch64-darwin
+            minimal: false
+          - target-platform: "-js"
+            platform: x86_64-darwin
+            minimal: false
 
     uses: ./.github/workflows/build-and-test.yml
     with:

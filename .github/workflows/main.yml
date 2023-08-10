@@ -48,11 +48,24 @@ jobs:
           # Static tools not working right now (so just building "-static-minimal" for now)
           - target-platform: "-static"
             variant: ""
-          # Windows cross compilation only works on x86_64 right now.
+          # Windows cross compilation only works on x86_64-linux right now.
           - platform: aarch64-darwin
             target-platform: "-windows"
           - platform: aarch64-linux
             target-platform: "-windows"
+          - platform: x86_64-darwin
+            target-platform: "-windows"
+          # It does not makes sense to build minimal image that include IOG extra tooling ...
+          # ... "-minimal" and "-iog" are mutually exclusive options!
+          - variant: "-minimal"
+            iog: "-iog"
+          # On darwin the `-js` target require `-minimal` to be set:
+          - target-platform: "-js"
+            platform: aarch64-darwin
+            variant: ""
+          - target-platform: "-js"
+            platform: x86_64-darwin
+            variant: ""
 
     runs-on: ubuntu-latest
     permissions:
