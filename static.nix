@@ -106,7 +106,7 @@ pkgs.mkShell (rec {
         echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
         echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
     '';
-    
+
     # these are _target_ libs, e.g. ones we want to link the build
     # product against. These are also the ones that showup in the
     # PKG_CONFIG_PATH.
@@ -127,6 +127,9 @@ pkgs.mkShell (rec {
         #R_4_1_3      # for plutus
         postgresql    # for db-sync
         icu           # for cardano-cli
+        gh
+        jq
+        yq-go
     ]);
 
     # these are _native_ libs, we need to drive the compilation environment
