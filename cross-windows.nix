@@ -115,7 +115,7 @@ let tool-version-map = import ./tool-map.nix;
         )
         WINEPATH=$DLLS WINEDLLOVERRIDES="winemac.drv=d" WINEDEBUG=warn-all,fixme-all,-menubuilder,-mscoree,-ole,-secur32,-winediag WINEPREFIX=$TMP ${pkgs.pkgsBuildBuild.winePackages.minimal}/bin/wine64 "$@"
       '';
-
+    quirks = (import ./quirks.nix { inherit pkgs; });
 in
 pkgs.pkgsBuildBuild.mkShell ({
     # Note [cabal override]:
@@ -141,12 +141,7 @@ pkgs.pkgsBuildBuild.mkShell ({
     # "--enable-executable-static"
     ];
 
-    CABAL_PROJECT_LOCAL_TEMPLATE = ''
-    constraints:
-      HsOpenSSL +use-pkg-config,
-      zlib +pkg-config,
-      pcre-lite +pkg-config
-    '';
+    inherit (quirks) CABAL_PROJECT_LOCAL_TEMPLATE;
 
     shellHook = with pkgs; ''
       export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
@@ -155,7 +150,7 @@ pkgs.pkgsBuildBuild.mkShell ({
       echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
       export CABAL_DIR=$HOME/.cabal-windows
       echo "CABAL_DIR set to $CABAL_DIR"
-    '';
+    '' + quirks.shellHook;
     buildInputs = [];
 
     nativeBuildInputs = [ wrapped-ghc wrapped-hsc2hs wrapped-cabal wine-test-wrapper compiler ] ++ (with pkgs; [
