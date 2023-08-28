@@ -1,5 +1,5 @@
 # see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
-# so we assume "latest" for all hls. 
+# so we assume "latest" for all hls.
 # for hlint however, we need hlint-3.3 for ghc-8.10.7.
 let fixed-versions = { "hlint" = { "ghc8107" = { version = "3.3"; }; }; }; in
 compiler-nix-name: tool: {
@@ -8,7 +8,7 @@ compiler-nix-name: tool: {
   # HLS release. Therefore we rely on the HLS upstream repository to provide the proper configuration information.
   haskell-language-server = {pkgs, ...}: rec {
       # Use the github source of HLS that is tested with haskell.nix CI
-      src = pkgs.haskell-nix.sources."hls-1.10";
+      src = pkgs.haskell-nix.sources."hls-2.0";
       # `tool` normally ignores the `cabal.project` (if there is one in the hackage source).
       # We need to use the github one (since it has settings to make hls build).
       cabalProject = __readFile (src + "/cabal.project");
