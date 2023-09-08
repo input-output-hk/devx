@@ -7,6 +7,17 @@ let tool-version-map = import ./tool-map.nix;
 
     inherit (pkgs.haskell-nix.iserv-proxy-exes.${compiler-nix-name}) iserv-proxy iserv-proxy-interpreter;
 
+    dllPkgs = [
+      pkgs.libffi
+      pkgs.gmp
+      pkgs.windows.mcfgthreads
+      pkgs.windows.mingw_w64_pthreads
+      pkgs.buildPackages.gcc.cc
+    ] ++ pkgs.lib.optionals withIOG [
+      (pkgs.libsodium-vrf or pkgs.libsodium)
+      pkgs.openssl.bin
+      pkgs.secp256k1
+    ];
     wineIservWrapperScript = pkgs.pkgsBuildBuild.writeScriptBin "iserv-wrapper" ''
         #!${pkgs.pkgsBuildBuild.stdenv.shell}
         set -euo pipefail
@@ -20,18 +31,7 @@ let tool-version-map = import ./tool-map.nix;
         REMOTE_ISERV=$(mktemp -d)
         ln -s ${iserv-proxy-interpreter}/bin/* $REMOTE_ISERV
         # Normally this would come from comp-builder.nix
-        pkgsHostTargetAsString="${pkgs.lib.concatStringsSep " " ([
-          pkgs.libffi
-          pkgs.gmp
-          pkgs.windows.mcfgthreads
-          pkgs.windows.mingw_w64_pthreads
-          pkgs.buildPackages.gcc.cc
-        ] ++ pkgs.lib.optionals withIOG [
-          (pkgs.libsodium-vrf or pkgs.libsodium)
-          pkgs.openssl.bin
-          pkgs.secp256k1
-        ])}"
-        for p in $pkgsHostTargetAsString; do
+        for p in ${pkgs.lib.concatStringsSep " " dllPkgs}; do
           find "$p" -iname '*.dll' -exec ln -sf {} $REMOTE_ISERV \;
           find "$p" -iname '*.dll.a' -exec ln -sf {} $REMOTE_ISERV \;
         done
@@ -44,8 +44,6 @@ let tool-version-map = import ./tool-map.nix;
           ln -s "$l" "''${l#lib}"
         done
         )
-        # Not sure why this `unset` helps.  It might avoids some kind of overflow issue.  We see `wine` fail to start when building `cardano-wallet-cli` test `unit`.
-        unset pkgsHostTargetAsString
         WINEDLLOVERRIDES="winemac.drv=d" WINEDEBUG=warn-all,fixme-all,-menubuilder,-mscoree,-ole,-secur32,-winediag WINEPREFIX=$TMP ${pkgs.pkgsBuildBuild.winePackages.minimal}/bin/wine64 $REMOTE_ISERV/${iserv-proxy-interpreter.exeName} tmp $PORT &
         (>&2 echo "---| ${iserv-proxy-interpreter.exeName} should have started on $PORT")
         RISERV_PID="$!"
@@ -96,6 +94,28 @@ let tool-version-map = import ./tool-map.nix;
             "$@"
         '';
     };
+    wine-test-wrapper = pkgs.pkgsBuildBuild.writeScriptBin "${compiler.targetPrefix}test-wrapper" ''
+        #!${pkgs.pkgsBuildBuild.stdenv.shell}
+        set -euo pipefail
+        # Link all the DLLs we might need into one place so we can add
+        # just that one location to WINEPATH.
+        DLLS=$(mktemp -d)
+        for p in ${pkgs.lib.concatStringsSep " " dllPkgs}; do
+          find "$p" -iname '*.dll' -exec ln -sf {} $DLLS \;
+          find "$p" -iname '*.dll.a' -exec ln -sf {} $DLLS \;
+        done
+        # Some DLLs have a `lib` prefix but we attempt to load them without the prefix.
+        # This was a problem for `double-conversion` package when used in TH code.
+        # Creating links from the `X.dll` to `libX.dll` works around this issue.
+        (
+        cd $DLLS
+        for l in lib*.dll; do
+          ln -s "$l" "''${l#lib}"
+        done
+        )
+        WINEPATH=$DLLS WINEDLLOVERRIDES="winemac.drv=d" WINEDEBUG=warn-all,fixme-all,-menubuilder,-mscoree,-ole,-secur32,-winediag WINEPREFIX=$TMP ${pkgs.pkgsBuildBuild.winePackages.minimal}/bin/wine64 "$@"
+      '';
+
 in
 pkgs.pkgsBuildBuild.mkShell ({
     # Note [cabal override]:
@@ -114,16 +134,18 @@ pkgs.pkgsBuildBuild.mkShell ({
     "--with-ghc=x86_64-w64-mingw32-ghc"
     "--with-ghc-pkg=x86_64-w64-mingw32-ghc-pkg"
     "--with-hsc2hs=x86_64-w64-mingw32-hsc2hs"
+    # We use the test-wrapper option here so that tests are executed through
+    # WINE, as we can't run windows test natively.
+    "--test-wrapper=x86_64-w64-mingw32-test-wrapper"
     # ensure that the linker knows we want a static build product
     # "--enable-executable-static"
     ];
 
     CABAL_PROJECT_LOCAL_TEMPLATE = ''
-    package digest
     constraints:
-    HsOpenSSL +use-pkg-config,
-    zlib +pkg-config
-    pcre-lite +pkg-config
+      HsOpenSSL +use-pkg-config,
+      zlib +pkg-config,
+      pcre-lite +pkg-config
     '';
 
     shellHook = with pkgs; ''
@@ -136,7 +158,7 @@ pkgs.pkgsBuildBuild.mkShell ({
     '';
     buildInputs = [];
 
-    nativeBuildInputs = [ wrapped-ghc wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
+    nativeBuildInputs = [ wrapped-ghc wrapped-hsc2hs wrapped-cabal wine-test-wrapper compiler ] ++ (with pkgs; [
         buildPackages.bintools.bintools
         stdenv.cc
         pkgsBuildBuild.haskell-nix.cabal-install.${compiler-nix-name}
