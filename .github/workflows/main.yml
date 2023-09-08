@@ -11,7 +11,41 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  wait-for-hydra-eval:
+    env:
+      HYDRA_JOB: ci/eval
+      GH_TOKEN: ${{ github.token }}
+    name: "Wait for hydra status"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get specific check run status
+      run: |
+        # start with a random sleep to prevent hitting the api too hard.
+        while true; do
+          # For GitHub Apps
+          # conclusion=$(gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --jq '.check_runs[] | select(.name == "ci/hydra-build:$DEV_SHELL") | .conclusion')
+          # For GitHub Statuses; we need --paginate because there are so many statuses
+          echo "Querying: gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --paginate --jq '.statuses[] | select(.context == \"$HYDRA_JOB\") | .state'"
+          conclusion=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status" --paginate --jq ".statuses[] | select(.context == \"$HYDRA_JOB\") | .state")
+          case "$conclusion" in
+            success)
+              echo "$HYDRA_JOB succeeded"
+              exit 0;;
+            failure)
+              echo "$HYDRA_JOB failed"
+              exit 1;;
+            *)
+              echo "conclusion is: '$conclusion'"
+              gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status" --paginate --jq '.statuses[] | .state+"\t"+.context'|sort
+              WAIT=$((30 + RANDOM % 30))
+            echo "$HYDRA_JOB pending. Waiting ${WAIT}s..."
+            sleep $WAIT;;
+          esac
+        done
+
+  upload:
+    needs: wait-for-hydra-eval
+    name: Container Upload
     strategy:
       fail-fast: false
       matrix:
@@ -66,39 +100,10 @@ jobs:
           - target-platform: "-js"
             platform: x86_64-darwin
             variant: ""
-
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Install Nix with good defaults
-        uses: cachix/install-nix-action@v20
-        with:
-          extra_nix_config: |
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
-            substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
-          nix_path: nixpkgs=channel:nixos-unstable
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2.1.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Work around issue fetching cabal revision files
-        run: |
-          # This will cause the revised `.cabal` files used whan building alex
-          # for building GHC to be fetched using the `x86_64-linux` `.drv` for `fetchurl`.
-          # Later when we want the non `x86_64-linux` version later it will find the
-          # fixed output of the derivation is already in the `/nix/store` and will
-          # not try to fetch it using the platform we do not have a builder for.
-          if [[ "${{ matrix.platform }}" != "x86_64-linux" && "${{ matrix.target-platform }}" = "-js" ]]; then
-            nix build ".#hydraJobs.x86_64-linux.${{ matrix.compiler-nix-name }}-js-minimal" --show-trace
-          fi
-      - name: Compute and upload closure and developer environment to ghcr.io
-        env:
-          NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DEV_SHELL: ${{ matrix.platform }}.${{ matrix.compiler-nix-name }}${{ matrix.target-platform }}${{ matrix.variant }}${{ matrix.iog }}-env
-        run: ./extra/ghcr-upload.sh
+    uses: ./.github/workflows/wait-and-upload.yml
+    with:
+      platform: ${{ matrix.platform }}
+      target-platform: ${{ matrix.target-platform }}
+      compiler-nix-name: ${{ matrix.compiler-nix-name }}
+      minimal: ${{ matrix.variant == '-minimal' }}
+      iog: ${{ matrix.iog == '-iog' }}
