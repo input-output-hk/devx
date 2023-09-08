@@ -50,6 +50,7 @@ let tool-version-map = import ./tool-map.nix;
         esac
         '';
     };
+    quirks = (import ./quirks.nix { inherit pkgs; static = true; });
 in
 pkgs.mkShell (rec {
     # Note [cabal override]:
@@ -73,14 +74,7 @@ pkgs.mkShell (rec {
     ];
     hardeningDisable = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isMusl [ "format" "pie" ];
 
-    CABAL_PROJECT_LOCAL_TEMPLATE = with pkgs; ''
-    package digest
-      extra-lib-dirs: ${zlib}/lib ${pcre}/lib
-    constraints:
-      HsOpenSSL +use-pkg-config,
-      zlib +pkg-config,
-      pcre-lite +pkg-config
-    '';
+    inherit (quirks) CABAL_PROJECT_LOCAL_TEMPLATE;
 
     # This is required to prevent
     #
@@ -102,11 +96,7 @@ pkgs.mkShell (rec {
         export CABAL_DIR=$HOME/.cabal-static
         echo "CABAL_DIR set to $CABAL_DIR"
         echo "DYLD_LIBRARY_PATH set to $DYLD_LIBRARY_PATH"
-        echo "Quirks:"
-        echo -e "\tif you have the zlib, HsOpenSSL, or digest package in your dependency tree, please make sure to"
-        echo -e "\techo \"\$CABAL_PROJECT_LOCAL_TEMPLATE\" > cabal.project.local"
-    '';
-
+    '' + quirks.shellHook;
     # these are _target_ libs, e.g. ones we want to link the build
     # product against. These are also the ones that showup in the
     # PKG_CONFIG_PATH.

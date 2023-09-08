@@ -61,6 +61,13 @@
            #
            # nix develop github:input-output-hk/devx#ghc924 --no-write-lock-file -c cabal build
            #
+           static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
+                         then if pkgs.stdenv.hostPlatform.isAarch64
+                              then pkgs.pkgsCross.aarch64-multiplatform-musl
+                              else pkgs.pkgsCross.musl64
+                         else pkgs;
+           js-pkgs = pkgs.pkgsCross.ghcjs;
+           windows-pkgs = pkgs.pkgsCross.mingwW64;
            devShellsWithToolsModule = toolsModule:
              let compilers = pkgs: builtins.removeAttrs pkgs.haskell-nix.compiler
                 # Exclude old versions of GHC to speed up `nix flake check`
@@ -85,13 +92,6 @@
                    (builtins.removeAttrs (compilers pkgs)
                      [
                      ]);
-                 static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
-                               then if pkgs.stdenv.hostPlatform.isAarch64
-                                    then pkgs.pkgsCross.aarch64-multiplatform-musl
-                                    else pkgs.pkgsCross.musl64
-                               else pkgs;
-                 js-pkgs = pkgs.pkgsCross.ghcjs;
-                 windows-pkgs = pkgs.pkgsCross.mingwW64;
              in (builtins.mapAttrs (compiler-nix-name: compiler:
                   import ./dynamic.nix { inherit pkgs self compiler compiler-nix-name toolsModule; withIOG = false; }
                   ) (compilers pkgs)
@@ -202,6 +202,9 @@
               };
             })) devShellsWithEvalOnLinux) // {
           };
+        packages.cabalProjectLocal.static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
+        packages.cabalProjectLocal.cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
+        packages.cabalProjectLocal.cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;
        });
 
     # --- Flake Local Nix Configuration ----------------------------

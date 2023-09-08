@@ -35,6 +35,7 @@ let tool-version-map = import ./tool-map.nix;
           ${compiler}/bin/${compiler.targetPrefix}hsc2hs --cross-compile "$@"
         '';
     };
+    quirks = (import ./quirks.nix { inherit pkgs; });
 in
 pkgs.mkShell ({
     # Note [cabal override]:
@@ -58,13 +59,7 @@ pkgs.mkShell ({
     ];
     # hardeningDisable = pkgs.lib.optionals pkgs.stdenv.hostPlatform.isMusl [ "format" "pie" ];
 
-    CABAL_PROJECT_LOCAL_TEMPLATE = with pkgs; ''
-    package digest
-    constraints:
-    HsOpenSSL +use-pkg-config,
-    zlib +pkg-config
-    pcre-lite +pkg-config
-    '';
+    inherit (quirks) CABAL_PROJECT_LOCAL_TEMPLATE;
 
     shellHook = with pkgs; ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
@@ -73,7 +68,7 @@ pkgs.mkShell ({
         echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
         export CABAL_DIR=$HOME/.cabal-js
         echo "CABAL_DIR set to $CABAL_DIR"
-    '';
+    '' + quirks.shellHook;
     buildInputs = [];
 
     nativeBuildInputs = [ wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
