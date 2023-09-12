@@ -214,7 +214,7 @@
      # we use flake-outputs here to inject a required job that aggregates all required jobs.
      in flake-outputs // {
           hydraJobs = flake-outputs.hydraJobs // { 
-            required = pkgs.runCommand "test-dependencies" {
+            required = (import nixpkgs { system = "x86_64-linux"; }).runCommand "test-dependencies" {
               _hydraAggregate = true;
               constituents = map (name: "${system}.required") supportedSystems;
             } "touch  $out";
