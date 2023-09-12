@@ -13,7 +13,7 @@ env:
 jobs:
   wait-for-hydra-eval:
     env:
-      HYDRA_JOB: ci/eval
+      HYDRA_JOB: x86_64-linux.required
       GH_TOKEN: ${{ github.token }}
     name: "Wait for hydra status"
     runs-on: ubuntu-latest
