@@ -167,7 +167,7 @@
           # *-dev sentinel job. Singals all -env have been built.
           required = pkgs.runCommand "test-dependencies" {
               _hydraAggregate = true;
-              constituents = map (name: "${name}-env") (builtins.attrNames devShellsWithEvalOnLinux);
+              constituents = map (name: "${system}.${name}-env") (builtins.attrNames devShellsWithEvalOnLinux);
             } "touch  $out";
           } // (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-env" (
