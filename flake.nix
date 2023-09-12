@@ -47,7 +47,7 @@
             "aarch64-linux"
             "aarch64-darwin"
        ];
-    in flake-utils.lib.eachSystem supportedSystems (system:
+    in let flake = flake-utils.lib.eachSystem supportedSystems (system:
       let
            pkgs = import nixpkgs {
              overlays = [haskellNix.overlay] ++ builtins.attrValues overlays;
@@ -210,7 +210,7 @@
         packages.cabalProjectLocal.static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
         packages.cabalProjectLocal.cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
         packages.cabalProjectLocal.cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;
-       });
+       }); in flake
 
     # --- Flake Local Nix Configuration ----------------------------
     nixConfig = {
