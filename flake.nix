@@ -216,7 +216,7 @@
           hydraJobs = flake-outputs.hydraJobs // { 
             required = (import nixpkgs { system = "x86_64-linux"; }).runCommand "test-dependencies" {
               _hydraAggregate = true;
-              constituents = map (name: "${system}.required") supportedSystems;
+              constituents = map (system: "${system}.required") supportedSystems;
             } "touch  $out";
           };          
         };
