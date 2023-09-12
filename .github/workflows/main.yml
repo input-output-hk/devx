@@ -18,30 +18,9 @@ jobs:
     name: "Wait for hydra status"
     runs-on: ubuntu-latest
     steps:
-    - name: Get specific check run status
-      run: |
-        # start with a random sleep to prevent hitting the api too hard.
-        while true; do
-          # For GitHub Apps
-          # conclusion=$(gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --jq '.check_runs[] | select(.name == "ci/hydra-build:$DEV_SHELL") | .conclusion')
-          # For GitHub Statuses; we need --paginate because there are so many statuses
-          echo "Querying: gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --paginate --jq '.statuses[] | select(.context == \"$HYDRA_JOB\") | .state'"
-          conclusion=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status" --paginate --jq ".statuses[] | select(.context == \"$HYDRA_JOB\") | .state")
-          case "$conclusion" in
-            success)
-              echo "$HYDRA_JOB succeeded"
-              exit 0;;
-            failure)
-              echo "$HYDRA_JOB failed"
-              exit 1;;
-            *)
-              echo "conclusion is: '$conclusion'"
-              gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status" --paginate --jq '.statuses[] | .state+"\t"+.context'|sort
-              WAIT=$((30 + RANDOM % 30))
-            echo "$HYDRA_JOB pending. Waiting ${WAIT}s..."
-            sleep $WAIT;;
-          esac
-        done
+    - uses: input-output-hk/actions@angerman/wait-for-hydra
+      with:
+        status: x86_64-linux.required
 
   upload:
     needs: wait-for-hydra-eval
