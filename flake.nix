@@ -216,11 +216,11 @@
           hydraJobs = flake-outputs.hydraJobs // {
             required = (import nixpkgs { system = "x86_64-linux"; }).runCommand "required dependencies (all systems)" {
               _hydraAggregate = true;
-              constituents = map (system: "${system}.required") [
-                "x86_64-linux"
-                "x86_64-darwin"
-                "aarch64-linux"
-                "aarch64-darwin"
+              constituents = [
+                flake-outputs.hydraJobs.x86_64-linux.required
+                flake-outputs.hydraJobs.x86_64-darwin.required
+                flake-outputs.hydraJobs.aarch44-linux.required
+                flake-outputs.hydraJobs.aarch64-darwin.required
               ];
             } "touch  $out";
           };
