@@ -219,7 +219,7 @@
               constituents = [
                 flake-outputs.hydraJobs.x86_64-linux.required
                 flake-outputs.hydraJobs.x86_64-darwin.required
-                flake-outputs.hydraJobs.aarch44-linux.required
+                flake-outputs.hydraJobs.aarch64-linux.required
                 flake-outputs.hydraJobs.aarch64-darwin.required
               ];
             } "touch  $out";
