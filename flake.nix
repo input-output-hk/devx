@@ -165,7 +165,7 @@
         inherit devShells;
         hydraJobs = devShells // {
           # *-dev sentinel job. Singals all -env have been built.
-          required = pkgs.runCommand "required dependencies (per system)" {
+          required = pkgs.runCommand "required dependencies (${system]})" {
               _hydraAggregate = true;
               constituents = map (name: "${system}.${name}-env") (builtins.attrNames devShellsWithEvalOnLinux);
             } "touch  $out";
@@ -214,14 +214,9 @@
      # we use flake-outputs here to inject a required job that aggregates all required jobs.
      in flake-outputs // {
           hydraJobs = flake-outputs.hydraJobs // {
-            required = (import nixpkgs { system = "x86_64-linux"; }).runCommand "required dependencies (all systems)" {
+            required = (import nixpkgs { system = "x86_64-linux"; }).runCommand "required dependencies" {
               _hydraAggregate = true;
-              constituents = [
-                flake-outputs.hydraJobs.x86_64-linux.required
-                flake-outputs.hydraJobs.x86_64-darwin.required
-                flake-outputs.hydraJobs.aarch64-linux.required
-                flake-outputs.hydraJobs.aarch64-darwin.required
-              ];
+              constituents = map (s: "${s}.required") supportedSystems;
             } "touch  $out";
           };
         };
