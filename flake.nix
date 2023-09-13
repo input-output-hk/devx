@@ -3,7 +3,7 @@
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
-    inputs.flake-utils.url = "github:hamishmack/flake-utils/hkm/nested-hydraJobs";
+    inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix }:
@@ -213,12 +213,12 @@
        });
      # we use flake-outputs here to inject a required job that aggregates all required jobs.
      in flake-outputs // {
-          hydraJobs = flake-outputs.hydraJobs // { 
+          hydraJobs = flake-outputs.hydraJobs // {
             required = (import nixpkgs { system = "x86_64-linux"; }).runCommand "test-dependencies" {
               _hydraAggregate = true;
               constituents = map (system: "${system}.required") supportedSystems;
             } "touch  $out";
-          };          
+          };
         };
 
     # --- Flake Local Nix Configuration ----------------------------
