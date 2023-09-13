@@ -18,7 +18,7 @@ jobs:
     name: "Wait for hydra status"
     runs-on: ubuntu-latest
     steps:
-    - uses: input-output-hk/actions@angerman/wait-for-hydra
+    - uses: input-output-hk/actions/wait-for-hydra@angerman/wait-for-hydra
       with:
         status: x86_64-linux.required
 
