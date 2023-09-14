@@ -165,7 +165,7 @@
         inherit devShells;
         hydraJobs = devShells // {
           # *-dev sentinel job. Singals all -env have been built.
-          required = pkgs.runCommand "required dependencies (${system]})" {
+          required = pkgs.runCommand "required dependencies (${system})" {
               _hydraAggregate = true;
               constituents = map (name: "${system}.${name}-env") (builtins.attrNames devShellsWithEvalOnLinux);
             } "touch  $out";
