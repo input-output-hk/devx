@@ -1,11 +1,11 @@
 { pkgs, static ? false }: rec {
   CABAL_PROJECT_LOCAL_TEMPLATE = with pkgs; ''
-  package digest
-  ${if static then "extra-lib-dirs: ${zlib}/lib ${pcre}/lib" else ""}
-  constraints:
-    HsOpenSSL +use-pkg-config,
-    zlib +pkg-config,
-    pcre-lite +pkg-config
+    package digest
+    ${if static then "extra-lib-dirs: ${zlib}/lib ${pcre}/lib" else ""}
+    constraints:
+      HsOpenSSL +use-pkg-config,
+      zlib +pkg-config,
+      pcre-lite +pkg-config
   '';
   template = pkgs.writeTextFile {
     name = "cabal.project.local";
