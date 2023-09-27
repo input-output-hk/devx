@@ -59,6 +59,9 @@ jobs:
           - ghc8107
           - ghc928
           - ghc962
+          # TODO find a nice way to avoid manually updating these
+          - ghc98020230824
+          - ghc9920230923
         target-platform:
           - ""
           - "-static"

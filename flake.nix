@@ -77,15 +77,16 @@
                   "ghc8101" "ghc8102" "ghc8103" "ghc8104" "ghc8105" "ghc8106" "ghc810420210212"
                   "ghc901"
                   "ghc921" "ghc922" "ghc923" "ghc924" "ghc925" "ghc926" "ghc927"
-                  "ghc941" "ghc942" "ghc943" "ghc944"
+                  "ghc941" "ghc942" "ghc943" "ghc944" "ghc945" "ghc946"
                   "ghc96020230302"
                   "ghc961"
+                  "ghc9820230704"
                  ];
                  js-compilers = pkgs: builtins.removeAttrs (compilers pkgs)
                  [
                   "ghc902"
                   "ghc928"
-                  "ghc945"
+                  "ghc947"
                  ];
                  windows-compilers = pkgs:
                    pkgs.lib.optionalAttrs (__elem system ["x86_64-linux"])
