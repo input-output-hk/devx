@@ -72,7 +72,7 @@ pkgs.mkShell {
         fixup-nix-deps
         compiler
     ] ++ (with pkgs; [
-        pkgconfig
+        (pkgs.pkg-config or pkgconfig)
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
