@@ -69,19 +69,18 @@
            js-pkgs = pkgs.pkgsCross.ghcjs;
            windows-pkgs = pkgs.pkgsCross.mingwW64;
            devShellsWithToolsModule = toolsModule:
-             let compilers = pkgs: builtins.removeAttrs pkgs.haskell-nix.compiler
-                # Exclude old versions of GHC to speed up `nix flake check`
-                [ "ghc844"
-                  "ghc861" "ghc862" "ghc863" "ghc864" "ghc865"
-                  "ghc881" "ghc882" "ghc883" "ghc884"
-                  "ghc8101" "ghc8102" "ghc8103" "ghc8104" "ghc8105" "ghc8106" "ghc810420210212"
-                  "ghc901"
-                  "ghc921" "ghc922" "ghc923" "ghc924" "ghc925" "ghc926" "ghc927"
-                  "ghc941" "ghc942" "ghc943" "ghc944" "ghc945" "ghc946"
-                  "ghc96020230302"
-                  "ghc961"
-                  "ghc9820230704"
-                 ];
+             # Map the compiler-nix-name to a final compiler-nix-name the way haskell.nix
+             # projects do (that way we can use short names)
+             let compilers = pkgs: pkgs.lib.genAttrs [
+                      "ghc8107"
+                      "ghc902"
+                      "ghc928"
+                      "ghc947"
+                      "ghc962"
+                      "ghc980"
+                      "ghc99"] (compiler-nix-name:
+                   pkgs.haskell-nix.compiler.${
+                     (pkgs.haskell-nix.cabalProject' { inherit compiler-nix-name; }).args.compiler-nix-name});
                  js-compilers = pkgs: builtins.removeAttrs (compilers pkgs)
                  [
                   "ghc902"
