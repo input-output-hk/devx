@@ -73,7 +73,7 @@ pkgs.mkShell ({
 
     nativeBuildInputs = [ wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
         nodejs # helpful to evaluate output on the commandline.
-        haskell-nix.cabal-install.${compiler-nix-name}
+        cabal-install
         (pkgs.pkg-config or pkgconfig)
         (tool "happy")
         (tool "alex")
