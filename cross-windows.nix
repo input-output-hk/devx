@@ -158,8 +158,8 @@ pkgs.pkgsBuildBuild.mkShell ({
         stdenv.cc
         pkgsBuildBuild.haskell-nix.cabal-install.${compiler-nix-name}
         (pkgsBuildBuild.pkg-config or pkgsBuildBuild.pkgconfig)
-        (pkgsBuildBuild.haskell-nix.tool compiler-nix-name "happy" "1.20.1.1")
-        (pkgsBuildBuild.haskell-nix.tool compiler-nix-name "alex" "3.2.7.3")
+        (tool "happy")
+        (tool "alex")
         stdenv.cc.cc.lib ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in (
          pkgs.lib.optional (builtins.compareVersions compiler.version "9.9" >= 0) compiler-nix-name
