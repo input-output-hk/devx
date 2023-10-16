@@ -76,7 +76,7 @@
                       "ghc902"
                       "ghc928"
                       "ghc947"
-                      "ghc962"
+                      "ghc963"
                       "ghc981"
                       "ghc99"] (compiler-nix-name:
                    pkgs.haskell-nix.compiler.${
