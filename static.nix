@@ -134,8 +134,8 @@ pkgs.mkShell (rec {
         (pkgs.pkg-config or pkgconfig)
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
-    ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc980" "ghc99"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961" "ghc962" "ghc980" "ghc99" "ghc902"] "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc99"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc981" "ghc99" "ghc902"] "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ])
     ;
 })

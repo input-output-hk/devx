@@ -77,7 +77,7 @@
                       "ghc928"
                       "ghc947"
                       "ghc962"
-                      "ghc980"
+                      "ghc981"
                       "ghc99"] (compiler-nix-name:
                    pkgs.haskell-nix.compiler.${
                      (pkgs.haskell-nix.cabalProject' { inherit compiler-nix-name; }).args.compiler-nix-name});
