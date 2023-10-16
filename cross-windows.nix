@@ -161,8 +161,12 @@ pkgs.pkgsBuildBuild.mkShell ({
         (pkgsBuildBuild.haskell-nix.tool compiler-nix-name "happy" "1.20.1.1")
         (pkgsBuildBuild.haskell-nix.tool compiler-nix-name "alex" "3.2.7.3")
         stdenv.cc.cc.lib ])
-    ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc99"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc981" "ghc99"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in (
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.9" >= 0) compiler-nix-name
+      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in (
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name
+      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs.pkgsBuildBuild; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [

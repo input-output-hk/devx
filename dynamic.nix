@@ -85,8 +85,12 @@ pkgs.mkShell {
         ]
         ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
     )
-    ++ pkgs.lib.optional (withHLS && (compiler-not-in (["ghc99"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in (["ghc981" "ghc99"] ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in (
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.9" >= 0) compiler-nix-name
+      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in (
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name
+      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs; [
             cddl
