@@ -58,8 +58,8 @@ jobs:
         compiler-nix-name:
           - ghc8107
           - ghc928
-          - ghc962
-          - ghc980
+          - ghc963
+          - ghc981
           - ghc99
         target-platform:
           - ""
