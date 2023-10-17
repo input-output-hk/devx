@@ -68,6 +68,7 @@
                          else pkgs;
            js-pkgs = pkgs.pkgsCross.ghcjs;
            windows-pkgs = pkgs.pkgsCross.mingwW64;
+
            devShellsWithToolsModule = toolsModule:
              let compilers = pkgs: builtins.removeAttrs pkgs.haskell-nix.compiler
                 # Exclude old versions of GHC to speed up `nix flake check`
@@ -88,75 +89,70 @@
                   "ghc945"
                  ];
                  windows-compilers = pkgs:
-                   pkgs.lib.optionalAttrs (__elem system ["x86_64-linux"])
+                   pkgs.lib.optionalAttrs (builtins.elem system ["x86_64-linux"])
                    (builtins.removeAttrs (compilers pkgs)
                      [
                      ]);
-             in (builtins.mapAttrs (compiler-nix-name: compiler:
-                  import ./dynamic.nix { inherit pkgs self compiler compiler-nix-name toolsModule; withIOG = false; }
-                  ) (compilers pkgs)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-minimal" (
-                    import ./dynamic.nix { inherit pkgs self compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = false; }
-                  )) (compilers pkgs)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-static" (
-                    import ./static.nix { pkgs = static-pkgs; inherit self compiler compiler-nix-name toolsModule; withIOG = false; }
-                  )) (compilers static-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal" (
-                    import ./static.nix { pkgs = static-pkgs; inherit self compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = false; }
-                  )) (compilers static-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-js" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit self compiler compiler-nix-name toolsModule; }
-                  )) (js-compilers js-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit self compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; }
-                  )) (js-compilers js-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit self compiler compiler-nix-name; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows-minimal" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit self compiler compiler-nix-name; withHLS = false; withHlint = false; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-iog" (
-                    import ./dynamic.nix { inherit pkgs self compiler compiler-nix-name toolsModule; withIOG = true; }
-                  )) (compilers pkgs)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-minimal-iog" (
-                    import ./dynamic.nix { inherit pkgs self compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = true; }
-                  )) (compilers pkgs)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-static-iog" (
-                    import ./static.nix { pkgs = static-pkgs; inherit self compiler compiler-nix-name toolsModule; withIOG = true; }
-                  )) (compilers static-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-static-minimal-iog" (
-                    import ./static.nix { pkgs = static-pkgs; inherit self compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = true; }
-                  )) (compilers static-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-js-iog" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit self compiler compiler-nix-name toolsModule; withIOG = true; }
-                  )) (js-compilers js-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-js-minimal-iog" (
-                    import ./cross-js.nix { pkgs = js-pkgs.buildPackages; inherit self compiler compiler-nix-name toolsModule; withHLS = false; withHlint = false; withIOG = true; }
-                  )) (js-compilers js-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows-iog" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit self compiler compiler-nix-name; withIOG = true; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
-              // pkgs.lib.mapAttrs' (compiler-nix-name: compiler:
-                  pkgs.lib.nameValuePair "${compiler-nix-name}-windows-minimal-iog" (
-                    import ./cross-windows.nix { pkgs = windows-pkgs; inherit self compiler compiler-nix-name; withHLS = false; withHlint = false; withIOG = true; }
-                  )) (windows-compilers windows-pkgs.buildPackages)
-             );
+
+
+                inherit (pkgs) lib;
+
+                combinations = lib.cartesianProductOfSets {
+                    iog = [false true];
+                    minimal = [false true];
+                    cross = [
+                      {
+                        suffix = "";
+                        file = ./dynamic.nix;
+                        pkgs = pkgs;
+                        compilers = compilers pkgs;
+                      }
+                      {
+                        suffix = "-static";
+                        file = ./static.nix;
+                        pkgs = static-pkgs;
+                        compilers = compilers static-pkgs.buildPackages;
+                      }
+                      {
+                        suffix = "-js";
+                        file = ./cross-js.nix;
+                        pkgs = js-pkgs.buildPackages;
+                        compilers = js-compilers js-pkgs.buildPackages;
+                      }
+                      {
+                        suffix = "-windows";
+                        file = ./cross-windows.nix;
+                        pkgs = windows-pkgs;
+                        compilers = windows-compilers windows-pkgs.buildPackages;
+                      }
+                    ];
+                  };
+
+                mkDevShell = {iog, minimal, cross}:
+                  lib.mapAttrs' (compiler-nix-name: compiler:
+                    {
+                      # devShell name
+                      name =
+                        compiler-nix-name
+                        + cross.suffix
+                        + lib.optionalString minimal "-minimal"
+                        + lib.optionalString iog "-iog";
+                      # devShell derivation
+                      value =
+                        import cross.file {
+                          inherit (cross) pkgs;
+                          inherit self compiler compiler-nix-name toolsModule;
+                          withIOG = iog;
+                          withHLS = !minimal;
+                          withHlint = !minimal;
+                        };
+                      })
+                    cross.compilers;
+
+             in lib.foldAttrs lib.mergeAttrs {} (builtins.map mkDevShell combinations);
+
         devShells = devShellsWithToolsModule {};
+
         # Eval must be done on linux when we use hydra to build environment
         # scripts for other platforms.  That way a linux GHA can download the
         # cached files without needing access to the actual build platform.

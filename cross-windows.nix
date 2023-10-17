@@ -1,4 +1,4 @@
-{ self, pkgs, compiler, compiler-nix-name, withHLS ? true, withHlint ? true, withIOG ? true  }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name (tool-version-map compiler-nix-name tool-name);
     cabal-install = tool "cabal";
