@@ -59,7 +59,7 @@
            #
            # Usage:
            #
-           # nix develop github:input-output-hk/devx#ghc924 --no-write-lock-file -c cabal build
+           # nix develop github:input-output-hk/devx#ghc96 --no-write-lock-file -c cabal build
            #
            static-pkgs = if pkgs.stdenv.hostPlatform.isLinux
                          then if pkgs.stdenv.hostPlatform.isAarch64
@@ -72,12 +72,12 @@
              # Map the compiler-nix-name to a final compiler-nix-name the way haskell.nix
              # projects do (that way we can use short names)
              let compilers = pkgs: pkgs.lib.genAttrs [
-                      "ghc8107"
-                      "ghc902"
-                      "ghc928"
-                      "ghc947"
-                      "ghc963"
-                      "ghc981"
+                      "ghc810"
+                      "ghc90"
+                      "ghc92"
+                      "ghc94"
+                      "ghc96"
+                      "ghc98"
                       "ghc99"] (short-name: rec {
                          inherit pkgs self toolsModule;
                          compiler-nix-name = pkgs.haskell-nix.resolve-compiler-name short-name;
@@ -85,9 +85,9 @@
                        });
                  js-compilers = pkgs: builtins.removeAttrs (compilers pkgs)
                  [
-                  "ghc902"
-                  "ghc928"
-                  "ghc947"
+                  "ghc90"
+                  "ghc92"
+                  "ghc94"
                  ];
                  windows-compilers = pkgs:
                    pkgs.lib.optionalAttrs (__elem system ["x86_64-linux"])
