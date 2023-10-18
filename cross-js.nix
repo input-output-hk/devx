@@ -1,7 +1,7 @@
 { self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
-    cabal-install = tool "cabal";
+    cabal-install = pkgs.haskell-nix.nix-tools-unchecked.exes.cabal;
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
@@ -73,14 +73,18 @@ pkgs.mkShell ({
 
     nativeBuildInputs = [ wrapped-hsc2hs wrapped-cabal compiler ] ++ (with pkgs; [
         nodejs # helpful to evaluate output on the commandline.
-        haskell-nix.cabal-install.${compiler-nix-name}
-        pkgconfig
+        cabal-install
+        (pkgs.pkg-config or pkgconfig)
         (tool "happy")
         (tool "alex")
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
-    ++ pkgs.lib.optional (withHLS) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in ["ghc961" "ghc962"] "HLint")) (tool "hlint")
+    ++ pkgs.lib.optional (withHLS && (compiler-not-in (
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.9" >= 0) compiler-nix-name
+      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
+    ++ pkgs.lib.optional (withHlint && (compiler-not-in (
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name
+      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [

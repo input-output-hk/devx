@@ -13,7 +13,7 @@ on:
         type: string
       compiler-nix-name:
         required: true
-        description: 'compiler name in nix format. e.g. ghc8107'
+        description: 'compiler name in nix format. e.g. ghc96'
         type: string
       minimal:
         description: 'without hls, hlint, ...'
@@ -112,8 +112,8 @@ jobs:
     # or the `-static` one (especially since the latter currently requires `-minimal` to work).
     # Likely, we consider using `-iog` as the default and do not generate other images.
     # Then the user choices left would be between native, `-windows` or `-js` target platforms,
-    # and the GHC version (currently `ghc8107` and `ghc962`).
-    if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc8107","ghc962"]'), inputs.compiler-nix-name) && !inputs.minimal && inputs.iog }}
+    # and the GHC version (currently `ghc810` and `ghc96`).
+    if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc810","ghc96"]'), inputs.compiler-nix-name) && !inputs.minimal && inputs.iog }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

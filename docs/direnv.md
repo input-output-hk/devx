@@ -78,10 +78,10 @@ if ! has nix_direnv_version || ! nix_direnv_version 2.3.0; then
   source_url "https://raw.githubusercontent.com/nix-community/nix-direnv/2.3.0/direnvrc" "sha256-Dmd+j63L84wuzgyjITIfSxSD57Tx7v51DMxVZOsiUD8="
 fi
 # https://github.com/input-output-hk/devx Slightly opinionated shared GitHub Action for Cardano-Haskell projects 
-use flake "github:input-output-hk/devx#ghc8107-iog"
+use flake "github:input-output-hk/devx#ghc96-iog"
 ```
 
-This will tell `direnv` to instantiate a shell with the same environment as `nix develop github:input-output-hk/devx#ghc8107-iog`, when changing into the folder where the `.envrc` resides.
+This will tell `direnv` to instantiate a shell with the same environment as `nix develop github:input-output-hk/devx#ghc96-iog`, when changing into the folder where the `.envrc` resides.
 
 You can also pin the flake to a specific version. This is a good practice to ensure reproducibility across different machines and systems. Refer to the Nix Flakes documentation on how to do this. Then, allow Direnv to take effect:
 
