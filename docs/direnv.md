@@ -24,7 +24,7 @@ To install `nix`, follow the steps provided on the [Nix installer page](https://
 
 If you're not listed, you need to add the line `trusted-users = $USER` in your configuration file. Additionally, two more lines should be added: `experimental-features = nix-command flakes` and `accept-flake-config = true` for the convenince of having flake features enabled globaly.
 
-You can add these lines in either of the two configuration files, `$XDG_CONFIG_HOME/nix/nix.conf` or `/etc/nix/nix.conf`. After making these edits, remember to restart the `nix-daemon`. If your system is based on `systemd`, you can do so by running `sudo systemctl restart nix-daemon`.
+You should add the `trusted-users` line in `/etc/nix/nix.conf`, others options could be added there or in `$XDG_CONFIG_HOME/nix/nix.conf` if you only want to change the configuration of your current user. After making these edits, remember to restart the `nix-daemon`. If you use a Linux distribution based on `systemd`, you can do so by running `sudo systemctl restart nix-daemon`, if you're running macOS, it's `launchctl kickstart -k system/org.nixos.nix-daemon`.
 
 ## Install and configure `direnv`
 
@@ -152,3 +152,6 @@ After installing and reloading Vim, when you open a Haskell file in your project
 ---
 
 Remember that this tutorial provides a very basic setup. You can further customize your environment and editor to better fit your workflow. Happy coding!
+
+> **Note**
+> You can run the whole tutorial (except the IDE configuration part) in one command `curl https://input-output-hk.github.io/devx | sh` (handy if you have several machines to configure) :)

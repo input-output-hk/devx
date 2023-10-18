@@ -3,7 +3,7 @@
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
-    inputs.flake-utils.url = "github:hamishmack/flake-utils/hkm/nested-hydraJobs";
+    inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix }:
@@ -47,7 +47,7 @@
             "aarch64-linux"
             "aarch64-darwin"
        ];
-    in flake-utils.lib.eachSystem supportedSystems (system:
+    in let flake-outputs = flake-utils.lib.eachSystem supportedSystems (system:
       let
            pkgs = import nixpkgs {
              overlays = [haskellNix.overlay] ++ builtins.attrValues overlays;
@@ -167,7 +167,7 @@
         inherit devShells;
         hydraJobs = devShells // {
           # *-dev sentinel job. Singals all -env have been built.
-          required = pkgs.runCommand "test-dependencies" {
+          required = pkgs.runCommand "required dependencies (${system})" {
               _hydraAggregate = true;
               constituents = map (name: "${system}.${name}-env") (builtins.attrNames devShellsWithEvalOnLinux);
             } "touch  $out";
@@ -213,6 +213,15 @@
         packages.cabalProjectLocal.cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
         packages.cabalProjectLocal.cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;
        });
+     # we use flake-outputs here to inject a required job that aggregates all required jobs.
+     in flake-outputs // {
+          hydraJobs = flake-outputs.hydraJobs // {
+            required = (import nixpkgs { system = "x86_64-linux"; }).runCommand "required dependencies" {
+              _hydraAggregate = true;
+              constituents = map (s: "${s}.required") supportedSystems;
+            } "touch  $out";
+          };
+        };
 
     # --- Flake Local Nix Configuration ----------------------------
     nixConfig = {

@@ -161,6 +161,11 @@ pkgs.pkgsBuildBuild.mkShell ({
         (tool "happy")
         (tool "alex")
         stdenv.cc.cc.lib ])
+    ++ map pkgs.lib.getDev (with pkgs; [
+        zlib pcre openssl
+        windows.mcfgthreads
+        windows.mingw_w64_pthreads
+    ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in (
          pkgs.lib.optional (builtins.compareVersions compiler.version "9.9" >= 0) compiler-nix-name
       ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
