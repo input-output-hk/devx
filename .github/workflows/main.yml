@@ -35,9 +35,11 @@ jobs:
           # Currently broken
           #- aarch64-linux
         compiler-nix-name:
-          - ghc8107
-          - ghc928
-          - ghc962
+          - ghc810
+          - ghc92
+          - ghc96
+          - ghc98
+          - ghc99
         target-platform:
           - ""
           - "-static"
@@ -51,9 +53,9 @@ jobs:
           - "-iog"
         exclude:
           # Just cross compiling javascript with ghc 9.6.2 for now
-          - compiler-nix-name: ghc8107
+          - compiler-nix-name: ghc810
             target-platform: "-js"
-          - compiler-nix-name: ghc928
+          - compiler-nix-name: ghc92
             target-platform: "-js"
           # Static builds not working for darwin yet
           - platform: x86_64-darwin

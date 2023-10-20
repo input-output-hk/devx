@@ -13,7 +13,7 @@ on:
         type: string
       compiler-nix-name:
         required: true
-        description: 'compiler name in nix format. e.g. ghc8107'
+        description: 'compiler name in nix format. e.g. ghc96'
         type: string
       minimal:
         description: 'without hls, hlint, ...'
