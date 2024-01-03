@@ -110,7 +110,9 @@ pkgs.mkShell (rec {
         zlib
         pcre
         openssl
-    ] ++ lib.optionals withIOG [
+    ]
+    ++ lib.optionals withIOG [
+        systemd
         libblst
         libsodium-vrf
         secp256k1
