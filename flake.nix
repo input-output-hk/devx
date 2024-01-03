@@ -2,7 +2,7 @@
     description = "Minimal devshell flake for haskell";
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
-    inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+    inputs.nixpkgs.follows = "haskellNix/nixpkgs-2311";
     inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
 
