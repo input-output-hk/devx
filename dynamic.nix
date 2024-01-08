@@ -33,7 +33,7 @@ let tool-version-map = import ./tool-map.nix;
     # here.
     wrapped-cabal = pkgs.writeShellApplication {
         name = "cabal";
-        runtimeInputs = [ cabal-install ];
+        runtimeInputs = [ cabal-install pkgs.curl ];
         text = ''
         case "$1" in
             build) cabal "$@"

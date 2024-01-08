@@ -56,7 +56,7 @@ let tool-version-map = import ./tool-map.nix;
     # A cabal-install wrapper that sets the appropriate static flags
     wrapped-cabal = pkgs.pkgsBuildBuild.writeShellApplication {
         name = "cabal";
-        runtimeInputs = [ cabal-install ];
+        runtimeInputs = [ cabal-install pkgs.curl ];
         text = ''
         # We do not want to quote NIX_CABAL_FLAGS
         # it will leave an empty argument, if they are empty.
