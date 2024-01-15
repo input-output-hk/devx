@@ -137,3 +137,34 @@ jobs:
             COMPILER_NIX_NAME=${{ inputs.compiler-nix-name }}
             MINIMAL=${{ inputs.minimal }}
             IOG=${{ inputs.iog }}
+
+  codespace-download:
+    env:
+      IMAGE_NAME: input-output-hk/devx-devcontainer
+    needs: codespace-upload
+    permissions:
+      packages: write
+    runs-on: ubuntu-latest
+    # We want a GitHub Codespace image for each combination of devx developer shell option.
+    # But, since the purpose of GitHub Codespace is to serve a complete development environment,
+    # the user is likely to always expect HLS (I don't see the point otherwise).
+    # Therefore, it doesn't seem useful to build an image on the `-minimal` flavor (without HLS),
+    # or the `-static` one (especially since the latter currently requires `-minimal` to work).
+    # Likely, we consider using `-iog` as the default and do not generate other images.
+    # Then the user choices left would be between native, `-windows` or `-js` target platforms,
+    # and the GHC version (currently `ghc810` and `ghc96`).
+    if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc810","ghc96"]'), inputs.compiler-nix-name) && !inputs.minimal && inputs.iog }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run test command inside the Dev Container
+        run: docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}-iog \
+             /bin/bash -c "cabal update && cabal unpack hello && cd hello-* && cabal build"
