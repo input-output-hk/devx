@@ -102,3 +102,6 @@ A full list of all available `devShells` can be see with:
 ```bash
 nix flake show github:input-output-hk/devx
 ```
+
+> [!NOTE]
+> For commercial support, please don't hesitate to reach out at devx@iohk.io
