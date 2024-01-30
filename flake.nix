@@ -227,8 +227,6 @@
     nixConfig = {
       extra-substituters = [
         "https://cache.iog.io"
-        # We only have zw3rk cache in here, because it provide aarch64-linux and aarch64-darwin.
-        "https://cache.zw3rk.com"
       ];
       extra-trusted-public-keys = [
         "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
