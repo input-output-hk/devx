@@ -39,6 +39,7 @@ let tool-version-map = import ./tool-map.nix;
                 --ghc-option=-L${lib.getLib static-gmp}/lib \
                 --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
                 --ghc-option=-L${lib.getLib static-secp256k1}/lib \
+                --ghc-option=-L${lib.getLib static-libblst}/lib \
                 --ghc-option=-L${lib.getLib static-openssl}/lib
             ;;
             clean|unpack)

@@ -23,6 +23,10 @@
           static-openssl = (final.openssl.override { static = true; });
           static-zlib = final.zlib.override { shared = false; };
           static-pcre = final.pcre.override { shared = false; };
+          static-libblst = final.libblst.overrideDerivation (old: {
+            configureFlags = old.configureFlags ++ [ "--enable-static" "--disable-shared" ];
+            postFixup = "";
+          });
         });
          # the haskell inline-r package depends on internals of the R
          # project that have been hidden in R 4.2+. See
