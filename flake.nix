@@ -25,6 +25,12 @@
           static-pcre = final.pcre.override { shared = false; };
           static-libblst = final.libblst.overrideDerivation (old: {
             configureFlags = old.configureFlags ++ [ "--enable-static" "--disable-shared" ];
+            buildPhase = ''
+              runHook preBuild
+              ./build.sh
+              runHook postBuild
+            '';
+            postFixup = "";
           });
         });
          # the haskell inline-r package depends on internals of the R
