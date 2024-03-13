@@ -5,8 +5,9 @@
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
+    inputs.rust-overlay.url = "github:oxalica/rust-overlay";
 
-    outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix }:
+    outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix, rust-overlay }:
     let overlays = {
         inherit (iohk-nix.overlays) crypto;
         # add static-$pkg for a few packages to be able to pull them im explicitly.
@@ -50,7 +51,7 @@
     in let flake-outputs = flake-utils.lib.eachSystem supportedSystems (system:
       let
            pkgs = import nixpkgs {
-             overlays = [haskellNix.overlay] ++ builtins.attrValues overlays;
+             overlays = [haskellNix.overlay (import rust-overlay)] ++ builtins.attrValues overlays;
              inherit system;
              inherit (haskellNix) config;
            };
@@ -157,7 +158,7 @@
                   pkgs.lib.nameValuePair "${short-name}-windows-minimal-iog" (
                     import ./cross-windows.nix (args // { withHLS = false; withHlint = false; withIOG = true; })
                   )) (windows-compilers windows-pkgs)
-             );
+             ) // (import ./rust.nix { inherit pkgs; });
         devShells = devShellsWithToolsModule {};
         # Eval must be done on linux when we use hydra to build environment
         # scripts for other platforms.  That way a linux GHA can download the
