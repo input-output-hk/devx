@@ -90,27 +90,27 @@ else
     echo "experimental-features = nix-command flakes" >> "$nix_conf_file"
     log "DEBUG" "'experimental-features = nix-command flakes' added to nix configuration."
 fi
-if grep -q "accept-flake-config" "$nix_conf_file"; then
-    log "WARN" "The 'accept-flake-config' option already exists in '$nix_conf_file'. Please check that it's set to 'accept-flake-config = true'."
-    echo "Press ENTER to open $nix_conf_file in $EDITOR:"
-    read -r confirm
-    $EDITOR "$nix_conf_file"
-else
-    echo "accept-flake-config = true" >> "$nix_conf_file"
-    log "DEBUG" "'accept-flake-config = true' added to nix configuration."
-fi
 
 nix_conf_file="/etc/nix/nix.conf"
-if grep -q "trusted-users" "$nix_conf_file"; then
-    log "WARN" "The 'trusted-users' option already exists in '$nix_conf_file'. Please ensure that your user is part of 'trusted-users'."
-    echo "Press ENTER to open $nix_conf_file in $EDITOR:"
-    read -r confirm
-    $EDITOR "$nix_conf_file"
-else
-    echo "trusted-users = root $USER" | sudo tee "$nix_conf_file" > /dev/null
-    log "DEBUG" "'trusted-users = root $USER' added to nix configuration."
-fi
 
+check_and_append_config() {
+    local key="$1"
+    local value="$2"
+    if grep -q "^$key" "$nix_conf_file"; then
+        echo "WARN: The '$key' option already exists in '$nix_conf_file'."
+        echo "You expected to add '$key = $value'."
+        echo "Press ENTER to open $nix_conf_file in $EDITOR for manual inspection:"
+        read -r confirm
+        sudo $EDITOR "$nix_conf_file"
+    else
+        echo "$key = $value" | sudo tee -a "$nix_conf_file" > /dev/null
+        log "DEBUG" "'$key = $value' added to system-wide nix configuration."
+    fi
+}
+
+check_and_append_config "allow-import-from-derivation" "true"
+check_and_append_config "extra-substituters" "https://cache.iog.io https://cache.zw3rk.com"
+check_and_append_config "extra-trusted-public-keys" "\"hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=\" \"loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=\""
 
 log "INFO" "[3/7] Restart nix-daemon (need sudo) ..."
 
