@@ -134,6 +134,14 @@
                     import ./dynamic.nix (args // { withHLS = false; withHlint = false; withIOG = true; })
                   )) (compilers pkgs)
               // pkgs.lib.mapAttrs' (short-name: args:
+                  pkgs.lib.nameValuePair "${short-name}-iog-full" (
+                    import ./dynamic.nix (args // { withIOGFull = true; })
+                  )) (compilers pkgs)
+              // pkgs.lib.mapAttrs' (short-name: args:
+                    pkgs.lib.nameValuePair "${short-name}-minimal-iog-full" (
+                    import ./dynamic.nix (args // { withHLS = false; withHlint = false; withIOGFull = true; })
+                  )) (compilers pkgs)
+              // pkgs.lib.mapAttrs' (short-name: args:
                   pkgs.lib.nameValuePair "${short-name}-static-iog" (
                     import ./static.nix (args // { withIOG = true; })
                   )) (compilers static-pkgs)

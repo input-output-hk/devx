@@ -1,5 +1,5 @@
 # define a development shell for dynamically linked applications (default)
-{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = pkgs.haskell-nix.nix-tools-unchecked.exes.cabal;
@@ -101,6 +101,6 @@ pkgs.mkShell {
             jq
             yq-go
         ]
-        ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 R_4_1_3 postgresql icu ]))
+        ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 icu ] ++ pkgs.lib.optional (withIOGFull) [ R_4_1_3 postgresql ]))
     ;
 }
