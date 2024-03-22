@@ -106,15 +106,14 @@ pkgs.mkShell (rec {
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
     ]) ++ map lib.getDev ([
-        static-gmp
-
-        zlib
         pcre
-        openssl
+        static-gmp
+        static-openssl
+        static-zlib
     ] ++ lib.optionals withIOG [
-        libblst
-        libsodium-vrf
-        secp256k1
+        static-libblst
+        static-libsodium-vrf
+        static-secp256k1
         #R_4_1_3      # for plutus
         postgresql    # for db-sync
         icu           # for cardano-cli
