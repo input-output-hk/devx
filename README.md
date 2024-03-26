@@ -1,25 +1,41 @@
 # The Developer Experience Shell
 
-This repo contains a `nix develop` shell for haskell. Its primary purpose is to
-help get a development shell for haskell quickly and across multiple
+This repository contains a `nix develop` shell for Haskell. Its primary purpose
+is to help get a development shell for Haskell quickly and across multiple
 operating systems (and architectures).
 
 It requires [`nix` to be installed](https://nixos.org/download.html).
 
-Once you have `nix` installed, you can check that everything is working correctly:
-* Make sure to add `experimental-features = nix-command flakes` and `accept-flake-config = true` lines to `$XDG_CONFIG_HOME/nix/nix.conf` file ;
-* Make sure your `$USER` is trusted `nix show-config | grep trusted-users`, otherwise add it to `/etc/nix/nix.conf` and restart `nix-daemon` ;
-* Make sure the `nix-daemon` is running using `systemctl status nix-daemon` (if your OS is `systemd`-based).
+> [!IMPORTANT]
+> The README previously suggested to add your current user to `trusted-users`,
+> but this is essentially equivalent to giving that user root access to the
+> system.
 
-Once you have `nix`, (Linux, macOS, windows WSL) you can use:
+## Getting Started
+
+Once you have `nix` installed:
+- Add `experimental-features = nix-command flakes` to your
+  `$XDG_CONFIG_HOME/nix/nix.conf` file to enable Nix flakes.
+- You should manually add necessary substituters and trusted public keys to your
+  `/etc/nix/nix.conf`:
+  ```
+  allow-import-from-derivation = "true";
+  extra-substituters = https://cache.iog.io https://cache.zw3rk.com
+  extra-trusted-public-keys = "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
+  ```
+- Ensure that `nix-daemon` is running (`systemctl status nix-daemon` on
+  `systemd`-based systems).
+
+Then, (on Linux, macOS, windows WSL) you can use:
 ```bash
 nix develop github:input-output-hk/devx#ghc96 --no-write-lock-file --refresh
 ```
 
-Then, to obtain a haskell development shell for GHC 8.10.7 including `cabal-install`,
-as well as `hls` and `hlint`. If you are on macOS on an Apple Silicon chip (M1, M2, ...),
-and want to switch between Intel (x86_64) and Apple Silicon (aarch64), you can do
-this by simply passing the corresponding `--system` argument:
+To obtain a haskell development shell for GHC 8.10.7 including `cabal-install`,
+as well as `hls` and `hlint`. If you are on macOS on an Apple Silicon chip
+(M1, M2, ...), and want to switch between Intel (x86_64) and Apple Silicon
+(aarch64), you can do this by simply passing the corresponding
+`--system` argument:
 ```bash
 nix develop github:input-output-hk/devx#ghc810 --no-write-lock-file --refresh --system x86_64-darwin
 # ... or:

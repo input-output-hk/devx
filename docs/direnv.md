@@ -20,11 +20,20 @@ Ensure you have the following installed on your machine:
 - [`direnv`](https://direnv.net/)
 - Your choice of editor (VSCode, Emacs, or Vim)
 
-To install `nix`, follow the steps provided on the [Nix installer page](https://nixos.org/download.html). To utilize our cache, it's essential that you're recognized as a trusted user. You can check your `nix` configuration to see if you're listed in `trusted-users` by running `nix show-config | grep 'trusted-users'`.
+To install `nix`, follow the steps provided on the [Nix installer page](https://nixos.org/download.html).
 
-If you're not listed, you need to add the line `trusted-users = $USER` in your configuration file. Additionally, two more lines should be added: `experimental-features = nix-command flakes` and `accept-flake-config = true` for the convenince of having flake features enabled globaly.
+> [!IMPORTANT]
+> This guide previously suggested to add your current user to `trusted-users`, but this is essentially equivalent to giving that user root access to the system.
 
-You should add the `trusted-users` line in `/etc/nix/nix.conf`, others options could be added there or in `$XDG_CONFIG_HOME/nix/nix.conf` if you only want to change the configuration of your current user. After making these edits, remember to restart the `nix-daemon`. If you use a Linux distribution based on `systemd`, you can do so by running `sudo systemctl restart nix-daemon`, if you're running macOS, it's `launchctl kickstart -k system/org.nixos.nix-daemon`.
+Once you have `nix` installed:
+- Add `experimental-features = nix-command flakes` to your `$XDG_CONFIG_HOME/nix/nix.conf` file to enable Nix flakes.
+- You should manually add necessary substituters and trusted public keys to your `/etc/nix/nix.conf`:
+  ```
+  allow-import-from-derivation = "true";
+  extra-substituters = https://cache.iog.io https://cache.zw3rk.com
+  extra-trusted-public-keys = "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
+  ```
+- After making these edits, remember to restart the `nix-daemon`. If you use a Linux distribution based on `systemd`, you can do so by running `sudo systemctl restart nix-daemon`, if you're running macOS, it's `launchctl kickstart -k system/org.nixos.nix-daemon`.
 
 ## Install and configure `direnv`
 
