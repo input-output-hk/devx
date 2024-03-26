@@ -3,9 +3,9 @@ WORKDIR /workspaces
 
 ARG PLATFORM="x86_64-linux"
 ARG TARGET_PLATFORM=""
-ARG COMPILER_NIX_NAME="ghc961"
-ARG MINIMAL="true"
-ARG IOG="false"
+ARG COMPILER_NIX_NAME="ghc96"
+ARG MINIMAL="false"
+ARG IOG="true"
 
 RUN DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
@@ -17,28 +17,34 @@ RUN DEBIAN_FRONTEND=noninteractive \
  && if [ "$IOG" = "true" ]; then SUFFIX="${SUFFIX}-iog"; fi \
  && ./fetch-docker.sh input-output-hk/devx $PLATFORM.$COMPILER_NIX_NAME$TARGET_PLATFORM${SUFFIX}-env | zstd -d | nix-store --import | tee store-paths.txt
 
+# FIXME: Consider moving this script into a Nix `writeShellApplication` trivial builder within the closure...
 RUN cat <<EOF >> $HOME/.bashrc
-CACHE_DIR="\$HOME/.cache"
-if [ ! -d "\$CACHE_DIR" ] && [ -n "\$GITHUB_TOKEN" ]; then
-    echo "\$GITHUB_TOKEN" | gh auth login --with-token
-    COMMIT_HASH=\$(git rev-parse HEAD)
-    REPO_URL=\$(git config --get remote.origin.url)
-    if [[ "\$REPO_URL" =~ git@github.com:(.+)/(.+)\.git ]]; then
-        OWNER=\${BASH_REMATCH[1]}
-        REPO=\${BASH_REMATCH[2]}
-    elif [[ "\$REPO_URL" =~ https://github.com/(.+)/(.+).git ]]; then
-        OWNER=\${BASH_REMATCH[1]}
-        REPO=\${BASH_REMATCH[2]}
-    fi
-    if [ -n "\$COMMIT_HASH" ] && [ -n "\$OWNER" ] &&  [ -n "\$REPO" ]; then
-        ARTIFACT_NAME="cache-\$COMMIT_HASH"
-        ARTIFACT_URL=\$(gh api "repos/\$OWNER/\$REPO/actions/artifacts" --jq ".artifacts[] | select(.name==\"\$ARTIFACT_NAME\") | .archive_download_url" | head -n 1)
-        if [ -n "\$ARTIFACT_URL" ]; then
-            curl -L -o "artifact.zstd" -H "Authorization: token \$GITHUB_TOKEN" "\$ARTIFACT_URL"
-            zstd -d "artifact.zstd" --output-dir-flat "\$CACHE_DIR"
-            rm "artifact.zstd"
-        fi
-    fi
+# n.b. GitHub Codespaces are populated with \$GH_TOKEN already set
+if [ -z "\$GH_TOKEN" ]; then
+    echo "A GitHub token is required for downloading HLS cache (optionnal)."
+    read -p "Would you like to enter your GitHub token now? (y/n) " yn
+    case \$yn in
+        [Yy]* ) 
+            read -sp "Enter your GitHub token: " GH_TOKEN; 
+            export GH_TOKEN;;
+        [Nn]* ) 
+            return;;
+        * ) 
+            echo "Invalid response. Please answer yes (y) or no (n)."; 
+            return;;
+    esac
 fi
-source $(grep -m 1 -e '-env.sh$' store-paths.txt)
+CACHE_DIR="\$HOME/.cache"
+if [ ! -d "\$CACHE_DIR" ]; then
+    echo "Attempting to download HLS cache from GitHub Artifact for faster first launch ..."
+    mkdir -p \$CACHE_DIR
+    pushd \$CACHE_DIR > /dev/null
+    PROJECT_DIR=\$(find /workspaces/ -mindepth 1 -maxdepth 1 -type d)
+    if [ -n "\$PROJECT_DIR" ]; then
+        CACHE_REV=\$(git -C "\$PROJECT_DIR" rev-parse HEAD)
+        gh run download -n "cache-\$CACHE_REV-$COMPILER_NIX_NAME"
+    fi
+    popd > /dev/null
+fi
+source \$(grep -m 1 -e '-env.sh$' store-paths.txt)
 EOF
