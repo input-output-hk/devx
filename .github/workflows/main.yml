@@ -51,6 +51,7 @@ jobs:
         iog:
           - ""
           - "-iog"
+          - "-iog-full"
         exclude:
           # Just cross compiling javascript with ghc 9.6.2 for now
           - compiler-nix-name: ghc810
@@ -88,3 +89,4 @@ jobs:
       compiler-nix-name: ${{ matrix.compiler-nix-name }}
       minimal: ${{ matrix.variant == '-minimal' }}
       iog: ${{ matrix.iog == '-iog' }}
+      iog-full: ${{ matrix.iog == '-iog-full' }}

@@ -20,14 +20,18 @@ on:
         type: boolean
         default: true
       iog:
-        description: 'without iog libs: libsodium, libsecp256k1, libblst, ...'
+        description: 'with iog libs: libsodium, libsecp256k1, libblst, ...'
+        type: boolean
+        default: false
+      iog-full:
+        description: 'with full iog libs: libsodium, libsecp256k1, libblst, postgresql, R, ...'
         type: boolean
         default: false
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  DEV_SHELL: ${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || ''}}-env
+  DEV_SHELL: ${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}${{ inputs.minimal && '-minimal' || '' }}${{ (inputs.iog-full && '-iog-full') || (inputs.iog && '-iog') || ''}}-env
   DEFAULT_TAG: latest
   GH_TOKEN: ${{ github.token }}
 
