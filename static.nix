@@ -87,7 +87,13 @@ pkgs.mkShell (rec {
     # the system path.
     DYLD_LIBRARY_PATH= with pkgs; "${lib.getLib openssl}/lib";
 
-    shellHook = with pkgs; ''
+    shellHook =
+        with pkgs;
+        let flavor = "${compiler-nix-name}-static"
+                   + lib.optionalString (!withHLS && !withHlint) "-minimal"
+                   + lib.optionalString withIOG                  "-iog"
+                   ;
+        in ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
         export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}";
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
@@ -97,7 +103,8 @@ pkgs.mkShell (rec {
         export CABAL_DIR=$HOME/.cabal-static
         echo "CABAL_DIR set to $CABAL_DIR"
         echo "DYLD_LIBRARY_PATH set to $DYLD_LIBRARY_PATH"
-    '' + quirks.shellHook;
+        echo ""
+    '' + (quirks.hint flavor) + quirks.shellHook;
     # these are _target_ libs, e.g. ones we want to link the build
     # product against. These are also the ones that showup in the
     # PKG_CONFIG_PATH.

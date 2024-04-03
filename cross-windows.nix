@@ -143,14 +143,21 @@ pkgs.pkgsBuildBuild.mkShell ({
 
     inherit (quirks) CABAL_PROJECT_LOCAL_TEMPLATE;
 
-    shellHook = with pkgs; ''
+    shellHook =
+      with pkgs;
+      let flavor = "${compiler-nix-name}-windows"
+                  + lib.optionalString (!withHLS && !withHlint) "-minimal"
+                  + lib.optionalString withIOG                  "-iog"
+                  ;
+      in ''
       export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
       ${pkgsBuildBuild.figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
       ${pkgsBuildBuild.figlet}/bin/figlet -f small "*= Windows =*"
       echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
       export CABAL_DIR=$HOME/.cabal-windows
       echo "CABAL_DIR set to $CABAL_DIR"
-    '' + quirks.shellHook;
+      echo ""
+    '' + (quirks.hint flavor) + quirks.shellHook;
     buildInputs = [];
 
     nativeBuildInputs = [ wrapped-ghc wrapped-hsc2hs wrapped-cabal wine-test-wrapper compiler ] ++ (with pkgs; [
