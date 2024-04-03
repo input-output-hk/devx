@@ -15,6 +15,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
  && SUFFIX='' \
  && if [ "$MINIMAL" = "true" ]; then SUFFIX="${SUFFIX}-minimal"; fi \
  && if [ "$IOG" = "true" ]; then SUFFIX="${SUFFIX}-iog"; fi \
+ && if [ "$IOG_FULL" = "true" ]; then SUFFIX="${SUFFIX}-iog-full"; fi \
  && ./fetch-docker.sh input-output-hk/devx $PLATFORM.$COMPILER_NIX_NAME$TARGET_PLATFORM${SUFFIX}-env | zstd -d | nix-store --import | tee store-paths.txt \
  && apt-get -y remove curl git jq nix zstd \
  && apt-get -y autoremove \
