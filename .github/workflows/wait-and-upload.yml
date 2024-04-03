@@ -117,7 +117,7 @@ jobs:
     # Likely, we consider using `-iog` as the default and do not generate other images.
     # Then the user choices left would be between native, `-windows` or `-js` target platforms,
     # and the GHC version (currently `ghc810` and `ghc96`).
-    if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc810","ghc96"]'), inputs.compiler-nix-name) && !inputs.minimal && inputs.iog }}
+    if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc810","ghc96"]'), inputs.compiler-nix-name) && !inputs.minimal }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -134,13 +134,14 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}-iog
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}${{ inputs.iog-full || inputs.iog }}
           build-args: |
             PLATFORM=${{ inputs.platform }}
             TARGET_PLATFORM=${{ inputs.target-platform }}
             COMPILER_NIX_NAME=${{ inputs.compiler-nix-name }}
             MINIMAL=${{ inputs.minimal }}
             IOG=${{ inputs.iog }}
+            IOG_FULL=${{ inputs.iog-full }}
 
   codespace-download:
     env:
@@ -170,5 +171,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run test command inside the Dev Container
-        run: docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}-iog \
+        run: docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }} \
              /bin/bash -c "cabal update && cabal unpack hello && cd hello-* && cabal build"

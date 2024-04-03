@@ -95,7 +95,8 @@ There are various flavors available as suffixes to the compiler names (e.g. `#gh
 | Flavor | Description | Example | Included |
 | - | - | - | - |
 | empty | General Haskell Dev | `#ghc810` | `ghc`, `cabal-install`, `hls`, `hlint` |
-| `-iog` | IOG Haskell Dev | `#ghc810` | adds `sodium-vrf`, `blst`, `secp256k1`, `R`, `postgresql` |
+| `-iog` | IOG Haskell Dev | `#ghc810` | adds `sodium-vrf`, `blst`, `secp256k1` |
+| `-iog-full` | IOG Haskell Dev | `#ghc810` | adds `sodium-vrf`, `blst`, `secp256k1`, `R`, `postgresql` |
 | `-minimal` | Only GHC, and Cabal | `#ghc810-minimal` | drops `hls`, `hlint` |
 | `-static` | Building static binaries | `#ghc810-static` | Static Haskell Cross-Compiler |
 | `-js` | JavaScript Cross-Compiler | `#ghc810-js` | JavaScript Haskell Cross-Compiler |
