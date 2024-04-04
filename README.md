@@ -80,6 +80,10 @@ It's also advised to enable GitHub CodeSpace prebuilds in your repository settin
 
 List of images available: `ghc810-iog`, `ghc96-iog`, `ghc810-js-iog`, `ghc96-js-iog`, `ghc810-windows-iog`, `ghc96-windows-iog`.
 
+> [!TIP]
+> If you wish to utilize the DevContainer as a normal Docker container outside of GitHub or VSCode, remember to prefix your commands with `bash -ic`. This is necessary because the Nix developer environment is loaded through `~/.bashrc`.
+> E.g., `docker run -it ghcr.io/input-output-hk/devx-devcontainer:x86_64-linux.ghc96-iog bash -ic "cabal --version"`
+
 ## Compilers and Flavors
 
 There are multiple compilers available, and usually the latest for each series
