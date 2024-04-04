@@ -45,12 +45,20 @@ let tool-version-map = import ./tool-map.nix;
         esac
         '';
     };
+    quirks = (import ./quirks.nix { inherit pkgs; });
 in
 pkgs.mkShell {
     # The `cabal` overrride in this shell-hook doesn't do much yet. But
     # we may need to massage cabal a bit, so we'll leave it in here for
     # consistency with the one in static.nix.
-    shellHook = with pkgs; ''
+    shellHook =
+        with pkgs;
+        let flavor = "${compiler-nix-name}"
+                   + lib.optionalString (!withHLS && !withHlint) "-minimal"
+                   + lib.optionalString withIOG                  "-iog"
+                   + lib.optionalString withIOGFull              "-full"
+                   ;
+        in ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
         ${figlet}/bin/figlet -f rectangles 'IOG Haskell Shell'
         echo "Revision (input-output-hk/devx): ${if self ? rev then self.rev else "unknown/dirty checkout"}."
@@ -59,7 +67,8 @@ pkgs.mkShell {
         # incompatbile.
         export CABAL_DIR=$HOME/.cabal-devx
         echo "CABAL_DIR set to $CABAL_DIR"
-    ''
+        echo ""
+    '' + (quirks.hint flavor)
     # this one is only needed on macOS right now, due to a bug in loading libcrypto.
     # The build will error with -6 due to "loading libcrypto in an unsafe way"
     + lib.optionalString stdenv.hostPlatform.isMacOS
