@@ -1,0 +1,34 @@
+name: Delete Untagged GHCR Containers
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every day
+    - cron: '0 0 * * *'
+
+jobs:
+  cleanup-untagged-containers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up GitHub CLI
+      uses: actions/setup-cli@v2
+
+    - name: Authenticate with GitHub Container Registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+    - name: List and Delete Untagged Containers
+      env:
+        GHCR_PACKAGE_NAME: devx-devcontainer
+        OWNER: input-output-hk
+      run: |
+        untagged_images=$(gh api -X GET /user/packages/container/$GHCR_PACKAGE_NAME/versions --paginate --jq '.[] | select(.metadata.container.tags | length == 0) | .id')
+        for image_id in $untagged_images; do
+          echo "Deleting untagged container image with ID: $image_id"
+          gh api -X DELETE /user/packages/container/$GHCR_PACKAGE_NAME/versions/$image_id
+        done
