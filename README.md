@@ -61,7 +61,8 @@ Refer to [`direnv` and `devx`](./docs/direnv.md) guide for more information.
 To make this developer shell available in VSCode DevContainer or GitHub CodeSpace, simply add a file named `.devcontainer/devcontainer.json` with the following content:
 ```json
 {
-   "image":"ghcr.io/input-output-hk/devx-devcontainer:x86_64-linux.ghc810-iog",
+   "image":"ghcr.io/input-output-hk/devx-devcontainer:x86_64-linux.ghc96-iog",
+   "postCreateCommand": "post-create-command",
    "customizations":{
       "vscode":{
          "extensions":[
