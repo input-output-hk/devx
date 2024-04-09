@@ -16,9 +16,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up GitHub CLI
-      uses: actions/setup-cli@v2
-
     - name: Authenticate with GitHub Container Registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
