@@ -21,7 +21,7 @@ on:
         default: true
       iog:
         description: 'with iog libs: libsodium, libsecp256k1, libblst, ...'
-        type: boolean
+        type: boolean # FIXME: this should rather be a 'string' that could be set to 'full' ...
         default: false
       iog-full:
         description: 'with full iog libs: libsodium, libsecp256k1, libblst, postgresql, R, ...'
@@ -120,7 +120,7 @@ jobs:
     # Likely, we consider using `-iog` as the default and do not generate other images.
     # Then the user choices left would be between native, `-windows` or `-js` target platforms,
     # and the GHC version (currently `ghc810` and `ghc96`).
-    if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc810","ghc96"]'), inputs.compiler-nix-name) && !inputs.minimal }}
+    if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc810","ghc96"]'), inputs.compiler-nix-name) && !inputs.minimal && inputs.iog && !inputs.iog-full }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -137,7 +137,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}${{ inputs.iog-full || inputs.iog }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}${{ (inputs.iog-full && '-iog-full') || (inputs.iog && '-iog') }}
           build-args: |
             PLATFORM=${{ inputs.platform }}
             TARGET_PLATFORM=${{ inputs.target-platform }}
