@@ -1,4 +1,9 @@
+# We build the Docker image from a Dockerfile rather than from a Nix expression
+# This is because VSCode DevContainer / GitHub Codespace run an install script
+# at first launch that mostly consider your machine to be Debian-based.
 FROM ubuntu:rolling
+# TODO: But there is likely a better immutable way to build this image ...
+# https://github.com/input-output-hk/devx-aux/issues/115
 WORKDIR /workspaces
 
 ARG PLATFORM="x86_64-linux"
@@ -24,10 +29,12 @@ source $(grep -m 1 -e '-env.sh$' store-paths.txt)
 EOF
 
 # This enforce those settings in DevContainer whatever "Settings Sync" user preferences ...
-RUN mkdir -p $HOME/.vscode-server/data/Machine/ \
- && cat <<EOF >> $HOME/.vscode-server/data/Machine/settings.json
-{ "haskell.manageHLS": "PATH" }
-EOF
+RUN bash -ic 'source $HOME/.bashrc && mkdir -p $HOME/.vscode-server/data/Machine/ && \
+    echo -e "{\n\
+    \"haskell.manageHLS\": \"PATH\",\n\
+    \"haskell.serverEnvironment\": { \"PATH\": \"$PATH\" },\n\
+    \"haskell.serverExecutablePath\": \"$(which haskell-language-server)\"\n\
+}" > $HOME/.vscode-server/data/Machine/settings.json'
 
 # FIXME: Consider moving this script into a Nix `writeShellApplication` trivial builder within the closure ...
 # ... but that means I should figure it out how to pass to it $COMPILER_NIX_NAME as input?
@@ -35,18 +42,19 @@ RUN mkdir -p /usr/local/bin/ \
  && cat <<EOF >> /usr/local/bin/post-create-command
 #!/usr/bin/env bash
 
-PROJECT_DIR=\$(find /workspaces/ -mindepth 1 -maxdepth 1 -type d)
+PROJECT_DIR=\$(find /workspaces/ -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print -quit)
 if [ -n "\$PROJECT_DIR" ]; then
     pushd \$PROJECT_DIR > /dev/null
-    # GitHub Codespaces should have \$GH_TOKEN already set.
-    if [ -n "\$GH_TOKEN" ]; then
+    # GitHub Codespaces should have \$GITHUB_TOKEN already set.
+    if [ -n "\$GITHUB_TOKEN" ]; then
+        echo \$GITHUB_TOKEN | gh auth login --with-token
         COMMIT_HASH=\$(git rev-parse HEAD)
         echo "Attempting to download HLS cache from GitHub Artifact (cache-\$COMMIT_HASH-$COMPILER_NIX_NAME) for faster first launch ..."
         gh run download -D .download -n "cache-\$COMMIT_HASH-$COMPILER_NIX_NAME"
         rsync -a .download/work/cardano-base/cardano-base/dist-newstyle .
         rm -r .download
     else
-        echo "\\\$GH_TOKEN is not set. Skipping HLS cache download."
+        echo "\\\$GITHUB_TOKEN is not set. Skipping HLS cache download."
     fi
     # HLS error (Couldn't load cradle for ghc libdir) if `cabal update` has never been run in project using cardano-haskell-packages ...
     echo "Running `cabal update` ..."
