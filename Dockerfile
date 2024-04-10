@@ -4,20 +4,15 @@ WORKDIR /workspaces
 ARG PLATFORM="x86_64-linux"
 ARG TARGET_PLATFORM=""
 ARG COMPILER_NIX_NAME="ghc96"
-ARG MINIMAL="false"
-ARG IOG="true"
-ARG IOG_FULL="false"
+ARG VARIANT=""
+ARG IOG="-iog"
 
 RUN DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
  && apt-get -y install curl gh git grep jq nix rsync zstd \
  && curl -L https://raw.githubusercontent.com/input-output-hk/actions/latest/devx/support/fetch-docker.sh -o fetch-docker.sh \
  && chmod +x fetch-docker.sh \
- && SUFFIX='' \
- && if [ "$MINIMAL" = "true" ]; then SUFFIX="${SUFFIX}-minimal"; fi \
- && if [ "$IOG" = "true" ]; then SUFFIX="${SUFFIX}-iog"; fi \
- && if [ "$IOG_FULL" = "true" ]; then SUFFIX="${SUFFIX}-full"; fi \
- && ./fetch-docker.sh input-output-hk/devx $PLATFORM.$COMPILER_NIX_NAME$TARGET_PLATFORM${SUFFIX}-env | zstd -d | nix-store --import | tee store-paths.txt
+ && ./fetch-docker.sh input-output-hk/devx $PLATFORM.$COMPILER_NIX_NAME$TARGET_PLATFORM$VARIANT$IOG-env | zstd -d | nix-store --import | tee store-paths.txt
 
 RUN cat <<EOF >> $HOME/.bashrc
 source $(grep -m 1 -e '-env.sh$' store-paths.txt)
