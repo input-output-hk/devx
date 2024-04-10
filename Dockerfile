@@ -29,12 +29,15 @@ source $(grep -m 1 -e '-env.sh$' store-paths.txt)
 EOF
 
 # This enforce those settings in DevContainer whatever "Settings Sync" user preferences ...
-RUN bash -ic 'source $HOME/.bashrc && mkdir -p $HOME/.vscode-server/data/Machine/ && \
-    echo -e "{\n\
-    \"haskell.manageHLS\": \"PATH\",\n\
-    \"haskell.serverEnvironment\": { \"PATH\": \"$PATH\" },\n\
-    \"haskell.serverExecutablePath\": \"$(which haskell-language-server)\"\n\
-}" > $HOME/.vscode-server/data/Machine/settings.json'
+# ... VSCode DevContainer and GitHub Codespace does not look for the same settings file ><'
+RUN mkdir -p $HOME/.vscode-server/data/Machine/ \
+ && mkdir -p $HOME/.vscode-remote/data/Machine/ \
+ && bash -ic 'echo -e "{\n \
+    \"haskell.manageHLS\": \"PATH\",\n \
+    \"haskell.serverEnvironment\": { \"PATH\": \"$PATH\" },\n \
+    \"haskell.serverExecutablePath\": \"$(which haskell-language-server)\"\n \
+}" > $HOME/.vscode-server/data/Machine/settings.json' \
+ && cp $HOME/.vscode-server/data/Machine/settings.json $HOME/.vscode-remote/data/Machine/settings.json
 
 # FIXME: Consider moving this script into a Nix `writeShellApplication` trivial builder within the closure ...
 # ... but that means I should figure it out how to pass to it $COMPILER_NIX_NAME as input?
