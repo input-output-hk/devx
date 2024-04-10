@@ -6,6 +6,7 @@ ARG TARGET_PLATFORM=""
 ARG COMPILER_NIX_NAME="ghc96"
 ARG MINIMAL="false"
 ARG IOG="true"
+ARG IOG_FULL="false"
 
 RUN DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
@@ -15,7 +16,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
  && SUFFIX='' \
  && if [ "$MINIMAL" = "true" ]; then SUFFIX="${SUFFIX}-minimal"; fi \
  && if [ "$IOG" = "true" ]; then SUFFIX="${SUFFIX}-iog"; fi \
- && if [ "$IOG_FULL" = "true" ]; then SUFFIX="${SUFFIX}-iog-full"; fi \
+ && if [ "$IOG_FULL" = "true" ]; then SUFFIX="${SUFFIX}-full"; fi \
  && ./fetch-docker.sh input-output-hk/devx $PLATFORM.$COMPILER_NIX_NAME$TARGET_PLATFORM${SUFFIX}-env | zstd -d | nix-store --import | tee store-paths.txt
 
 RUN cat <<EOF >> $HOME/.bashrc
