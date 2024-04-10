@@ -67,10 +67,7 @@ To make this developer shell available in VSCode DevContainer or GitHub CodeSpac
       "vscode":{
          "extensions":[
             "haskell.haskell"
-         ],
-         "settings":{
-            "haskell.manageHLS":"PATH"
-         }
+         ]
       }
    }
 }
