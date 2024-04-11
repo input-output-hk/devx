@@ -48,6 +48,9 @@ RUN mkdir -p /usr/local/bin/ \
 PROJECT_DIR=\$(find /workspaces/ -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print -quit)
 if [ -n "\$PROJECT_DIR" ]; then
     pushd \$PROJECT_DIR > /dev/null
+    # HLS error (Couldn't load cradle for ghc libdir) if `cabal update` has never been run in project using cardano-haskell-packages ...
+    echo "Running `cabal update` ..."
+    bash -ic "cabal update"
     # GitHub Codespaces should have \$GITHUB_TOKEN already set.
     if [ -n "\$GITHUB_TOKEN" ]; then
         echo \$GITHUB_TOKEN | gh auth login --with-token
@@ -59,9 +62,6 @@ if [ -n "\$PROJECT_DIR" ]; then
     else
         echo "\\\$GITHUB_TOKEN is not set. Skipping HLS cache download."
     fi
-    # HLS error (Couldn't load cradle for ghc libdir) if `cabal update` has never been run in project using cardano-haskell-packages ...
-    echo "Running `cabal update` ..."
-    bash -c "cabal update"
     popd > /dev/null
 fi
 EOF
