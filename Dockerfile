@@ -42,7 +42,7 @@ RUN mkdir -p $HOME/.vscode-server/data/Machine/ \
 # FIXME: Consider moving this script into a Nix `writeShellApplication` trivial builder within the closure ...
 # ... but that means I should figure it out how to pass to it $COMPILER_NIX_NAME as input?
 RUN mkdir -p /usr/local/bin/ \
- && cat <<EOF >> /usr/local/bin/post-create-command
+ && cat <<EOF >> /usr/local/bin/on-create-command
 #!/usr/bin/env bash
 
 PROJECT_DIR=\$(find /workspaces/ -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print -quit)
@@ -53,7 +53,6 @@ if [ -n "\$PROJECT_DIR" ]; then
     bash -ic "cabal update"
     # GitHub Codespaces should have \$GITHUB_TOKEN already set.
     if [ -n "\$GITHUB_TOKEN" ]; then
-        echo \$GITHUB_TOKEN | gh auth login --with-token
         COMMIT_HASH=\$(git rev-parse HEAD)
         echo "Attempting to download HLS cache from GitHub Artifact (cache-\$COMMIT_HASH-$COMPILER_NIX_NAME) for faster first launch ..."
         gh run download -D .download -n "cache-\$COMMIT_HASH-$COMPILER_NIX_NAME"
@@ -65,4 +64,4 @@ if [ -n "\$PROJECT_DIR" ]; then
     popd > /dev/null
 fi
 EOF
-RUN chmod +x /usr/local/bin/post-create-command
+RUN chmod +x /usr/local/bin/on-create-command
