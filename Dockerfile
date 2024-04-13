@@ -52,7 +52,7 @@ if [ -n "\$PROJECT_DIR" ]; then
         echo "Attempting to download HLS cache from GitHub Artifact (cache-\$COMMIT_HASH-$COMPILER_NIX_NAME) for faster first launch ..."
         gh run download -D .download -n "cache-\$COMMIT_HASH-$COMPILER_NIX_NAME"
         if [ -n .download ]; then
-            rsync -a .download/dist-newstyle .
+            rsync -a .download/ dist-newstyle/
             rm -r .download
         fi
     else
