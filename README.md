@@ -59,16 +59,17 @@ Refer to [`direnv` and `devx`](./docs/direnv.md) guide for more information.
 ## VSCode DevContainer / GitHub CodeSpace support
 
 To make this developer shell available in VSCode DevContainer or GitHub CodeSpace, simply add a file named `.devcontainer/devcontainer.json` with the following content:
-```json
+```jsonc
 {
    "image":"ghcr.io/input-output-hk/devx-devcontainer:x86_64-linux.ghc96-iog",
-   "postCreateCommand": "post-create-command",
+   "onCreateCommand": "on-create-command",
    "customizations":{
       "vscode":{
          "extensions":[
             "haskell.haskell"
          ]
       }
+      // Do not set custom `settings` as they would override devx-container defaults...
    }
 }
 ```
@@ -106,7 +107,7 @@ There are various flavors available as suffixes to the compiler names (e.g. `#gh
 
 These can then be combined following this schema:
 ```
-#ghc<ver>[-js|-windows|-static][-minimal][-iog]
+#ghc<ver>[-js|-windows|-static][-minimal][-iog|-iog-full]
 ```
 For example:
 ```bash
