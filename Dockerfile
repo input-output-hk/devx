@@ -51,8 +51,10 @@ if [ -n "\$PROJECT_DIR" ]; then
         COMMIT_HASH=\$(git rev-parse HEAD)
         echo "Attempting to download HLS cache from GitHub Artifact (cache-\$COMMIT_HASH-$COMPILER_NIX_NAME) for faster first launch ..."
         gh run download -D .download -n "cache-\$COMMIT_HASH-$COMPILER_NIX_NAME"
-        rsync -a .download/work/cardano-base/cardano-base/dist-newstyle .
-        rm -r .download
+        if [ -n .download ]; then
+            rsync -a .download/dist-newstyle .
+            rm -r .download
+        fi
     else
         echo "\\\$GITHUB_TOKEN is not set. Skipping HLS cache download."
     fi
