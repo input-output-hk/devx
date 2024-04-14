@@ -39,7 +39,6 @@ jobs:
           - ghc92
           - ghc96
           - ghc98
-          - ghc99
         target-platform:
           - ""
           - "-static"
