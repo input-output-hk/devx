@@ -142,7 +142,7 @@ pkgs.mkShell (rec {
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
     ++ pkgs.lib.optional (withHLS && (compiler-not-in (
-         pkgs.lib.optional (builtins.compareVersions compiler.version "9.9" >= 0) compiler-nix-name) "Haskell Language Server")) (tool "haskell-language-server")
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.7" >= 0) compiler-nix-name) "Haskell Language Server")) (tool "haskell-language-server")
     ++ pkgs.lib.optional (withHlint && (compiler-not-in (
          pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name) "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ])
