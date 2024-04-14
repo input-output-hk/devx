@@ -2,7 +2,10 @@
 # so we assume "latest" for all hls.
 # for hlint however, we need hlint-3.3 for ghc-8.10.7.
 let
-  fixed-versions = { "hlint" = { "ghc8107" = { version = "3.4.1"; }; "ghc902" = { version = "3.5"; }; }; };
+  fixed-versions = { "hlint" = { "ghc8107" = { version = "3.4.1"; };
+                                 "ghc902"  = { version = "3.5"; };
+                                 "ghc928"  = { version = "3.6.1"; };
+                               }; };
   cabalProjectLocal = ''
         repository head.hackage.ghc.haskell.org
           url: https://ghc.gitlab.haskell.org/head.hackage/
@@ -14,7 +17,7 @@ let
              7541f32a4ccca4f97aea3b22f5e593ba2c0267546016b992dfadcd2fe944e55d
           --sha256: sha256-aVI93DtHziicNn2mGli0YE+bC5BeT7mOQQETp2Thi68=
 
-        if impl(ghc < 9.7)
+        if impl(ghc < 9.11)
           active-repositories: hackage.haskell.org
         else
           active-repositories: hackage.haskell.org, head.hackage.ghc.haskell.org
