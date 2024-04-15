@@ -126,7 +126,9 @@ pkgs.mkShell (rec {
         jq
         yq-go
     ] ++ lib.optionals withIOGFull [
-        (if pkgs.stdenv.hostPlatform.isAarch64 then null else R) # for plutus; but unavailable for static/aarch64
+        # for plutus; but unavailable for static/aarch64, or static even.
+        # R fails in almost any direction. For now, we just disable it.
+        (if (pkgs.stdenv.hostPlatform.isAarch64 || pkgs.stdenv.hostPlatform.isMusl) then null else R)
         postgresql # for db-sync
     ]);
 
