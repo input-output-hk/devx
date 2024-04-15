@@ -1,4 +1,4 @@
-{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = pkgs.pkgsBuildBuild.haskell-nix.nix-tools-unchecked.exes.cabal;
@@ -121,12 +121,13 @@ pkgs.mkShell (rec {
         static-libblst
         static-libsodium-vrf
         static-secp256k1
-        #R_4_1_3      # for plutus
-        postgresql    # for db-sync
         icu           # for cardano-cli
         gh
         jq
         yq-go
+    ] ++ lib.options withIOGFull [
+        R          # for plutus
+        postgresql # for db-sync
     ]);
 
     # these are _native_ libs, we need to drive the compilation environment

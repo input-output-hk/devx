@@ -154,8 +154,16 @@
                     import ./static.nix (args // { withIOG = true; })
                   )) (compilers static-pkgs)
               // pkgs.lib.mapAttrs' (short-name: args:
+                  pkgs.lib.nameValuePair "${short-name}-static-iog-full" (
+                    import ./static.nix (args // { withIOG = true; withIOGFull = true;})
+                  )) (compilers static-pkgs)
+              // pkgs.lib.mapAttrs' (short-name: args:
                   pkgs.lib.nameValuePair "${short-name}-static-minimal-iog" (
                     import ./static.nix (args // { withHLS = false; withHlint = false; withIOG = true; })
+                  )) (compilers static-pkgs)
+              // pkgs.lib.mapAttrs' (short-name: args:
+                  pkgs.lib.nameValuePair "${short-name}-static-minimal-iog-full" (
+                    import ./static.nix (args // { withHLS = false; withHlint = false; withIOG = true; withIOGFull = true; })
                   )) (compilers static-pkgs)
               // pkgs.lib.mapAttrs' (short-name: args:
                   pkgs.lib.nameValuePair "${short-name}-js-iog" (
