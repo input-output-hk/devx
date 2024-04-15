@@ -35,7 +35,9 @@ compiler-nix-name: tool: {
   # Ideally we should expose this from haskell.nix
   haskell-language-server = {pkgs, ...}: rec {
       # Use the github source of HLS that is tested with haskell.nix CI
-      src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2"; }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.6";
+      src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2";
+              "ghc902"  = pkgs.haskell-nix.sources."hls-2.4";
+            }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.6";
       # `tool` normally ignores the `cabal.project` (if there is one in the hackage source).
       # We need to use the github one (since it has settings to make hls build).
       cabalProject = __readFile (src + "/cabal.project");
