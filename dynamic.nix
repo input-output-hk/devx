@@ -110,7 +110,7 @@ pkgs.mkShell {
         ]
         ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 icu ]
             ++ pkgs.lib.optional (withIOGFull) [
-                R          # for plutus
+                (if pkgs.stdenv.hostPlatform.isAarch64 then null else R) # for plutus; R is broken on aarch64
                 postgresql # for db-sync
             ]))
     ;
