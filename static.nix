@@ -126,7 +126,7 @@ pkgs.mkShell (rec {
         jq
         yq-go
     ] ++ lib.optionals withIOGFull [
-        R          # for plutus
+        (if pkgs.stdenv.hostPlatform.isAarch64 then null else R) # for plutus; but unavailable for static/aarch64
         postgresql # for db-sync
     ]);
 
