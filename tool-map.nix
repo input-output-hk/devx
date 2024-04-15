@@ -27,15 +27,18 @@ compiler-nix-name: tool: {
   # for HLS, we rely on the cabal.project configuration from the upstream project to have the correct configuration.
   # Building HLS from hackage requires setting all those constraints as well, and just isn't practical to do for each
   # HLS release. Therefore we rely on the HLS upstream repository to provide the proper configuration information.
+  #
+  # The fact that we duplicate logic from haskell.nix here is quite annoying:
+  #
+  #  https://github.com/input-output-hk/haskell.nix/blob/dbf7e3e722f9d02ed9776d02f934280fb972a669/build.nix#L54-L66
+  #
+  # Ideally we should expose this from haskell.nix
   haskell-language-server = {pkgs, ...}: rec {
       # Use the github source of HLS that is tested with haskell.nix CI
-      src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2"; }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.4";
+      src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2"; }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.6";
       # `tool` normally ignores the `cabal.project` (if there is one in the hackage source).
       # We need to use the github one (since it has settings to make hls build).
       cabalProject = __readFile (src + "/cabal.project");
-      inherit cabalProjectLocal;
-      # sha256 for a `source-repository-package` in the `cabal.project` file.
-      sha256map."https://github.com/pepeiborra/ekg-json"."7a0af7a8fd38045fd15fb13445bdcc7085325460" = "sha256-fVwKxGgM0S4Kv/4egVAAiAjV7QB5PBqMVMCfsv7otIQ=";
   };
   happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
   alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
