@@ -104,12 +104,14 @@ pkgs.mkShell {
         (with pkgs; [
             cddl
             cbor-diag
-            #R_4_1_3      # for plutus
-            #postgresql   # for db-sync
             gh
             jq
             yq-go
         ]
-        ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 icu ] ++ pkgs.lib.optional (withIOGFull) [ R_4_1_3 postgresql ]))
+        ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 icu ]
+            ++ pkgs.lib.optional (withIOGFull) [
+                R          # for plutus
+                postgresql # for db-sync
+            ]))
     ;
 }

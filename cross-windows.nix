@@ -182,7 +182,7 @@ pkgs.pkgsBuildBuild.mkShell ({
     ++ pkgs.lib.optional withIOG
         (with pkgs.pkgsBuildBuild; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [
-            libblst libsodium-vrf secp256k1 #R_4_1_3
+            libblst libsodium-vrf secp256k1
         ]))
     ;
 })
