@@ -125,7 +125,7 @@ pkgs.mkShell (rec {
         gh
         jq
         yq-go
-    ] ++ lib.options withIOGFull [
+    ] ++ lib.optionals withIOGFull [
         R          # for plutus
         postgresql # for db-sync
     ]);
