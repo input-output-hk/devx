@@ -142,5 +142,6 @@ jobs:
             IOG=${{ inputs.iog }}
 
       - name: Run test command inside the Dev Container
-        run: docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}${{ inputs.variant }}${{ inputs.iog }} \
-             /bin/bash -c "cabal update && cabal unpack hello && cd hello-* && cabal build"
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.platform }}.${{ inputs.compiler-nix-name }}${{ inputs.target-platform }}${{ inputs.variant }}${{ inputs.iog }} \
+          bash -ic "cabal update && cabal unpack hello && cd hello-* && cabal build"
