@@ -32,19 +32,8 @@
             '';
             postFixup = "";
           });
-        });
-         # the haskell inline-r package depends on internals of the R
-         # project that have been hidden in R 4.2+. See
-         # https://github.com/tweag/HaskellR/issues/374
-         oldR = (final: prev: {
-           R_4_1_3 = final.R.overrideDerivation (old: rec {
-             version = "4.1.3";
-             patches = []; # upstream patches will most likely break this build, as they are specific to a different version.
-             src = final.fetchurl {
-               url = "https://cran.r-project.org/src/base/R-${final.lib.versions.major version}/${old.pname}-${version}.tar.gz";
-               sha256 = "sha256-Ff9bMzxhCUBgsqUunB2OxVzELdAp45yiKr2qkJUm/tY="; };
-             });
          });
+
          cddl-tools = (final: prev: {
           cbor-diag = final.callPackage ./pkgs/cbor-diag { };
           cddl = final.callPackage ./pkgs/cddl { };
@@ -86,8 +75,7 @@
                       "ghc92"
                       "ghc94"
                       "ghc96"
-                      "ghc98"
-                      "ghc99"] (short-name: rec {
+                      "ghc98"] (short-name: rec {
                          inherit pkgs self toolsModule;
                          compiler-nix-name = pkgs.haskell-nix.resolve-compiler-name short-name;
                          compiler = pkgs.buildPackages.haskell-nix.compiler.${compiler-nix-name};
@@ -155,8 +143,16 @@
                     import ./static.nix (args // { withIOG = true; })
                   )) (compilers static-pkgs)
               // pkgs.lib.mapAttrs' (short-name: args:
+                  pkgs.lib.nameValuePair "${short-name}-static-iog-full" (
+                    import ./static.nix (args // { withIOG = true; withIOGFull = true;})
+                  )) (compilers static-pkgs)
+              // pkgs.lib.mapAttrs' (short-name: args:
                   pkgs.lib.nameValuePair "${short-name}-static-minimal-iog" (
                     import ./static.nix (args // { withHLS = false; withHlint = false; withIOG = true; })
+                  )) (compilers static-pkgs)
+              // pkgs.lib.mapAttrs' (short-name: args:
+                  pkgs.lib.nameValuePair "${short-name}-static-minimal-iog-full" (
+                    import ./static.nix (args // { withHLS = false; withHlint = false; withIOG = true; withIOGFull = true; })
                   )) (compilers static-pkgs)
               // pkgs.lib.mapAttrs' (short-name: args:
                   pkgs.lib.nameValuePair "${short-name}-js-iog" (

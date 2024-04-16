@@ -95,21 +95,23 @@ pkgs.mkShell {
         ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
     )
     ++ pkgs.lib.optional (withHLS && (compiler-not-in (
-         pkgs.lib.optional (builtins.compareVersions compiler.version "9.9" >= 0) compiler-nix-name
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.7" >= 0) compiler-nix-name
       ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
     ++ pkgs.lib.optional (withHlint && (compiler-not-in (
-         pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name
+         pkgs.lib.optional (builtins.compareVersions compiler.version "9.10" >= 0) compiler-nix-name
       ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
     ++ pkgs.lib.optional withIOG
         (with pkgs; [
             cddl
             cbor-diag
-            #R_4_1_3      # for plutus
-            #postgresql   # for db-sync
             gh
             jq
             yq-go
         ]
-        ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 icu ] ++ pkgs.lib.optional (withIOGFull) [ R_4_1_3 postgresql ]))
+        ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 icu ]
+            ++ pkgs.lib.optional (withIOGFull) [
+                (if pkgs.stdenv.hostPlatform.isAarch64 then null else R) # for plutus; R is broken on aarch64
+                postgresql # for db-sync
+            ]))
     ;
 }
