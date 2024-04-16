@@ -79,7 +79,7 @@ jobs:
             substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
           nix_path: nixpkgs=channel:nixos-unstable
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
         with:
@@ -119,7 +119,7 @@ jobs:
     if: ${{ contains(fromJSON('["x86_64-linux", "aarch64-linux"]'), inputs.platform) && contains(fromJson('["","-windows","-js"]'), inputs.target-platform) && contains(fromJson('["ghc810","ghc96"]'), inputs.compiler-nix-name) && inputs.variant == '' && inputs.iog == '-iog' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2.1.0
