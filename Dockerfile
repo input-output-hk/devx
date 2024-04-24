@@ -20,6 +20,14 @@ RUN DEBIAN_FRONTEND=noninteractive \
  && ./fetch-docker.sh input-output-hk/devx $PLATFORM.$COMPILER_NIX_NAME$TARGET_PLATFORM$VARIANT$IOG-env | zstd -d | nix-store --import | tee store-paths.txt
 
 RUN cat <<EOF >> $HOME/.bashrc
+# This fix: mktemp: failed to create directory via template '/tmp/nix-shell.XXXXXX/' ...
+if [ -n "\$VSCODE_GIT_IPC_HANDLE" ]; then
+    mkdir -p "\$(dirname "\$VSCODE_GIT_IPC_HANDLE")"
+fi
+if [ -n "\$VSCODE_IPC_HOOK_CLI" ]; then
+    mkdir -p "\$(dirname "\$VSCODE_IPC_HOOK_CLI")"
+fi
+# This line is the one that actually brings DevX devshell ...
 source $(grep -m 1 -e '-env.sh$' store-paths.txt)
 EOF
 
