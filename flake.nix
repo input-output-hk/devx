@@ -42,7 +42,8 @@
        supportedSystems = [
             "x86_64-linux"
             "x86_64-darwin"
-            "aarch64-linux"
+            # Currently no aarch64 linux builders
+            # "aarch64-linux"
             "aarch64-darwin"
        ];
     in let flake-outputs = flake-utils.lib.eachSystem supportedSystems (system:
