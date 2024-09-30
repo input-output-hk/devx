@@ -37,6 +37,7 @@ compiler-nix-name: tool: {
       # Use the github source of HLS that is tested with haskell.nix CI
       src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2";
               "ghc902"  = pkgs.haskell-nix.sources."hls-2.4";
+              "ghc966"  = pkgs.haskell-nix.sources."hls-2.9";
             }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.6";
       # `tool` normally ignores the `cabal.project` (if there is one in the hackage source).
       # We need to use the github one (since it has settings to make hls build).
