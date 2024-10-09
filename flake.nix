@@ -187,12 +187,15 @@
             } "touch  $out";
           } // (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-env" (
+            # We need to use unsafeDiscardOutputDependency here, as it will otherwise
+            # pull in a bunch of dependenceis we don't care about at all from the .drvPath
+            # query.
             let env = pkgs.runCommand "${name}-env.sh" {
                 requiredSystemFeatures = [ "recursive-nix" ];
                 nativeBuildInputs = [ pkgs.nix ];
               } ''
               nix --offline --extra-experimental-features "nix-command flakes" \
-                print-dev-env ${drv.drvPath} >> $out
+                print-dev-env ${builtins.unsafeDiscardOutputDependency drv.drvPath} >> $out
             '';
             # this needs to be linux.  It would be great if we could have this
             # eval platform agnostic, but flakes don't permit this.  A the

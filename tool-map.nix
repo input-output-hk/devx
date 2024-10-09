@@ -37,19 +37,11 @@ compiler-nix-name: tool: {
       # Use the github source of HLS that is tested with haskell.nix CI
       src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2";
               "ghc902"  = pkgs.haskell-nix.sources."hls-2.4";
-            }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.6";
+            }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.9";
       # `tool` normally ignores the `cabal.project` (if there is one in the hackage source).
       # We need to use the github one (since it has settings to make hls build).
       cabalProject = __readFile (src + "/cabal.project");
       configureArgs = "--disable-benchmarks --disable-tests";
-      modules = [{
-          packages.ghcide.patches =
-              (if compiler-nix-name != "ghc8107" && compiler-nix-name != "ghc902" then [
-                  # The following patch only works with hls-2.6 ...
-                  # https://github.com/haskell/haskell-language-server/issues/4046#issuecomment-1926242056
-                  ./extra/ghcide-workaround.diff
-              ] else []);
-      }];
   };
   happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
   alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
