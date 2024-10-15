@@ -4,7 +4,12 @@ let tool-version-map = import ./tool-map.nix;
     cabal-install = pkgs.pkgsBuildBuild.haskell-nix.nix-tools-unchecked.exes.cabal;
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
-
+    # Exclude zstd support for now, since it's currently broken on mingw32W64:
+    # https://github.com/NixOS/nixpkgs/issues/333338
+    curl = pkgs.curl.override ({
+      zstdSupport = false;
+      pslSupport = false;
+    });
     inherit (pkgs.haskell-nix.iserv-proxy-exes.${compiler-nix-name}) iserv-proxy iserv-proxy-interpreter;
 
     dllPkgs = [
@@ -56,7 +61,7 @@ let tool-version-map = import ./tool-map.nix;
     # A cabal-install wrapper that sets the appropriate static flags
     wrapped-cabal = pkgs.pkgsBuildBuild.writeShellApplication {
         name = "cabal";
-        runtimeInputs = [ cabal-install pkgs.curl ];
+        runtimeInputs = [ cabal-install curl ];
         text = ''
         # We do not want to quote NIX_CABAL_FLAGS
         # it will leave an empty argument, if they are empty.

@@ -38,6 +38,30 @@
           cbor-diag = final.callPackage ./pkgs/cbor-diag { };
           cddl = final.callPackage ./pkgs/cddl { };
          });
+
+         musl = (final: prev: prev.lib.optionalAttrs prev.stdenv.hostPlatform.isMusl {
+           # Fix the following Ruby cross build error:
+           #
+           #     error: output '/nix/store/6hyyk9wnnxpd5rsr6ivc0s8l1lgvsjrb-ruby-x86_64-unknown-linux-musl-3.3.4'
+           #     is not allowed to refer to the following paths:
+           #             /nix/store/c77wdd4fb0llq37bpmfr73m7s7r1j068-ruby-3.3.4
+           #
+           # See https://github.com/NixOS/nixpkgs/issues/347758
+           ruby = prev.ruby.overrideAttrs (old: {
+             postInstall = old.postInstall + ''
+               find $out/${old.passthru.gemPath} -name exts.mk -delete
+             '';
+           });
+
+           # Tests on static postgresql are failing with:
+           #
+           #    FATAL:  could not load library "/build/postgresql-16.4/.../lib/dict_snowball.so":
+           #    Error relocating /build/postgresql-16.4/tmp_install/nix/store/.../lib/dict_snowball.so:
+           #    pg_any_to_server: symbol not found
+           postgresql = prev.postgresql.overrideAttrs (_: {
+             doCheck = false;
+           });
+         });
        };
        supportedSystems = [
             "x86_64-linux"
@@ -187,12 +211,15 @@
             } "touch  $out";
           } // (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-env" (
+            # We need to use unsafeDiscardOutputDependency here, as it will otherwise
+            # pull in a bunch of dependenceis we don't care about at all from the .drvPath
+            # query.
             let env = pkgs.runCommand "${name}-env.sh" {
                 requiredSystemFeatures = [ "recursive-nix" ];
                 nativeBuildInputs = [ pkgs.nix ];
               } ''
               nix --offline --extra-experimental-features "nix-command flakes" \
-                print-dev-env ${drv.drvPath} >> $out
+                print-dev-env '${builtins.unsafeDiscardOutputDependency drv.drvPath}^*' >> $out
             '';
             # this needs to be linux.  It would be great if we could have this
             # eval platform agnostic, but flakes don't permit this.  A the
@@ -221,7 +248,7 @@
                 license = pkgs.lib.licenses.asl20;
                 platforms = pkgs.lib.platforms.unix;
               };
-            })) devShellsWithEvalOnLinux) // {
+            })) devShells) // {
           };
         packages.cabalProjectLocal.static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
         packages.cabalProjectLocal.cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
