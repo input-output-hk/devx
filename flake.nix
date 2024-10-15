@@ -100,7 +100,8 @@
                       "ghc92"
                       "ghc94"
                       "ghc96"
-                      "ghc98"] (short-name: rec {
+                      "ghc98"
+                      "ghc910"] (short-name: rec {
                          inherit pkgs self toolsModule;
                          compiler-nix-name = pkgs.haskell-nix.resolve-compiler-name short-name;
                          compiler = pkgs.buildPackages.haskell-nix.compiler.${compiler-nix-name};
@@ -110,6 +111,7 @@
                   "ghc90"
                   "ghc92"
                   "ghc94"
+                  "ghc910"
                  ];
                  windows-compilers = pkgs:
                    pkgs.lib.optionalAttrs (__elem system ["x86_64-linux"])
