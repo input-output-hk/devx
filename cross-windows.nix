@@ -10,6 +10,13 @@ let tool-version-map = import ./tool-map.nix;
       zstdSupport = false;
       pslSupport = false;
     });
+    # Haskell.nix pulls in cabal-install 3.10.3.0 which will not build with 9.10+. In that
+    # case, build with 9.8
+    native-cabal-install =
+      if builtins.compareVersions compiler.version "9.10" >= 0 then
+        pkgs.pkgsBuildBuild.haskell-nix.cabal-install.ghc982
+      else
+        pkgs.pkgsBuildBuild.haskell-nix.cabal-install.${compiler-nix-name};
     inherit (pkgs.haskell-nix.iserv-proxy-exes.${compiler-nix-name}) iserv-proxy iserv-proxy-interpreter;
 
     dllPkgs = [
@@ -165,10 +172,17 @@ pkgs.pkgsBuildBuild.mkShell ({
     '' + (quirks.hint flavor) + quirks.shellHook;
     buildInputs = [];
 
-    nativeBuildInputs = [ wrapped-ghc wrapped-hsc2hs wrapped-cabal wine-test-wrapper compiler ] ++ (with pkgs; [
+    nativeBuildInputs = [
+        wrapped-ghc
+        wrapped-hsc2hs
+        wrapped-cabal
+        wine-test-wrapper
+        compiler
+        native-cabal-install
+    ]
+    ++ (with pkgs; [
         buildPackages.bintools.bintools
         stdenv.cc
-        pkgsBuildBuild.haskell-nix.cabal-install.${compiler-nix-name}
         (pkgsBuildBuild.pkg-config or pkgsBuildBuild.pkgconfig)
         (tool "happy")
         (tool "alex")
