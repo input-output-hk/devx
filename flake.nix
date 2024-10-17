@@ -235,6 +235,7 @@
 
                 set -euo pipefail
 
+                # Set up the environment
                 source ${env}
                 source "$1"
               '';
