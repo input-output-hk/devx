@@ -44,7 +44,7 @@ jobs:
           # conclusion=$(gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --jq '.check_runs[] | select(.name == "ci/hydra-build:$DEV_SHELL") | .conclusion')
           # For GitHub Statuses; we need --paginate because there are so many statuses
           echo "gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs --paginate --jq '.check_runs[] | select(.name == \"ci/hydra-build:$DEV_SHELL\") | .conclusion'"
-          conclusion=$(gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs --paginate --jq '.check_runs[] | select(.name ==  \"ci/hydra-build:$DEV_SHELL\") | .conclusion")
+          conclusion=$(gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs --paginate --jq ".check_runs[] | select(.name ==  \"ci/hydra-build:$DEV_SHELL\") | .conclusion")
           case "$conclusion" in
             success)
               echo "ci/hydra-build:$DEV_SHELL succeeded"
