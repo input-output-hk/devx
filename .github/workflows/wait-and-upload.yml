@@ -43,8 +43,8 @@ jobs:
           # For GitHub Apps
           # conclusion=$(gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --jq '.check_runs[] | select(.name == "ci/hydra-build:$DEV_SHELL") | .conclusion')
           # For GitHub Statuses; we need --paginate because there are so many statuses
-          echo "Querying: gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --paginate --jq '.statuses[] | select(.context == \"ci/hydra-build:$DEV_SHELL\") | .state'"
-          conclusion=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status" --paginate --jq ".statuses[] | select(.context == \"ci/hydra-build:$DEV_SHELL\") | .state")
+          echo "gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs --paginate --jq '.check_runs[] | select(.name == \"ci/hydra-build:$DEV_SHELL\") | .conclusion'"
+          conclusion=$(gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs --paginate --jq '.check_runs[] | select(.name ==  \"ci/hydra-build:$DEV_SHELL\") | .conclusion")
           case "$conclusion" in
             success)
               echo "ci/hydra-build:$DEV_SHELL succeeded"
@@ -54,7 +54,7 @@ jobs:
               exit 1;;
             *)
               echo "conclusion is: '$conclusion'"
-              gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/status --paginate --jq '.statuses[] | .state+"\t"+.context'|sort
+              gh api repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs --paginate --jq '.check_runs[] | .conclusion+"\t"+.name'|sort
               WAIT=$((180 + RANDOM % 180))
               echo "ci/hydra-build:$DEV_SHELL pending. Waiting ${WAIT}s..."
               sleep $WAIT;;
