@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: input-output-hk/actions/wait-for-hydra@latest
       with:
-        status: ci/hydra-build:required
+        check: ci/hydra-build:required
 
   upload:
     needs: wait-for-hydra-eval
