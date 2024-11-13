@@ -251,8 +251,9 @@
                 license = pkgs.lib.licenses.asl20;
                 platforms = pkgs.lib.platforms.unix;
               };
-            })) devShells) // {
-          };
+            })) devShells)
+          // (pkgs.lib.mapAttrs' (name: drv:
+            pkgs.lib.nameValuePair "${name}-plans" drv.plans) devShells);
         packages.cabalProjectLocal.static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
         packages.cabalProjectLocal.cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
         packages.cabalProjectLocal.cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;

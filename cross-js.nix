@@ -1,7 +1,15 @@
 { self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
 let tool-version-map = import ./tool-map.nix;
-    tool = tool-name: pkgs.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
-    cabal-install = pkgs.haskell-nix.nix-tools-unchecked.exes.cabal;
+    tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
+    cabal-install = pkgs.pkgsBuildBuild.haskell-nix.nix-tools-unchecked.exes.cabal;
+    haskell-tools =
+         pkgs.lib.optionalAttrs (withHLS && (compiler-not-in (
+           # it appears we can't get HLS build with 9.8 yet.
+           pkgs.lib.optional (builtins.compareVersions compiler.version "9.7" >= 0) compiler-nix-name
+        ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) { hls = tool "haskell-language-server"; }
+      // pkgs.lib.optionalAttrs (withHlint && (compiler-not-in (
+           pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name
+        ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) { hlint = tool "hlint"; };
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
@@ -86,17 +94,17 @@ pkgs.mkShell ({
         (tool "alex")
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
-    ++ pkgs.lib.optional (withHLS && (compiler-not-in (
-         # it appears we can't get HLS build with 9.8 yet.
-         pkgs.lib.optional (builtins.compareVersions compiler.version "9.7" >= 0) compiler-nix-name
-      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) (tool "haskell-language-server")
-    ++ pkgs.lib.optional (withHlint && (compiler-not-in (
-         pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name
-      ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) (tool "hlint")
+    ++ builtins.attrValues haskell-tools
     ++ pkgs.lib.optional withIOG
         (with pkgs; [ cddl cbor-diag ]
         ++ map pkgs.lib.getDev (with pkgs; [
             libblst libsodium-vrf secp256k1
         ]))
     ;
+
+    passthru = {
+      plans = if haskell-tools == {} then {} else
+        pkgs.pkgsBuildBuild.linkFarm "plans"
+          (builtins.mapAttrs (_: t: t.project.plan-nix) haskell-tools);
+    };
 })
