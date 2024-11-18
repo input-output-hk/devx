@@ -40,18 +40,7 @@
          });
 
          musl = (final: prev: prev.lib.optionalAttrs prev.stdenv.hostPlatform.isMusl {
-           # Fix the following Ruby cross build error:
-           #
-           #     error: output '/nix/store/6hyyk9wnnxpd5rsr6ivc0s8l1lgvsjrb-ruby-x86_64-unknown-linux-musl-3.3.4'
-           #     is not allowed to refer to the following paths:
-           #             /nix/store/c77wdd4fb0llq37bpmfr73m7s7r1j068-ruby-3.3.4
-           #
-           # See https://github.com/NixOS/nixpkgs/issues/347758
-           ruby = prev.ruby.overrideAttrs (old: {
-             postInstall = old.postInstall + ''
-               find $out/${old.passthru.gemPath} -name exts.mk -delete
-             '';
-           });
+           ruby = prev.pkgsBuildBuild.ruby;
 
            # Tests on static postgresql are failing with:
            #
