@@ -40,6 +40,8 @@
          });
 
          musl = (final: prev: prev.lib.optionalAttrs prev.stdenv.hostPlatform.isMusl {
+           # We don't need a ruby static build. We're only interested in producing static
+           # outputs, not necessarily build tools.
            ruby = prev.pkgsBuildBuild.ruby;
 
            # Tests on static postgresql are failing with:
