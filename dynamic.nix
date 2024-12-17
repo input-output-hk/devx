@@ -83,39 +83,42 @@ pkgs.mkShell {
     export DYLD_LIBRARY_PATH="${lib.getLib openssl}/lib"
     '';
 
-    buildInputs = [
+    buildInputs =
+      let
+        inherit (pkgs) lib stdenv;
+        inherit (lib) attrValues optional optionals;
+      in [
         wrapped-cabal
         fixup-nix-deps
         compiler
-    ] ++ (with pkgs; [
-        (pkgs.pkg-config or pkgconfig)
         # for libstdc++; ghc not being able to find this properly is bad,
         # it _should_ probably call out to a g++ or clang++ but doesn't.
         stdenv.cc.cc.lib
-    ]) ++ map pkgs.lib.getDev (
-        with pkgs;
-        [
-            zlib
-            pcre
-            openssl
+      ]
+      ++ (with pkgs; [
+        openssl
+        pcre
+        pkg-config
+        zlib
+      ])
+      ++ optional stdenv.hostPlatform.isLinux pkgs.systemd
+      ++ optionals withIOG (
+        with pkgs; [
+          cbor-diag
+          cddl
+          gh
+          icu
+          jq
+          libblst
+          libsodium-vrf
+          secp256k1
+          yq-go
         ]
-        ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux systemd
-    )
-    ++ builtins.attrValues haskell-tools
-    ++ pkgs.lib.optional withIOG
-        (with pkgs; [
-            cddl
-            cbor-diag
-            gh
-            jq
-            yq-go
-        ]
-        ++ map pkgs.lib.getDev (with pkgs; [ libblst libsodium-vrf secp256k1 icu ]
-            ++ pkgs.lib.optional (withIOGFull) [
-                (if pkgs.stdenv.hostPlatform.isAarch64 then null else R) # for plutus; R is broken on aarch64
-                postgresql # for db-sync
-            ]))
-    ;
+        ++ optionals withIOGFull (
+          [ postgresql ] ++ (optional stdenv.hostPlatform.isAarch64 R)
+        )
+        ++ attrValues haskell-tools
+      );
 
     passthru = {
       plans = if haskell-tools == {} then {} else
