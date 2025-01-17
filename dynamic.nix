@@ -1,5 +1,5 @@
 # define a development shell for dynamically linked applications (default)
-{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false, withGHCTooling ? false }:
 let tool-version-map = import ./tool-map.nix;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = pkgs.pkgsBuildBuild.haskell-nix.nix-tools-unchecked.exes.cabal;
@@ -64,6 +64,7 @@ pkgs.mkShell {
                    + lib.optionalString (!withHLS && !withHlint) "-minimal"
                    + lib.optionalString withIOG                  "-iog"
                    + lib.optionalString withIOGFull              "-full"
+                   + lib.optionalString withGHCTooling           "-ghc"
                    ;
         in ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
@@ -81,6 +82,14 @@ pkgs.mkShell {
     + lib.optionalString stdenv.hostPlatform.isMacOS
     ''
     export DYLD_LIBRARY_PATH="${lib.getLib openssl}/lib"
+    ''
+    + lib.optionalString withGHCTooling ''
+    export HADRIAN_CONFIGURE_FLAGS=--with-gmp-includes="${lib.getDev gmp}/include" --with-gmp-libraries="${lib.getLib gmp}/lib"
+    echo "HADRIAN_CONFIGURE_FLAGS set to $HADRIAN_CONFIGURE_FLAGS"
+    echo "To build GHC, run"
+    echo "  ./boot"
+    echo "  ./configure \"$HADRIAN_CONFIGURE_FLAGS\""
+    echo "  ./hadrian/build -j"
     '';
 
     buildInputs =
@@ -118,6 +127,9 @@ pkgs.mkShell {
           [ postgresql ] ++ (optional stdenv.hostPlatform.isAarch64 R)
         )
         ++ attrValues haskell-tools
+        ++ optionals withGHCTooling (
+          with pkgs; [ automake autoconf alex happy ]
+        )
       );
 
     passthru = {
