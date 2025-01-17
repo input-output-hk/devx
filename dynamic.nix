@@ -127,10 +127,11 @@ pkgs.mkShell {
           [ postgresql ] ++ (optional stdenv.hostPlatform.isAarch64 R)
         )
         ++ attrValues haskell-tools
-        ++ optionals withGHCTooling (
-          with pkgs; [ python3 automake autoconf alex happy ]
-        )
-      );
+      )
+      ++ optionals withGHCTooling (
+        with pkgs; [ python3 automake autoconf alex happy ]
+      )
+    ;
 
     passthru = {
       plans = if haskell-tools == {} then {} else
