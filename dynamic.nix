@@ -128,7 +128,7 @@ pkgs.mkShell {
         )
         ++ attrValues haskell-tools
         ++ optionals withGHCTooling (
-          with pkgs; [ automake autoconf alex happy ]
+          with pkgs; [ python3 automake autoconf alex happy ]
         )
       );
 
