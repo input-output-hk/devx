@@ -89,8 +89,9 @@ jobs:
         nix-shell -p patchelf --run 'patchelf --set-rpath \$ORIGIN/lib:/lib64 bin/hello'
 
     - name: Upload hello executable
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
+        overwrite: true
         name: ${{ inputs.package }}-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
         path: |
           hello-1.0.0.2/bin/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }}
@@ -103,7 +104,7 @@ jobs:
     runs-on: ${{ inputs.target-platform == '-windows' && 'windows-latest' || (inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest') }}
     steps:
       - name: Download hello executable
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.package }}-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
 
