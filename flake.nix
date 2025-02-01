@@ -225,8 +225,13 @@
             in (import nixpkgs { system = "x86_64-linux"; }).writeTextFile {
               name = "devx";
               executable = true;
+              # We use nix-shell to invoke bash, to work around some shells being just too ancient.
+              # This primarily happens on macOS. But as the sourced env may expect a bash version
+              # current with the current nix, using nix-shell to launch the bash is probably the
+              # most reliable option.
               text = ''
-                #!/bin/bash
+                #! /usr/bin/env nix-shell
+                #! nix-shell -i bash -p bash
 
                 set -euo pipefail
 
