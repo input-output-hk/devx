@@ -35,9 +35,7 @@ jobs:
       id: set-matrix
       run: |
         BUILDS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate \
-            --jq '.check_runs[] | \
-            select(.name | startswith("ci/hydra-build")) | select(.name | endswith("-env")) | \
-            { "config": (.name | sub("ci/hydra-build:"; "")), "build_path": .output.text }' | \
+            --jq '.check_runs[] | select(.name | startswith("ci/hydra-build")) | select(.name | endswith("-env")) |  { "config": (.name | sub("ci/hydra-build:"; "")), "build_path": .output.text }' | \
             jq --slurp 'reduce .[] as $item ({}; . + $item)' | jq --slurp '{"matrix": .}')
         echo "matrix=$BUILDS" >> $GITHUB_OUTPUT
 
