@@ -104,6 +104,7 @@ There are various flavors available as suffixes to the compiler names (e.g. `#gh
 | `-static` | Building static binaries | `#ghc810-static` | Static Haskell Cross-Compiler |
 | `-js` | JavaScript Cross-Compiler | `#ghc810-js` | JavaScript Haskell Cross-Compiler |
 | `-windows` | Windows Cross-Compiler | `#ghc810-windows` | Windows Haskell Cross-Compiler |
+| `-ghc` | GHC Development | `#ghc810-ghc` | GHC Development Compiler |
 
 These can then be combined following this schema:
 ```
