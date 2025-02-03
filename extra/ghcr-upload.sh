@@ -2,11 +2,9 @@
 #! nix-shell -i bash -p zstd -p oras -p jq
 set -euox pipefail
 
-: "${GITHUB_REPOSITORY:?'GITHUB_REPOSITORY is not set'}"
-: "${GITHUB_SHA:?'GITHUB_SHA is not set'}"
 : "${DEV_SHELL:?'DEV_SHELL is not set'}"
+: "${SHELL_NIX_PATH:?'SHELL_NIX_PATH is not set'}"
 
-SHELL_NIX_PATH=$(nix path-info "github:${GITHUB_REPOSITORY}/${GITHUB_SHA}#hydraJobs.${DEV_SHELL}" --accept-flake-config --json | jq -r 'keys[0]')
 nix-store -r "$SHELL_NIX_PATH"
 #nix build ".#hydraJobs.${DEV_SHELL}" --show-trace --accept-flake-config
 nix-store --export $(nix-store -qR "$SHELL_NIX_PATH") | tee store-paths.txt | zstd -z8T8 >${DEV_SHELL}
