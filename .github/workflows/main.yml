@@ -35,9 +35,9 @@ jobs:
       run: |
         BUILDS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate \
             --jq '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' | \
-            jq --slurp)
+            jq --slurp -c -r)
         echo "$BUILDS" | jq .
-        echo "matrix=$BUILDS" >> $GITHUB_OUTPUT
+        echo "matrix=${BUILDS}" >> $GITHUB_OUTPUT
 
   ghcr-upload:
     needs: discover
