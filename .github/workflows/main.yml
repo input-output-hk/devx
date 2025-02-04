@@ -44,7 +44,8 @@ jobs:
     name: Container Upload
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+      matrix:
+        job: ${{ fromJson(needs.discover.outputs.matrix) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -70,8 +71,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Compute and upload closure and developer environment to ghcr.io
         env:
-          DEV_SHELL: ${{ matrix.config }}
-          SHELL_NIX_PATH: ${{ matrix.build_path }}
+          DEV_SHELL: ${{ matrix.job.config }}
+          SHELL_NIX_PATH: ${{ matrix.job.build_path }}
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: ./extra/ghcr-upload.sh
 
