@@ -15,14 +15,13 @@ env:
 jobs:
   wait-for-hydra-eval:
     env:
-      HYDRA_JOB: ci/eval
       GH_TOKEN: ${{ github.token }}
     name: "Wait for hydra status"
     runs-on: ubuntu-latest
     steps:
     - uses: input-output-hk/actions/wait-for-hydra@latest
       with:
-        check: ci/hydra-build:required
+        check: required
 
   discover:
     needs: wait-for-hydra-eval
