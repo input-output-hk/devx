@@ -56,8 +56,8 @@ jobs:
         with:
           script: |
             const matrix = context.matrix;
-            const platform = matrix.platform;
-            const jobs = matrix.jobs;
+            const platform = matrix.group.platform;
+            const jobs = matrix.group.jobs;
             console.log(`Calling container-upload workflow for platform: ${platform} with ${jobs.length} jobs`);
 
             await github.rest.actions.createWorkflowDispatch({
