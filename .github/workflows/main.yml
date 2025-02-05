@@ -50,49 +50,26 @@ jobs:
       matrix:
         group: ${{ fromJson(needs.discover.outputs.matrix) }}
     name: Process Jobs for ${{ matrix.group.platform }}
-    outputs:
-      jobs: ${{ toJson(matrix.group.jobs) }} # Direct output definition
     steps:
-      - name: No-op step (required to have at least one step)
-        run: echo "no-op"
-
-  ghcr-upload:
-    needs: process
-    name: Container Upload
-    strategy:
-      fail-fast: false
-      matrix:
-        job: ${{ fromJson(needs.process.outputs.jobs) }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-
-      - name: Install Nix with good defaults
-        uses: cachix/install-nix-action@v20
+      - name: Call Container Upload Workflow
+        uses: actions/github-script@v6
         with:
-          extra_nix_config: |
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
-            substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
-          nix_path: nixpkgs=channel:nixos-unstable
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3.3.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Compute and upload closure and developer environment to ghcr.io
-        env:
-          DEV_SHELL: ${{ matrix.job.config }}
-          SHELL_NIX_PATH: ${{ matrix.job.build_path }}
-          NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        run: ./extra/ghcr-upload.sh
+          script: |
+            const platform = ${{ matrix.group.platform }};
+            const jobs = ${{ matrix.group.jobs }};
+            console.log(`Calling container-upload workflow for platform: ${platform} with ${jobs.length} jobs`);
 
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'container-upload.yml', // Filename of the reusable workflow
+              ref: context.ref, // Or specify a branch/tag
+              inputs: {
+                platform: platform,
+                jobs: JSON.stringify(jobs) // Pass jobs as JSON string
+              }
+            });
+    
   # codespace-upload:
   #   env:
   #     IMAGE_NAME: input-output-hk/devx-devcontainer
