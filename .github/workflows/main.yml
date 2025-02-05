@@ -55,8 +55,9 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const platform = ${{ matrix.group.platform }};
-            const jobs = ${{ matrix.group.jobs }};
+            const matrix = JSON.parse("${{ toJson(matrix) }}"}
+            const platform = matrix.group.platform;
+            const jobs = matrix.group.jobs;
             console.log(`Calling container-upload workflow for platform: ${platform} with ${jobs.length} jobs`);
 
             await github.rest.actions.createWorkflowDispatch({
