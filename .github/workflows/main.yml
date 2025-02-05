@@ -43,8 +43,9 @@ jobs:
         FILTERED=$(./jq --slurp -c -r . <<< "$FILTERED")
         ./jq -e . <<< "$FILTERED"
         echo "computing groups"
-        ./jq -c -r '. as $jobs | map(.config | split(".") | first) | unique' <<< "$FILTERED"
-        ./jq '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED"
+        ./jq -c '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED"
+        echo $?
+        echo "Lets build groups..."
         GROUPS=$(./jq '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
         echo "groups..."
         if ./jq -e . <<< "$GROUPS" > /dev/null 2>&1; then  # JSON validation
