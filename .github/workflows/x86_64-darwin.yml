@@ -1,0 +1,11 @@
+name: Prebuild DevX closures for x86_64-darwin
+
+on:
+  push:
+
+jobs:
+  build:
+    name: Build for x86_64-darwin
+    uses: ./.github/workflows/main.yml
+    with:
+        platform: x86_64-darwin

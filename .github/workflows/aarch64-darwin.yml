@@ -1,0 +1,11 @@
+name: Prebuild DevX closures for aarch64-darwin
+
+on:
+  push:
+
+jobs:
+  build:
+    name: Build for aarch64-darwin
+    uses: ./.github/workflows/main.yml
+    with:
+        platform: aarch64-darwin

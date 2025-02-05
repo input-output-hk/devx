@@ -37,7 +37,7 @@ jobs:
         # Group the output by platform.
         RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/2c66429a549f1122374faf3e1eb097e07a8f0c22/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.text }' <<< "$RUNS")
+        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.text, "short_name": .name | sub("${{ inputs.platform }}\\.";"") }' <<< "$RUNS")
         jq . <<< "$FILTERED"
         MATRIX=$(jq --slurp -c -r '.' <<< "$FILTERED")
         jq . <<< "$MATRIX"
@@ -52,7 +52,7 @@ jobs:
       fail-fast: false
       matrix:
         job: ${{ fromJson(needs.discover.outputs.matrix) }}
-    name: Container Upload for ${{ matrix.job.config }}
+    name: GHCR Upload for ${{ matrix.job.short_name }}
     permissions:
       contents: read
       packages: write
