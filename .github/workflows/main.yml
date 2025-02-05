@@ -32,15 +32,17 @@ jobs:
       id: set-matrix
       run: |
         # Group the output by platform.
-        jq --version
+        curl -L https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux64 -o jq
+        chmod +x jq
+        ./jq --version
         CHECK_RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/main/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$CHECK_RUNS")
+        FILTERED=$(./jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$CHECK_RUNS")
         echo "filtered..."
-        jq -e . <<< "$FILTERED"
-        GROUPS=$(jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
+        ./jq -e . <<< "$FILTERED"
+        GROUPS=$(./jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
         echo "groups..."
-        if jq -e . <<< "$GROUPS" > /dev/null 2>&1; then  # JSON validation
+        if ./jq -e . <<< "$GROUPS" > /dev/null 2>&1; then  # JSON validation
           echo "Valid JSON"
         else
           echo "Invalid JSON: $GROUPS"
