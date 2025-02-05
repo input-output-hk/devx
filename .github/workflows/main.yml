@@ -1,8 +1,6 @@
 name: Prebuild DevX closures
 on:
   push:
-    branches:
-      - main
 
   workflow_dispatch:
 
@@ -34,7 +32,8 @@ jobs:
       id: set-matrix
       run: |
         # Group the output by platform.
-        CHECK_RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate)
+        jq --version
+        CHECK_RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/main/check-runs" --paginate)
         echo "checks..."
         FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$CHECK_RUNS")
         echo "filtered..."
