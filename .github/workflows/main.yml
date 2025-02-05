@@ -11,18 +11,18 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  wait-for-hydra-eval:
-    env:
-      GH_TOKEN: ${{ github.token }}
-    name: "Wait for hydra status"
-    runs-on: ubuntu-latest
-    steps:
-    - uses: input-output-hk/actions/wait-for-hydra@latest
-      with:
-        check: required
+  # wait-for-hydra-eval:
+  #   env:
+  #     GH_TOKEN: ${{ github.token }}
+  #   name: "Wait for hydra status"
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: input-output-hk/actions/wait-for-hydra@latest
+  #     with:
+  #       check: required
 
   discover:
-    needs: wait-for-hydra-eval
+    # needs: wait-for-hydra-eval
     name: Discover
     runs-on: ubuntu-latest
     outputs:
