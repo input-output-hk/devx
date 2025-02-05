@@ -33,12 +33,11 @@ jobs:
     - name: fetch all ci/hydra-build jobs
       id: set-matrix
       run: |
-        BUILDS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate \
-            --jq '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' | \
-            jq --slurp -c -r)
         # Group the output by platform.
-        GROUPS=$("$BUILDS" | jq -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})')
-        echo "${GROUPS}" | jq .
+        GROUPS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate \
+            --jq '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' | \
+            jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})')
+        jq . <<< ${GROUPS}
         echo "matrix=${GROUPS}" >> $GITHUB_OUTPUT
 
   # We need this process step in here, because we have in excess of 256 jobs.
