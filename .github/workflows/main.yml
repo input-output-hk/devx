@@ -14,18 +14,18 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  # wait-for-hydra-eval:
-  #   env:
-  #     GH_TOKEN: ${{ github.token }}
-  #   name: "Wait for hydra status"
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: input-output-hk/actions/wait-for-hydra@latest
-  #     with:
-  #       check: required
+  wait-for-hydra-eval:
+    env:
+      GH_TOKEN: ${{ github.token }}
+    name: "Wait for hydra status"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: input-output-hk/actions/wait-for-hydra@latest
+      with:
+        check: required
 
   discover:
-    # needs: wait-for-hydra-eval
+    needs: wait-for-hydra-eval
     name: Discover
     runs-on: ubuntu-latest
     outputs:
@@ -35,7 +35,7 @@ jobs:
       id: set-matrix
       run: |
         # Group the output by platform.
-        RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/2c66429a549f1122374faf3e1eb097e07a8f0c22/check-runs" --paginate)
+        RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate)
         echo "checks..."
         FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.text, "short_name": .name | sub("${{ inputs.platform }}\\.";"") }' <<< "$RUNS")
         jq . <<< "$FILTERED"
