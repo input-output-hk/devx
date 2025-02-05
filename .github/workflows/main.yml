@@ -32,7 +32,7 @@ jobs:
       id: set-matrix
       run: |
         # Group the output by platform.
-        RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/main/check-runs" --paginate)
+        RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/2c66429a549f1122374faf3e1eb097e07a8f0c22/check-runs" --paginate)
         echo "checks..."
         FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$RUNS")
         jq . <<< "$FILTERED"
@@ -51,11 +51,10 @@ jobs:
         group: ${{ fromJson(needs.discover.outputs.matrix) }}
     name: Process Jobs for ${{ matrix.group.platform }}
     outputs:
-      jobs: ${{ steps.set-jobs.outputs.jobs }} 
+      jobs: ${{ toJson(matrix.group.jobs) }} # Direct output definition
     steps:
       - name: No-op step (required to have at least one step)
-        id: set-jobs
-        run: echo "jobs=${{ toJson( matrix.group.jobs ) }}" >> $GITHUB_OUTPUT
+        run: echo "no-op"
 
   ghcr-upload:
     needs: process
