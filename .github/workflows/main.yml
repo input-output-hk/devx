@@ -37,6 +37,7 @@ jobs:
         echo "checks..."
         FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$CHECK_RUNS")
         echo "filtered..."
+        jq -e . <<< "$FILTERED"
         GROUPS=$(jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
         echo "groups..."
         if jq -e . <<< "$GROUPS" > /dev/null 2>&1; then  # JSON validation
