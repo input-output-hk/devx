@@ -37,8 +37,10 @@ jobs:
         ./jq --version
         CHECK_RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/main/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(./jq --slurp -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$CHECK_RUNS")
+        FILTERED=$(./jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$CHECK_RUNS")
         echo "filtered..."
+        ./jq -e . <<< "$FILTERED"
+        FILTERED=$(./jq --slurp -c -r . <<< "$CHECK_RUNS")
         ./jq -e . <<< "$FILTERED"
         echo "computing groups"
         ./jq -c -r '. as $jobs | map(.config | split(".") | first) | unique' <<< "$FILTERED" 
