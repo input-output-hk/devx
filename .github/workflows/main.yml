@@ -36,16 +36,33 @@ jobs:
         BUILDS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate \
             --jq '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' | \
             jq --slurp -c -r)
-        echo "$BUILDS" | jq .
-        echo "matrix=${BUILDS}" >> $GITHUB_OUTPUT
+        # Group the output by platform.
+        GROUPS=$("$BUILDS" | jq -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})')
+        echo "${GROUPS}" | jq .
+        echo "matrix=${GROUPS}" >> $GITHUB_OUTPUT
+
+  # We need this process step in here, because we have in excess of 256 jobs.
+  process:
+    needs: discover
+    runs-on: ubuntu-latest # You still need runs-on to define a job, but it can be minimal
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ${{ fromJson(needs.discover.outputs.matrix) }}
+    name: Process Jobs for ${{ matrix.group.platform }}
+    outputs:
+      jobs: ${{ toJson(matrix.group.jobs) }} # Direct output definition
+    steps:
+      - name: No-op step (required to have at least one step)
+        run: echo "No-op" # Minimal step to satisfy step requirement
 
   ghcr-upload:
-    needs: discover
+    needs: process
     name: Container Upload
     strategy:
       fail-fast: false
       matrix:
-        job: ${{ fromJson(needs.discover.outputs.matrix) }}
+        job: ${{ fromJson(needs.process.outputs.matrix) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
