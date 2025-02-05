@@ -34,20 +34,20 @@ jobs:
       id: set-matrix
       run: |
         # Group the output by platform.
-        CHECK_RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate)
+        RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$CHECK_RUNS")
+        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$RUNS")
         echo "filtered..."
-        GROUPS=$(jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
+        MATRIX=$(jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
         echo "groups..."
-        if jq -e . <<< "$GROUPS" > /dev/null 2>&1; then  # JSON validation
+        if jq -e . <<< "$MATRIX" > /dev/null 2>&1; then  # JSON validation
           echo "Valid JSON"
         else
-          echo "Invalid JSON: $GROUPS"
+          echo "Invalid JSON: $MATRIX"
           exit 1 # or handle the error appropriately
         fi
         echo "creating result matrix."
-        echo "matrix=$GROUPS" >> $GITHUB_OUTPUT
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   # We need this process step in here, because we have in excess of 256 jobs.
   process:
