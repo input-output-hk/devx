@@ -47,16 +47,16 @@ jobs:
         echo $?
         set -x
         echo "Lets build groups..."
-        GROUPS=$(./jq '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
+        MY_M=$(./jq -c '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
         echo "groups..."
-        if ./jq -e . <<< "$GROUPS" > /dev/null 2>&1; then  # JSON validation
+        if ./jq -e . <<< "$MY_M" > /dev/null 2>&1; then  # JSON validation
           echo "Valid JSON"
         else
-          echo "Invalid JSON: $GROUPS"
+          echo "Invalid JSON: $MY_M"
           exit 1 # or handle the error appropriately
         fi
         echo "creating result matrix."
-        echo "matrix=$GROUPS" >> $GITHUB_OUTPUT
+        echo "matrix=$MY_M" >> $GITHUB_OUTPUT
 
   # We need this process step in here, because we have in excess of 256 jobs.
   process:
