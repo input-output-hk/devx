@@ -32,31 +32,12 @@ jobs:
       id: set-matrix
       run: |
         # Group the output by platform.
-        curl -L https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux64 -o jq
-        chmod +x jq
-        ./jq --version
         RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/main/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(./jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$RUNS")
-        echo "filtered..."
-        ./jq -e . <<< "$FILTERED"
-        FILTERED=$(./jq --slurp -c -r . <<< "$FILTERED")
-        ./jq -e . <<< "$FILTERED"
-        echo "computing groups"
-        ./jq -c '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED"
-        echo $?
-        set -x
-        echo "Lets build groups..."
-        MY_M=$(./jq -c '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
-        echo "groups..."
-        if ./jq -e . <<< "$MY_M" > /dev/null 2>&1; then  # JSON validation
-          echo "Valid JSON"
-        else
-          echo "Invalid JSON: $MY_M"
-          exit 1 # or handle the error appropriately
-        fi
+        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$RUNS")
+        MATRIX=$(./jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
         echo "creating result matrix."
-        echo "matrix=$MY_M" >> $GITHUB_OUTPUT
+        echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   # We need this process step in here, because we have in excess of 256 jobs.
   process:
@@ -79,7 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job: ${{ fromJson(needs.process.outputs.matrix) }}
+        job: ${{ fromJson(needs.process.outputs.jobs) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
