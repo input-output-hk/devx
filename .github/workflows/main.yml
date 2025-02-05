@@ -49,10 +49,11 @@ jobs:
         group: ${{ fromJson(needs.discover.outputs.matrix) }}
     name: Process Jobs for ${{ matrix.group.platform }}
     outputs:
-      jobs: ${{ toJson(matrix.group.jobs) }} # Direct output definition
+      jobs: ${{ steps.set-jobs.outputs.jobs }} 
     steps:
       - name: No-op step (required to have at least one step)
-        run: echo "No-op" # Minimal step to satisfy step requirement
+        id: set-jobs
+        run: echo "jobs=${{ toJson( matrix.group.jobs ) }}" >> $GITHUB_OUTPUT
 
   ghcr-upload:
     needs: process
