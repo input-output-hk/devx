@@ -5,12 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Run Prebuild Workflow for x86_64-linux
-      uses: ./.github/workflows/main.yml
-      with:
+    name: Build for x86_64-linux
+    uses: ./.github/workflows/main.yml
+    with:
         platform: x86_64-linux
