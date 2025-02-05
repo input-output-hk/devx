@@ -45,6 +45,7 @@ jobs:
         echo "computing groups"
         ./jq -c '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED"
         echo $?
+        set -x
         echo "Lets build groups..."
         GROUPS=$(./jq '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
         echo "groups..."
