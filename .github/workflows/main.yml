@@ -55,21 +55,28 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const matrix = context.matrix;
-            const platform = matrix.group.platform;
-            const jobs = matrix.group.jobs;
-            console.log(`Calling container-upload workflow for platform: ${platform} with ${jobs.length} jobs`);
+            console.log("Full context object:");
+            console.dir(context, { depth: null }); // Use console.dir for full object inspection          
 
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'container-upload.yml', // Filename of the reusable workflow
-              ref: context.ref, // Or specify a branch/tag
-              inputs: {
-                platform: platform,
-                jobs: JSON.stringify(jobs) // Pass jobs as JSON string
-              }
-            });
+            
+            
+            
+            
+  # const matrix = context.matrix;
+  # const platform = matrix.group.platform;
+  # const jobs = matrix.group.jobs;
+  # console.log(`Calling container-upload workflow for platform: ${platform} with ${jobs.length} jobs`);
+
+  # await github.rest.actions.createWorkflowDispatch({
+  #   owner: context.repo.owner,
+  #   repo: context.repo.repo,
+  #   workflow_id: 'container-upload.yml', // Filename of the reusable workflow
+  #   ref: context.ref, // Or specify a branch/tag
+  #   inputs: {
+  #     platform: platform,
+  #     jobs: JSON.stringify(jobs) // Pass jobs as JSON string
+  #   }
+  # });
     
   # codespace-upload:
   #   env:
