@@ -1,7 +1,7 @@
 name: Container Upload Workflow
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       platform:
         required: true
@@ -40,10 +40,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload Container for Job ${{ matrix.job }}         
+      - name: Upload Container for Job ${{ matrix.job }}
       - name: Compute and upload closure and developer environment to ghcr.io
         env:
           DEV_SHELL: ${{ matrix.job.config }}
           SHELL_NIX_PATH: ${{ matrix.job.build_path }}
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        run: ./extra/ghcr-upload.sh          
+        run: ./extra/ghcr-upload.sh

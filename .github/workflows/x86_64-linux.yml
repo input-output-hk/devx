@@ -1,0 +1,13 @@
+name: Prebuild DevX closures for x86_64-linux
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run Prebuild Workflow for x86_64-linux
+      uses: ./.github/workflows/main.yml
+      with:
+        platform: x86_64-linux

@@ -1,8 +1,11 @@
 name: Prebuild DevX closures
-on:
-  push:
 
-  workflow_dispatch:
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -34,9 +37,9 @@ jobs:
         # Group the output by platform.
         RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/2c66429a549f1122374faf3e1eb097e07a8f0c22/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$RUNS")
+        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.text }' <<< "$RUNS")
         jq . <<< "$FILTERED"
-        MATRIX=$(jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
+        MATRIX=$(jq --slurp -c -r '.' <<< "$FILTERED")
         jq . <<< "$MATRIX"
         echo "creating result matrix."
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
@@ -44,35 +47,19 @@ jobs:
   # We need this process step in here, because we have in excess of 256 jobs.
   process:
     needs: discover
-    runs-on: ubuntu-latest # You still need runs-on to define a job, but it can be minimal
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        group: ${{ fromJson(needs.discover.outputs.matrix) }}
-    name: Process Jobs for ${{ matrix.group.platform }}
+        jobs: ${{ fromJson(needs.discover.outputs.matrix) }}
+    name: Process Jobs for ${{ inputs.platform }}
     steps:
       - name: Call Container Upload Workflow
-        uses: actions/github-script@v6
+        uses: ./.github/workflows/container-upload.yml
         with:
-          script: |
-            const matrix = JSON.parse(`
-              ${{ toJson(matrix) }}
-            `);
-            const platform = matrix.group.platform;
-            const jobs = matrix.group.jobs;
-            console.log(`Calling container-upload workflow for platform: ${platform} with ${jobs.length} jobs`);
-          
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'container-upload.yml', // Filename of the reusable workflow
-              ref: context.ref, // Or specify a branch/tag
-              inputs: {
-                platform: platform,
-                jobs: JSON.stringify(jobs) // Pass jobs as JSON string
-              }
-            });
-    
+          platform: ${{ inputs.platform }}
+          jobs: ${{ matrix.jobs }}
+
   # codespace-upload:
   #   env:
   #     IMAGE_NAME: input-output-hk/devx-devcontainer
