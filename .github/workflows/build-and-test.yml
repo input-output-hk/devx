@@ -1,118 +1,118 @@
-# name: Build and Test
+name: Build and Test
 
-# on:
-#   workflow_call:
-#     inputs:
-#       platform:
-#         required: true
-#         description: 'build platform'
-#         type: string
-#       target-platform:
-#         required: true
-#         description: 'target platform'
-#         type: string
-#       compiler-nix-name:
-#         required: true
-#         description: 'compiler name in nix format. e.g. ghc96'
-#         type: string
-#       minimal:
-#         description: 'without hls, hlint, ...'
-#         type: boolean
-#         default: true
-#       iog:
-#         description: 'without iog libs: libsodium, libsecp256k1, libblst, ...'
-#         type: boolean
-#         default: false
-#       package:
-#         description: 'name of hackage package'
-#         type: string
-#         default: hello
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        description: 'build platform'
+        type: string
+      target-platform:
+        required: true
+        description: 'target platform'
+        type: string
+      compiler-nix-name:
+        required: true
+        description: 'compiler name in nix format. e.g. ghc96'
+        type: string
+      minimal:
+        description: 'without hls, hlint, ...'
+        type: boolean
+        default: true
+      iog:
+        description: 'without iog libs: libsodium, libsecp256k1, libblst, ...'
+        type: boolean
+        default: false
+      package:
+        description: 'name of hackage package'
+        type: string
+        default: hello
 
-# jobs:
-#   build:
-#     name: Build ${{ inputs.package }} executable
-#     defaults:
-#       run:
-#         shell: devx {0}
-#     runs-on: ${{ inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
-#     steps:
-#     - name: Checkout code
-#       uses: actions/checkout@v4
-#     - name: Install GHC and Cabal
-#       uses: input-output-hk/actions/devx@latest
-#       with:
-#         platform: ${{ inputs.platform }}
-#         target-platform: ${{ inputs.target-platform }}
-#         compiler-nix-name: ${{ inputs.compiler-nix-name }}
-#         minimal: ${{ inputs.minimal }}
-#         iog: ${{ inputs.iog }}
-#     - name: cabal update
-#       run: cabal update
-#     - name: unapck hello
-#       run: cabal unpack hello
-#     - name: build hello
-#       working-directory: hello-1.0.0.2
-#       run: |
-#         cabal build${{ inputs.target-platform == '-static' && ' --enable-executable-static' || '' }}
-#         mkdir bin
-#         cp dist-newstyle/build/*/*/hello-1.0.0.2/build/hello/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }} bin
-#         ls -lah bin/
-#     - name: Fix up the nix dependencies
-#       working-directory: hello-1.0.0.2
-#       if: (inputs.platform == 'x86_64-darwin' || inputs.platform == 'aarch64-darwin') && inputs.target-platform == ''
-#       run: fixup-nix-deps bin/hello
+jobs:
+  build:
+    name: Build ${{ inputs.package }} executable
+    defaults:
+      run:
+        shell: devx {0}
+    runs-on: ${{ inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest' }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Install GHC and Cabal
+      uses: input-output-hk/actions/devx@latest
+      with:
+        platform: ${{ inputs.platform }}
+        target-platform: ${{ inputs.target-platform }}
+        compiler-nix-name: ${{ inputs.compiler-nix-name }}
+        minimal: ${{ inputs.minimal }}
+        iog: ${{ inputs.iog }}
+    - name: cabal update
+      run: cabal update
+    - name: unapck hello
+      run: cabal unpack hello
+    - name: build hello
+      working-directory: hello-1.0.0.2
+      run: |
+        cabal build${{ inputs.target-platform == '-static' && ' --enable-executable-static' || '' }}
+        mkdir bin
+        cp dist-newstyle/build/*/*/hello-1.0.0.2/build/hello/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }} bin
+        ls -lah bin/
+    - name: Fix up the nix dependencies
+      working-directory: hello-1.0.0.2
+      if: (inputs.platform == 'x86_64-darwin' || inputs.platform == 'aarch64-darwin') && inputs.target-platform == ''
+      run: fixup-nix-deps bin/hello
 
-#     - name: Inspect and patchup dynamic build product
-#       working-directory: hello-1.0.0.2
-#       if: ${{ inputs.platform == 'x86_64-linux' && inputs.target-platform == '' }}
-#       run: |
-#         nix-shell -p patchelf --run 'patchelf --print-interpreter                                    bin/hello'
-#         nix-shell -p patchelf --run 'patchelf --print-needed                                         bin/hello'
-#         # setting the interpreter to the 64bit ubuntu one.
-#         nix-shell -p patchelf --run 'patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2          bin/hello'
-#         # this will copy _all_ dependent libraries. This might not be the
-#         # greatest idea. But it's most likely the most reliable.
-#         nix-shell -p patchelf --run 'mkdir -p bin/libs
-#           for lib in $(patchelf --print-needed bin/hello); do
-#             for path in $(patchelf --print-rpath bin/hello|tr : \ ); do
-#               if [ -f "$path/$lib" ]; then
-#                 cp "$path/$lib" bin/libs/
-#                 if patchelf --print-interpreter "bin/libs/$lib" >/dev/null 2>&1; then
-#                   patchelf --set-interpreter /lib/ld-linux.so.2 "bin/libs/$lib"
-#                 fi
-#                 break
-#               fi
-#             done
-#           done'
-#         # we set /lib64 as well, even though we likely shouldn't need that, as all
-#         # libraries are found in the libs folder we ship along.
-#         nix-shell -p patchelf --run 'patchelf --set-rpath \$ORIGIN/lib:/lib64 bin/hello'
+    - name: Inspect and patchup dynamic build product
+      working-directory: hello-1.0.0.2
+      if: ${{ inputs.platform == 'x86_64-linux' && inputs.target-platform == '' }}
+      run: |
+        nix-shell -p patchelf --run 'patchelf --print-interpreter                                    bin/hello'
+        nix-shell -p patchelf --run 'patchelf --print-needed                                         bin/hello'
+        # setting the interpreter to the 64bit ubuntu one.
+        nix-shell -p patchelf --run 'patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2          bin/hello'
+        # this will copy _all_ dependent libraries. This might not be the
+        # greatest idea. But it's most likely the most reliable.
+        nix-shell -p patchelf --run 'mkdir -p bin/libs
+          for lib in $(patchelf --print-needed bin/hello); do
+            for path in $(patchelf --print-rpath bin/hello|tr : \ ); do
+              if [ -f "$path/$lib" ]; then
+                cp "$path/$lib" bin/libs/
+                if patchelf --print-interpreter "bin/libs/$lib" >/dev/null 2>&1; then
+                  patchelf --set-interpreter /lib/ld-linux.so.2 "bin/libs/$lib"
+                fi
+                break
+              fi
+            done
+          done'
+        # we set /lib64 as well, even though we likely shouldn't need that, as all
+        # libraries are found in the libs folder we ship along.
+        nix-shell -p patchelf --run 'patchelf --set-rpath \$ORIGIN/lib:/lib64 bin/hello'
 
-#     - name: Upload hello executable
-#       uses: actions/upload-artifact@v4
-#       with:
-#         overwrite: true
-#         name: ${{ inputs.package }}-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
-#         path: |
-#           hello-1.0.0.2/bin/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }}
-#           hello-1.0.0.2/bin/libs
+    - name: Upload hello executable
+      uses: actions/upload-artifact@v4
+      with:
+        overwrite: true
+        name: ${{ inputs.package }}-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
+        path: |
+          hello-1.0.0.2/bin/hello${{ inputs.target-platform == '-windows' && '.exe' || '' }}
+          hello-1.0.0.2/bin/libs
 
-#   run:
-#     name: Run ${{ inputs.package }} executable
-#     needs: build
+  run:
+    name: Run ${{ inputs.package }} executable
+    needs: build
 
-#     runs-on: ${{ inputs.target-platform == '-windows' && 'windows-latest' || (inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest') }}
-#     steps:
-#       - name: Download hello executable
-#         uses: actions/download-artifact@v4
-#         with:
-#           name: ${{ inputs.package }}-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
+    runs-on: ${{ inputs.target-platform == '-windows' && 'windows-latest' || (inputs.platform == 'x86_64-linux' && 'ubuntu-latest' || 'macos-latest') }}
+    steps:
+      - name: Download hello executable
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.package }}-${{ inputs.platform }}${{ inputs.target-platform }}-${{ inputs.compiler-nix-name }}${{ inputs.minimal && '-minimal' || '' }}${{ inputs.iog && '-iog' || '' }}
 
-#       # see https://github.com/actions/upload-artifact#permission-loss
-#       # windows doesn't care \o/
-#       - name: Restore Executable Permission
-#         if: ${{ inputs.target-platform != '-windows' }}
-#         run: chmod +x ./hello
+      # see https://github.com/actions/upload-artifact#permission-loss
+      # windows doesn't care \o/
+      - name: Restore Executable Permission
+        if: ${{ inputs.target-platform != '-windows' }}
+        run: chmod +x ./hello
 
-#       - name: Run hello executable
-#         run: ./hello
+      - name: Run hello executable
+        run: ./hello
