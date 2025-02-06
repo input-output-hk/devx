@@ -1,10 +1,11 @@
 name: Prebuild DevX closures
-on:
-  push:
-    branches:
-      - main
 
-  workflow_dispatch:
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -36,49 +37,28 @@ jobs:
         # Group the output by platform.
         RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) |  { "config": .name, "build_path": .output.text }' <<< "$RUNS")
-        echo "filtered..."
-        MATRIX=$(jq --slurp -c -r '. as $jobs | map(.config | split(".") | first) | unique | map(. as $group | {"platform": $group, "jobs": $jobs | map(select(.config |startswith($group)))})' <<< "$FILTERED")
-        echo "groups..."
-        if jq -e . <<< "$MATRIX" > /dev/null 2>&1; then  # JSON validation
-          echo "Valid JSON"
-        else
-          echo "Invalid JSON: $MATRIX"
-          exit 1 # or handle the error appropriately
-        fi
+        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.text, "short_name": .name | sub("${{ inputs.platform }}\\.";"") }' <<< "$RUNS")
+        jq . <<< "$FILTERED"
+        MATRIX=$(jq --slurp -c -r '.' <<< "$FILTERED")
+        jq . <<< "$MATRIX"
         echo "creating result matrix."
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   # We need this process step in here, because we have in excess of 256 jobs.
   process:
     needs: discover
-    runs-on: ubuntu-latest # You still need runs-on to define a job, but it can be minimal
-    strategy:
-      fail-fast: false
-      matrix:
-        group: ${{ fromJson(needs.discover.outputs.matrix) }}
-    name: Process Jobs for ${{ matrix.group.platform }}
-    outputs:
-      jobs: ${{ toJson(matrix.group.jobs) }} # Direct output definition
-    steps:
-      - name: No-op step (required to have at least one step)
-        run: echo "No-op" # Minimal step to satisfy step requirement
-
-  ghcr-upload:
-    needs: process
-    name: Container Upload
-    strategy:
-      fail-fast: false
-      matrix:
-        job: ${{ fromJson(needs.process.outputs.matrix) }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ fromJson(needs.discover.outputs.matrix) }}
+    name: GHCR Upload for ${{ matrix.job.short_name }}
     permissions:
       contents: read
       packages: write
     steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
-
       - name: Install Nix with good defaults
         uses: cachix/install-nix-action@v20
         with:
@@ -100,6 +80,8 @@ jobs:
           SHELL_NIX_PATH: ${{ matrix.job.build_path }}
           NIX_STORE_SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: ./extra/ghcr-upload.sh
+
+
 
   # codespace-upload:
   #   env:

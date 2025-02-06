@@ -1,4 +1,5 @@
 name: Test that we can build the hello world example form hackage
+
 on:
   push:
   workflow_dispatch:
