@@ -596,7 +596,7 @@
         "iohk-nix": "iohk-nix",
         "nixpkgs": [
           "haskellNix",
-          "nixpkgs-unstable"
+          "nixpkgs-2411"
         ]
       }
     },
