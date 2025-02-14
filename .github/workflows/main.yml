@@ -37,7 +37,7 @@ jobs:
         # Group the output by platform.
         RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate)
         echo "checks..."
-        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.text, "short_name": .name | sub("${{ inputs.platform }}\\.";"") }' <<< "$RUNS")
+        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.summary, "short_name": .name | sub("${{ inputs.platform }}\\.";"") }' <<< "$RUNS")
         jq . <<< "$FILTERED"
         MATRIX=$(jq --slurp -c -r '.' <<< "$FILTERED")
         jq . <<< "$MATRIX"
@@ -86,7 +86,7 @@ jobs:
   # codespace-upload:
   #   env:
   #     IMAGE_NAME: input-output-hk/devx-devcontainer
-  #   needs: ghcr-upload
+  #   needs: process
   #   permissions:
   #     packages: write
   #   runs-on: ubuntu-latest
