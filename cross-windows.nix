@@ -1,7 +1,7 @@
 { self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
-let tool-version-map = import ./tool-map.nix;
+let tool-version-map = (import ./tool-map.nix) self;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
-    cabal-install = pkgs.pkgsBuildBuild.haskell-nix.nix-tools-unchecked.exes.cabal;
+    cabal-install = tool "cabal";
     haskell-tools =
          pkgs.lib.optionalAttrs (withHLS && (compiler-not-in (
            # it appears we can't get HLS build with 9.8 yet.

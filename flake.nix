@@ -5,8 +5,10 @@
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
+    inputs.cabal.url = "github:hsyl20/cabal?ref=hsyl20/per-file-extra-source-options";
+    inputs.cabal.flake = false;
 
-    outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix }:
+    outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix, ... }:
     let overlays = {
         inherit (iohk-nix.overlays) crypto;
         # add static-$pkg for a few packages to be able to pull them im explicitly.

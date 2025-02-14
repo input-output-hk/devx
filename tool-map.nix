@@ -1,4 +1,4 @@
-# see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
+self: # see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
 # so we assume "latest" for all hls.
 # for hlint however, we need hlint-3.3 for ghc-8.10.7.
 let
@@ -45,4 +45,5 @@ compiler-nix-name: tool: {
   };
   happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
   alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
+  cabal = { src = self.inputs.cabal; };
 }.${tool} or fixed-versions.${tool}.${compiler-nix-name} or {}

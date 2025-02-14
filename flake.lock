@@ -33,6 +33,23 @@
         "type": "github"
       }
     },
+    "cabal": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1736333136,
+        "narHash": "sha256-oG//67jh9+Hi1ctckn9ul1OI7p9U7avQKcytXmIel+0=",
+        "owner": "hsyl20",
+        "repo": "cabal",
+        "rev": "e8538c6597cc355eca705827845f5341d1d815f2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hsyl20",
+        "ref": "hsyl20/per-file-extra-source-options",
+        "repo": "cabal",
+        "type": "github"
+      }
+    },
     "cabal-32": {
       "flake": false,
       "locked": {
@@ -716,6 +733,7 @@
     },
     "root": {
       "inputs": {
+        "cabal": "cabal",
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
         "iohk-nix": "iohk-nix",
