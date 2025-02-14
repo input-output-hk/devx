@@ -45,5 +45,15 @@ compiler-nix-name: tool: {
   };
   happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
   alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
-  cabal = { src = self.inputs.cabal; };
+  cabal = {
+    src = self.inputs.cabal;
+    # We use the cabal.boostrap.project file, as we don't
+    # want an of the cabal complexities they have. The
+    # bootstrap file, also neatly doesn't do any `import`s.
+    # which would require us to muck around with the source filter like
+    #
+    #    cabal = { src = { outPath = self.inputs.cabal; filterPath = { path, ... }: path; }; }
+    #
+    cabalProjectFileName = "cabal.bootstrap.project";
+  };
 }.${tool} or fixed-versions.${tool}.${compiler-nix-name} or {}
