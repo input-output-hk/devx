@@ -1,4 +1,4 @@
-# see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
+self: # see https://haskell-language-server.readthedocs.io/en/latest/support/ghc-version-support.html
 # so we assume "latest" for all hls.
 # for hlint however, we need hlint-3.3 for ghc-8.10.7.
 let
@@ -15,9 +15,9 @@ let
              f76d08be13e9a61a377a85e2fb63f4c5435d40f8feb3e12eb05905edb8cdea89
              26021a13b401500c8eb2761ca95c61f2d625bfef951b939a8124ed12ecf07329
              7541f32a4ccca4f97aea3b22f5e593ba2c0267546016b992dfadcd2fe944e55d
-          --sha256: sha256-aVI93DtHziicNn2mGli0YE+bC5BeT7mOQQETp2Thi68=
+          --sha256: sha256-+hzciiQqWb5oOzQ2JZ2lzJGfGuwA3ZigeWgAQ8Dz+kk=
 
-        if impl(ghc < 9.11)
+        if impl(ghc < 9.13)
           active-repositories: hackage.haskell.org
         else
           active-repositories: hackage.haskell.org, head.hackage.ghc.haskell.org
@@ -45,4 +45,15 @@ compiler-nix-name: tool: {
   };
   happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
   alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
+  cabal = {
+    src = self.inputs.cabal;
+    # We use the cabal.boostrap.project file, as we don't
+    # want an of the cabal complexities they have. The
+    # bootstrap file, also neatly doesn't do any `import`s.
+    # which would require us to muck around with the source filter like
+    #
+    #    cabal = { src = { outPath = self.inputs.cabal; filterPath = { path, ... }: path; }; }
+    #
+    cabalProjectFileName = "cabal.bootstrap.project";
+  };
 }.${tool} or fixed-versions.${tool}.${compiler-nix-name} or {}
