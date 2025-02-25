@@ -36,16 +36,16 @@
     "cabal": {
       "flake": false,
       "locked": {
-        "lastModified": 1736333136,
-        "narHash": "sha256-oG//67jh9+Hi1ctckn9ul1OI7p9U7avQKcytXmIel+0=",
-        "owner": "hsyl20",
+        "lastModified": 1740376902,
+        "narHash": "sha256-KUKGEVPL0qAyOHzPTSqet7ajkNw/bpXnKieR9mAmRGk=",
+        "owner": "stable-haskell",
         "repo": "cabal",
-        "rev": "e8538c6597cc355eca705827845f5341d1d815f2",
+        "rev": "98242d4d81e38dd591e212f3a9df7f04215ad1c7",
         "type": "github"
       },
       "original": {
-        "owner": "hsyl20",
-        "ref": "hsyl20/per-file-extra-source-options",
+        "owner": "stable-haskell",
+        "ref": "wip/make-build",
         "repo": "cabal",
         "type": "github"
       }
@@ -139,11 +139,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1726560853,
-        "narHash": "sha256-X6rJYSESBVr3hBoH0WbKE5KvhPU5bloyZ2L4K60/fPQ=",
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "c1dfcf08411b08f6b8615f7d8971a2bfa81d5e8a",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       },
       "original": {
@@ -172,11 +172,11 @@
     "hackage": {
       "flake": false,
       "locked": {
-        "lastModified": 1739924618,
-        "narHash": "sha256-PPiZjaAHexQ2pKtZWqLS9a9MFaATG2jjowQcEvk2r1A=",
+        "lastModified": 1740443059,
+        "narHash": "sha256-mM5GHiCNA5cwOC+zpRuNq/lmdFJ+mBUMH/bxlazwYDw=",
         "owner": "input-output-hk",
         "repo": "hackage.nix",
-        "rev": "9bccb2878f8c7bf4461103543f0987970e07d496",
+        "rev": "79e170956b8e805c53666e3cde7198cba9a7268d",
         "type": "github"
       },
       "original": {
@@ -188,11 +188,11 @@
     "hackage-for-stackage": {
       "flake": false,
       "locked": {
-        "lastModified": 1739924608,
-        "narHash": "sha256-+S96qUWrxY07PJF733kG0n5nso3ErqkMgLB0Qt69N9U=",
+        "lastModified": 1740443047,
+        "narHash": "sha256-SGAnmukMJPksY5KQcL2gOzJ9utxhaEGUQQgyc12Agaw=",
         "owner": "input-output-hk",
         "repo": "hackage.nix",
-        "rev": "0f08a2e8e9304600cc82a0a940c72a56a778f23a",
+        "rev": "e379651b3605952d1ec5930c79b848eec20cf715",
         "type": "github"
       },
       "original": {
@@ -238,11 +238,11 @@
         "stackage": "stackage"
       },
       "locked": {
-        "lastModified": 1739926307,
-        "narHash": "sha256-RfLCDwE4kHGvX+hBgB4sYx3UyYEtb4IEr4gOuVzj8Oc=",
+        "lastModified": 1740444702,
+        "narHash": "sha256-uqfpsjuX+nnbXpSy4YmzgTJGFY3ivY60IpJc68YQa2Y=",
         "owner": "input-output-hk",
         "repo": "haskell.nix",
-        "rev": "29be2a6f5fec17f7385128eee8d8fac28ca65bfa",
+        "rev": "e843d27716ac021992e6495751b4bfa2654cc197",
         "type": "github"
       },
       "original": {
@@ -445,11 +445,11 @@
         "sodium": "sodium"
       },
       "locked": {
-        "lastModified": 1730297014,
-        "narHash": "sha256-n3f1iAmltKnorHWx7FrdbGIF/FmEG8SsZshS16vnpz0=",
+        "lastModified": 1738874249,
+        "narHash": "sha256-oyPD/zIhs5AUEdYXZHluMAOmT5ynJSgjV2bNIXt5aKE=",
         "owner": "input-output-hk",
         "repo": "iohk-nix",
-        "rev": "d407eedd4995e88d08e83ef75844a8a9c2e29b36",
+        "rev": "e26038d47df5d17187288fd7c8f5b915c9447b2e",
         "type": "github"
       },
       "original": {
@@ -637,11 +637,11 @@
     "stackage": {
       "flake": false,
       "locked": {
-        "lastModified": 1739923898,
-        "narHash": "sha256-HpWOe4a8NLJV7IJ4D8Qyl1CWOqo4oisRUVGHG620nEU=",
+        "lastModified": 1740442299,
+        "narHash": "sha256-FuJ69LY9JSioFN2oEHSAeintvIiI44EH5KuZKB/9q54=",
         "owner": "input-output-hk",
         "repo": "stackage.nix",
-        "rev": "a732fe6a5e8b7fb9082f1447b22fa57284be1f4d",
+        "rev": "837f90c84db66ba8edd1e3598f95c1ad55de92aa",
         "type": "github"
       },
       "original": {
