@@ -129,7 +129,7 @@ pkgs.mkShell {
         ++ attrValues haskell-tools
       )
       ++ optionals withGHCTooling (
-        with pkgs; [ python3 automake autoconf alex happy git ]
+        with pkgs; [ python3 automake autoconf alex happy git libffi.dev ]
       )
     ;
 
