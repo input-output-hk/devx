@@ -84,7 +84,7 @@ pkgs.mkShell {
     export DYLD_LIBRARY_PATH="${lib.getLib openssl}/lib"
     ''
     + lib.optionalString withGHCTooling ''
-    export HADRIAN_CONFIGURE_FLAGS=--with-gmp-includes="${lib.getDev gmp}/include" --with-gmp-libraries="${lib.getLib gmp}/lib"
+    export HADRIAN_CONFIGURE_FLAGS="--with-gmp-includes=\"${lib.getDev gmp}/include\" --with-gmp-libraries=\"${lib.getLib gmp}/lib\""
     echo "HADRIAN_CONFIGURE_FLAGS set to $HADRIAN_CONFIGURE_FLAGS"
     echo "To build GHC, run"
     echo "  ./boot"
