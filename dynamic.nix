@@ -87,11 +87,13 @@ pkgs.mkShell {
     ''
     + lib.optionalString withGHCTooling ''
     export HADRIAN_CONFIGURE_FLAGS="--with-gmp-includes=\"${lib.getDev gmp}/include\" --with-gmp-libraries=\"${lib.getLib gmp}/lib\""
+    echo "======= Building with Hadrian ======="
     echo "HADRIAN_CONFIGURE_FLAGS set to $HADRIAN_CONFIGURE_FLAGS"
     echo "To build GHC, run"
     echo "  ./boot"
     echo "  ./configure \"$HADRIAN_CONFIGURE_FLAGS\""
     echo "  ./hadrian/build -j"
+    echo "======= End of Hadrian build ======="
     '';
 
     buildInputs =
