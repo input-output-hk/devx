@@ -55,5 +55,8 @@ compiler-nix-name: tool: {
     #    cabal = { src = { outPath = self.inputs.cabal; filterPath = { path, ... }: path; }; }
     #
     cabalProjectFileName = "cabal.bootstrap.project";
+    cabalProjectLocal = ''
+      index-state: hackage.haskell.org 2025-03-17T00:00:00Z
+    '';
   };
 }.${tool} or fixed-versions.${tool}.${compiler-nix-name} or {}
