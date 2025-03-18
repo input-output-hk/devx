@@ -89,12 +89,10 @@
              # projects do (that way we can use short names)
              let compilers = pkgs: pkgs.lib.genAttrs [
                       "ghc810"
-                      "ghc90"
-                      "ghc92"
-                      "ghc94"
                       "ghc96"
                       "ghc98"
-                      "ghc910"] (short-name: rec {
+                      "ghc910"
+                      "ghc912"] (short-name: rec {
                          inherit pkgs self toolsModule;
                          compiler-nix-name = pkgs.haskell-nix.resolve-compiler-name short-name;
                          compiler = pkgs.buildPackages.haskell-nix.compiler.${compiler-nix-name};
