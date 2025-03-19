@@ -34,7 +34,7 @@ jobs:
           - false
           - true
         exclude:
-          # Just cross compiling javascript with ghc 9.6 for now
+          # Just cross compiling javascript with ghc 9.6 and above
           - compiler-nix-name: ghc810
             target-platform: "-js"
           # Static builds not working for darwin yet
