@@ -1,6 +1,6 @@
 # define a development shell for dynamically linked applications (default)
 { self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false, withGHCTooling ? false }:
-let tool-version-map = (import ./tool-map.nix) self;
+let tool-version-map = (import ./tool-map.nix) (self // { inputs = self.inputs // {cabal = if withGHCTooling then self.inputs.cabal-experimental else self.inputs.cabal;}; });
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
     haskell-tools =

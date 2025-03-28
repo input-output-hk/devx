@@ -5,8 +5,10 @@
     inputs.nixpkgs.follows = "haskellNix/nixpkgs-2411";
     inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
-    inputs.cabal.url = "github:stable-haskell/cabal?ref=wip/make-build";
+    inputs.cabal.url = "github:stable-haskell/cabal";
     inputs.cabal.flake = false;
+    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=angerman/cross";
+    inputs.cabal-experimental.flake = false;
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix, ... }:
     let overlays = {
