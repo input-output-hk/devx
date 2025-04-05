@@ -59,4 +59,10 @@ compiler-nix-name: tool: {
       index-state: hackage.haskell.org 2025-03-17T00:00:00Z
     '';
   };
+  hlint = {
+    cabalProjectLocal = ''
+      if impl(ghc ==9.8.4)
+        constraints: ghc-lib-parser <9.12.2
+    '';
+  };
 }.${tool} or fixed-versions.${tool}.${compiler-nix-name} or {}

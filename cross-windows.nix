@@ -5,10 +5,10 @@ let tool-version-map = (import ./tool-map.nix) self;
     haskell-tools =
          pkgs.lib.optionalAttrs (withHLS && (compiler-not-in (
            # it appears we can't get HLS build with 9.8 yet.
-           pkgs.lib.optional (builtins.compareVersions compiler.version "9.7" >= 0) compiler-nix-name
+           pkgs.lib.optional (builtins.compareVersions compiler.version "9.11" >= 0) compiler-nix-name
         ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "Haskell Language Server")) { hls = tool "haskell-language-server"; }
       // pkgs.lib.optionalAttrs (withHlint && (compiler-not-in (
-           pkgs.lib.optional (builtins.compareVersions compiler.version "9.8" >= 0) compiler-nix-name
+           pkgs.lib.optional (builtins.compareVersions compiler.version "9.11" >= 0) compiler-nix-name
         ++ pkgs.lib.optional (pkgs.stdenv.hostPlatform.isDarwin && pkgs.stdenv.hostPlatform.isAarch64) "ghc902") "HLint")) { hlint = tool "hlint"; };
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
