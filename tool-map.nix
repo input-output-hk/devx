@@ -37,7 +37,7 @@ compiler-nix-name: tool: {
       # Use the github source of HLS that is tested with haskell.nix CI
       src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2";
               "ghc902"  = pkgs.haskell-nix.sources."hls-2.4";
-            }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.9";
+            }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.10";
       # `tool` normally ignores the `cabal.project` (if there is one in the hackage source).
       # We need to use the github one (since it has settings to make hls build).
       cabalProject = __readFile (src + "/cabal.project");
@@ -55,5 +55,14 @@ compiler-nix-name: tool: {
     #    cabal = { src = { outPath = self.inputs.cabal; filterPath = { path, ... }: path; }; }
     #
     cabalProjectFileName = "cabal.bootstrap.project";
+    cabalProjectLocal = ''
+      index-state: hackage.haskell.org 2025-03-17T00:00:00Z
+    '';
+  };
+  hlint = {
+    cabalProjectLocal = ''
+      if impl(ghc ==9.8.4)
+        constraints: ghc-lib-parser <9.12.2
+    '';
   };
 }.${tool} or fixed-versions.${tool}.${compiler-nix-name} or {}
