@@ -37,12 +37,6 @@ jobs:
           # Just cross compiling javascript with ghc 9.6 and above
           - compiler-nix-name: ghc810
             target-platform: "-js"
-          # Static builds not working for darwin yet
-          - platform: x86_64-darwin
-            target-platform: "-static"
-          # Static tools not working right now (so just building "-static-minimal" for now)
-          - target-platform: "-static"
-            minimal: false
           # Windows cross compilation only works on x86_64 right now.
           - platform: aarch64-darwin
             target-platform: "-windows"
