@@ -14,18 +14,20 @@ let tool-version-map = (import ./tool-map.nix) self;
     # fixup-nix-deps allows us to drop dylibs from macOS executables that can be
     # linked directly.
     fixup-nix-deps = pkgs.writeShellApplication {
-        name = "fixup-nix-deps";
-        text = ''
+      name = "fixup-nix-deps";
+      text = ''
         for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
-            case "$nixlib" in
-            *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
-            *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
-            *libc++.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libc++.dylib   "$1" ;;
-            *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
+          case "$nixlib" in
+            *libiconv.dylib)    install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib   "$1" ;;
+            *libiconv.2.dylib)  install_name_tool -change "$nixlib" /usr/lib/libiconv.2.dylib "$1" ;;
+            *libffi.*.dylib)    install_name_tool -change "$nixlib" /usr/lib/libffi.dylib     "$1" ;;
+            *libc++.*.dylib)    install_name_tool -change "$nixlib" /usr/lib/libc++.dylib     "$1" ;;
+            *libz.dylib)        install_name_tool -change "$nixlib" /usr/lib/libz.dylib       "$1" ;;
+            *libresolv.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libresolv.dylib  "$1" ;;
             *) ;;
-            esac
+          esac
         done
-        '';
+      '';
     };
     # A cabal-install wrapper that sets the appropriate static flags
     wrapped-cabal = pkgs.writeShellApplication {

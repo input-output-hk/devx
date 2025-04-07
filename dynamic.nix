@@ -21,18 +21,20 @@ let tool-version-map = (import ./tool-map.nix) self;
     #        a shared file. It will also not work for anything that has more than
     #        the system libs linked.
     fixup-nix-deps = pkgs.writeShellApplication {
-        name = "fixup-nix-deps";
-        text = ''
+      name = "fixup-nix-deps";
+      text = ''
         for nixlib in $(otool -L "$1" |awk '/nix\/store/{ print $1 }'); do
-            case "$nixlib" in
-            *libiconv.dylib) install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib "$1" ;;
-            *libffi.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libffi.dylib   "$1" ;;
-            *libz.dylib)     install_name_tool -change "$nixlib" /usr/lib/libz.dylib     "$1" ;;
+          case "$nixlib" in
+            *libiconv.dylib)    install_name_tool -change "$nixlib" /usr/lib/libiconv.dylib   "$1" ;;
+            *libiconv.2.dylib)  install_name_tool -change "$nixlib" /usr/lib/libiconv.2.dylib "$1" ;;
+            *libffi.*.dylib)    install_name_tool -change "$nixlib" /usr/lib/libffi.dylib     "$1" ;;
+            *libc++.*.dylib)    install_name_tool -change "$nixlib" /usr/lib/libc++.dylib     "$1" ;;
+            *libz.dylib)        install_name_tool -change "$nixlib" /usr/lib/libz.dylib       "$1" ;;
+            *libresolv.*.dylib) install_name_tool -change "$nixlib" /usr/lib/libresolv.dylib  "$1" ;;
             *) ;;
-            esac
+          esac
         done
-        '';
-    };
+      '';
 
     # this wrapped-cabal is for now the identity, but it's the same logic we
     # have in the static configuration, and we may imagine needing to inject
@@ -126,8 +128,8 @@ pkgs.mkShell {
         ++ optionals withIOGFull (
           [ postgresql ] ++ (optional stdenv.hostPlatform.isAarch64 R)
         )
-        ++ attrValues haskell-tools
       )
+      ++ attrValues haskell-tools
       ++ optionals withGHCTooling (
         with pkgs; [ python3 automake autoconf alex happy git libffi.dev ]
       )

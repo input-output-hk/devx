@@ -111,7 +111,8 @@ jobs:
       # see https://github.com/actions/upload-artifact#permission-loss
       # windows doesn't care \o/
       - name: Restore Executable Permission
-        if: ${{ inputs.target-platform != '-windows' }}
+        # Disable for windows cross and dynamic macOS builds (fail due to missing libgmp dylib)
+        if: ${{ inputs.target-platform != '-windows' && (inputs.target-platform != '' || (inputs.platform != 'x86_64-darwin' && inputs.platform != 'aarch64-darwin')}}
         run: chmod +x ./hello
 
       - name: Run hello executable
