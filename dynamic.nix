@@ -35,7 +35,7 @@ let tool-version-map = (import ./tool-map.nix) self;
           esac
         done
       '';
-
+    };
     # this wrapped-cabal is for now the identity, but it's the same logic we
     # have in the static configuration, and we may imagine needing to inject
     # some flags into cabal (temporarily), hence we'll keep this functionality
