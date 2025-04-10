@@ -36,11 +36,11 @@
     "cabal": {
       "flake": false,
       "locked": {
-        "lastModified": 1743007061,
-        "narHash": "sha256-r77uBF2ezEiB3n2iW2ivKn7dZt7go6xaLGlSRqU55YQ=",
+        "lastModified": 1743338359,
+        "narHash": "sha256-OHjT+UbGcyz46cUW+/eLeezvO0om/vSQ8BZ/oLld1AE=",
         "owner": "stable-haskell",
         "repo": "cabal",
-        "rev": "091f61a88a8eca0f89ee13b3ca20584e7aea7493",
+        "rev": "c0d52b2cb168d3204b0c56a85a42be65d87cdabd",
         "type": "github"
       },
       "original": {
@@ -103,11 +103,11 @@
     "cabal-experimental": {
       "flake": false,
       "locked": {
-        "lastModified": 1743046385,
-        "narHash": "sha256-gCoPv8QaCc22GyOADyawsOvI60Rk/aAWVpJdkNGpyS0=",
+        "lastModified": 1744014992,
+        "narHash": "sha256-UsMDgfti/yctTcRt6c8h56/CPjviG7+qlrKy9FXvrN0=",
         "owner": "stable-haskell",
         "repo": "cabal",
-        "rev": "35e6455674a53127eb74aaef3ff28c88360224d5",
+        "rev": "7e50837ade188504d1401bad932a5b8b3769661e",
         "type": "github"
       },
       "original": {
