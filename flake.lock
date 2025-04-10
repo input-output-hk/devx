@@ -36,16 +36,15 @@
     "cabal": {
       "flake": false,
       "locked": {
-        "lastModified": 1742274496,
-        "narHash": "sha256-FJotImCQxXPIQrhbMK33CeuOauLzKoTO2KvFHNtRo+g=",
+        "lastModified": 1743338359,
+        "narHash": "sha256-OHjT+UbGcyz46cUW+/eLeezvO0om/vSQ8BZ/oLld1AE=",
         "owner": "stable-haskell",
         "repo": "cabal",
-        "rev": "9b66d2cb6229e5864ef1d1c1ffee59bb2d8d9780",
+        "rev": "c0d52b2cb168d3204b0c56a85a42be65d87cdabd",
         "type": "github"
       },
       "original": {
         "owner": "stable-haskell",
-        "ref": "wip/make-build",
         "repo": "cabal",
         "type": "github"
       }
@@ -97,6 +96,23 @@
       "original": {
         "owner": "haskell",
         "ref": "3.6",
+        "repo": "cabal",
+        "type": "github"
+      }
+    },
+    "cabal-experimental": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1744014992,
+        "narHash": "sha256-UsMDgfti/yctTcRt6c8h56/CPjviG7+qlrKy9FXvrN0=",
+        "owner": "stable-haskell",
+        "repo": "cabal",
+        "rev": "7e50837ade188504d1401bad932a5b8b3769661e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "stable-haskell",
+        "ref": "angerman/cross",
         "repo": "cabal",
         "type": "github"
       }
@@ -626,6 +642,7 @@
     "root": {
       "inputs": {
         "cabal": "cabal",
+        "cabal-experimental": "cabal-experimental",
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
         "iohk-nix": "iohk-nix",
