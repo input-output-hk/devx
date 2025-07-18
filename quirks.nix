@@ -21,17 +21,17 @@
     echo ""
   '';
   hint = flavor: ''
-    if [ "$GITHUB_ACTIONS" = "true" ]; then
+    if [[ "x''${GITHUB_ACTIONS:-}" == xtrue ]]; then
         PREFIX="::notice::Hint:"
     else
         PREFIX="Hint:"
     fi
-    if [ "$GITHUB_ACTIONS" = "true" ] || [ "$'' + ''{CODESPACE_TOKEN+x}" = "x" ]; then
+    if [[ "x''${GITHUB_ACTIONS:-}" == xtrue || "x''${CODESPACES:-}" == xtrue ]]; then
         echo "$PREFIX to reproduce this environment locally, use either:" \
              "\`nix develop github:input-output-hk/devx#${flavor}\`, or" \
              "\`docker run -it -v \$(pwd):/workspaces ghcr.io/input-output-hk/devx-devcontainer:x86_64-linux.${flavor}\`"
     fi
-    if [ "$'' + ''{CODESPACE_TOKEN+x}" = "x" ]; then
+    if [[ "x''${CODESPACES:-}" == xtrue ]]; then
         echo "Quirks:"
         echo -e "\tThe Haskell VSCode extension might ask you \"How do you want the extension to manage/discover HLS and the relevant toolchain?\""
         echo -e "\tChoose \"Manually via PATH\", not \"Automatically via GHCup\""
