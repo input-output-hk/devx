@@ -36,6 +36,12 @@
             '';
             postFixup = "";
           });
+          static-lmdb = final.lmdb.overrideDerivation (old: {
+            # Don't attempt the .so if static, as it would fail.
+            postPatch = ''
+              sed 's/^ILIBS\>.*/ILIBS = liblmdb.a/' -i Makefile
+            '';
+          });
          });
 
          cddl-tools = (final: prev: {

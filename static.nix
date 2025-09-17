@@ -128,6 +128,7 @@ pkgs.mkShell (rec {
         static-libblst
         static-libsodium-vrf
         static-secp256k1
+        static-lmdb   # for cardano-lmdb/ouroboros-consensus
         icu           # for cardano-cli
         gh
         jq
