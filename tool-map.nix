@@ -46,7 +46,11 @@ compiler-nix-name: tool: {
   happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
   alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
   cabal = {
-    src = self.inputs.cabal;
+    # cabal has a project-cabal/constraints.config now, which is
+    # cleaned by the source clean logic, so we need to sidestep this for now
+    # until the filter is changed in haskell.nix
+    src = #self.inputs.cabal;
+      { outPath = self.inputs.cabal; filterPath = { path, ... }: path; };
     # We use the cabal.boostrap.project file, as we don't
     # want an of the cabal complexities they have. The
     # bootstrap file, also neatly doesn't do any `import`s.
@@ -56,7 +60,7 @@ compiler-nix-name: tool: {
     #
     cabalProjectFileName = "cabal.bootstrap.project";
     cabalProjectLocal = ''
-      index-state: hackage.haskell.org 2025-03-17T00:00:00Z
+      index-state: hackage.haskell.org 2025-09-17T00:00:00Z
     '';
   };
   hlint = {
