@@ -2,12 +2,12 @@
     description = "Minimal devshell flake for haskell";
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
-    inputs.nixpkgs.follows = "haskellNix/nixpkgs-2411";
+    inputs.nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
     inputs.cabal.url = "github:stable-haskell/cabal";
     inputs.cabal.flake = false;
-    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=angerman/cross";
+    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=stable-haskell/feature/cross-compile";
     inputs.cabal-experimental.flake = false;
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix, ... }:
@@ -61,8 +61,7 @@
        supportedSystems = [
             "x86_64-linux"
             "x86_64-darwin"
-            # Currently no aarch64 linux builders
-            # "aarch64-linux"
+            "aarch64-linux"
             "aarch64-darwin"
        ];
     in let flake-outputs = flake-utils.lib.eachSystem supportedSystems (system:
@@ -90,7 +89,7 @@
              # Map the compiler-nix-name to a final compiler-nix-name the way haskell.nix
              # projects do (that way we can use short names)
              let compilers = pkgs: pkgs.lib.genAttrs [
-                      "ghc810"
+                      # "ghc810"
                       "ghc96"
                       "ghc98"
                       "ghc910"
