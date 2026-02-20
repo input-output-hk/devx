@@ -99,6 +99,10 @@ jobs:
         echo "Cabal: $(cabal --version 2>/dev/null | head -1 || echo N/A)"
         TESTEOF
 
+        # stdenv's setup.sh requires $out for output variable assignment.
+        # Inside a Nix build $out is set automatically; when running
+        # directly we must provide a dummy value.
+        export out=$(mktemp -d)
         "$DEVX_PATH" "$SMOKE_TEST"
         echo "::endgroup::"
 

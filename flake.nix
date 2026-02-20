@@ -349,6 +349,14 @@
                   # attributes needed to initialize the full dev environment.
                   ${envExports}
 
+                  # setup.sh requires $out for output variable assignment
+                  # (_assignFirst). Inside a Nix build $out is set by the
+                  # builder; when running directly (container, CLI) we
+                  # provide a temporary directory so setup.sh succeeds.
+                  if [ -z "''${out:-}" ]; then
+                    export out=$(mktemp -d)
+                  fi
+
                   # Source stdenv's setup.sh to initialize the development
                   # environment. This runs all setup hooks (cc-wrapper,
                   # pkg-config-wrapper, etc.) and populates NIX_CFLAGS_COMPILE,
