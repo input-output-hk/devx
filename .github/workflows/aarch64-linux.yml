@@ -1,8 +1,7 @@
 name: DevX closures for aarch64-linux
 
 on:
-  # Disabled until we have a new aarch64-linux hydra builder
-  # push:
+  push:
 
 jobs:
   build:

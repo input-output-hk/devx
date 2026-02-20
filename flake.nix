@@ -61,8 +61,7 @@
        supportedSystems = [
             "x86_64-linux"
             "x86_64-darwin"
-            # Currently no aarch64 linux builders
-            # "aarch64-linux"
+            "aarch64-linux"
             "aarch64-darwin"
        ];
     in let flake-outputs = flake-utils.lib.eachSystem supportedSystems (system:
@@ -90,7 +89,6 @@
              # Map the compiler-nix-name to a final compiler-nix-name the way haskell.nix
              # projects do (that way we can use short names)
              let compilers = pkgs: pkgs.lib.genAttrs [
-                      "ghc810"
                       "ghc96"
                       "ghc98"
                       "ghc910"
