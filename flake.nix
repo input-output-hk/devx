@@ -38,6 +38,19 @@
           });
          });
 
+         # nixpkgs defines happy = justStaticExecutables haskellPackages.happy
+         # which sets disallowGhcReference = true. In nixpkgs-2511, this causes
+         # the build to fail because the happy binary transitively references GHC
+         # through happy-lib (happy -> happy-lib -> ghc). The postFixup only
+         # removes $out/lib but cannot break the reference chain through happy-lib
+         # which lives in the Nix store. We override to disable the GHC reference
+         # check while keeping the rest of justStaticExecutables behavior.
+         build-fixes = (final: prev: {
+           happy = final.haskell.lib.compose.overrideCabal (drv: {
+             disallowGhcReference = false;
+           }) prev.happy;
+         });
+
          cddl-tools = (final: prev: {
           cbor-diag = final.callPackage ./pkgs/cbor-diag { };
           cddl = final.callPackage ./pkgs/cddl { };
@@ -48,13 +61,71 @@
            # outputs, not necessarily build tools.
            ruby = prev.pkgsBuildBuild.ruby;
 
-           # Tests on static postgresql are failing with:
+           # OpenSSL 3.6.0 test 82-test_ocsp_cert_chain.t fails in the nix sandbox
+           # because the OCSP stapling test requires network/timing conditions that
+           # aren't reliably available during cross-compilation builds. Only 1 of 3888
+           # tests fails, and it's unrelated to the actual crypto functionality.
+           openssl = prev.openssl.overrideAttrs (old: {
+             preCheck = (old.preCheck or "") + ''
+               rm -f test/recipes/82-test_ocsp_cert_chain.t
+             '';
+           });
+
+           # PostgreSQL fixes for musl cross-compilation:
            #
-           #    FATAL:  could not load library "/build/postgresql-16.4/.../lib/dict_snowball.so":
-           #    Error relocating /build/postgresql-16.4/tmp_install/nix/store/.../lib/dict_snowball.so:
-           #    pg_any_to_server: symbol not found
-           postgresql = prev.postgresql.overrideAttrs (_: {
+           # nixpkgs-2511 postgresql/generic.nix has multiple issues with
+           # musl64 because pkgsCross.musl64 doesn't set isStatic=true:
+           #
+           # 1. jitSupport defaults true → pulls in LLVM build inputs.
+           # 2. perlSupport defaults true → musl perl lacks shared libperl.
+           # 3. pythonSupport/tclSupport default true → adds plpython3/pltcl
+           #    outputs. These are unnecessary for musl cross-builds and
+           #    each extra output widens the nix-copy window, exacerbating
+           #    the min-free GC race on darwin builders.
+           # 4. generic.nix switches to LLVM stdenv+bintools for LTO when
+           #    GCC is used. Cross-compiled LLVM 20 OOMs on darwin builders.
+           #    We override llvmPackages_20 to prevent the switch (avoids
+           #    LLVM dependency), then explicitly disable LTO with -fno-lto
+           #    since GCC LTO + GNU ld is broken for postgresql (.ltrans
+           #    link failures). Can't use hardeningDisable=["lto"] because
+           #    "lto" is not a recognized hardening flag on musl cross.
+           # 5. outputChecks unconditionally reference llvmPackages.llvm.
+           postgresql = (prev.postgresql.override {
+             jitSupport = false;
+             perlSupport = false;
+             pythonSupport = false;
+             tclSupport = false;
+             # Prevent the LTO stdenv switch: provide normal GCC-based
+             # musl stdenv as llvmPackages_20, making the switch a no-op.
+             llvmPackages_20 = prev.llvmPackages_20 // {
+               inherit (prev) stdenv;
+               bintools = prev.stdenv.cc.bintools;
+             };
+           }).overrideAttrs (old: {
+             # Explicitly disable LTO since we're using GCC + GNU ld
+             # (not the LLVM bintools the stdenv switch would provide).
+             env = (old.env or {}) // {
+               NIX_CFLAGS_COMPILE = (old.env.NIX_CFLAGS_COMPILE or "") + " -fno-lto";
+             };
              doCheck = false;
+             outputChecks = {};
+             separateDebugInfo = false;
+             disallowedReferences = [];
+             # Break multi-output reference cycles. Nix refuses to register
+             # outputs that form cycles. The cycles are:
+             #   dev ↔ out: dev has .pc files referencing out; out has
+             #              baked-in dev paths from configure
+             #   lib ↔ out: lib has embedded out paths (share/locale refs
+             #              in libpq); out links against lib
+             # Fix: strip dev refs from out+lib, strip out refs from lib.
+             # out→lib is the only legitimate runtime dependency.
+             postFixup = (old.postFixup or "") + ''
+               find "$out" -name '*.la' -delete
+               find "$out" -type f -exec remove-references-to -t "$dev" {} +
+               find "$lib" -name '*.la' -delete
+               find "$lib" -type f -exec remove-references-to -t "$dev" {} +
+               find "$lib" -type f -exec remove-references-to -t "$out" {} +
+             '';
            });
          });
        };
@@ -104,11 +175,9 @@
                   "ghc94"
                   "ghc910"
                  ];
-                 windows-compilers = pkgs:
-                   pkgs.lib.optionalAttrs (__elem system ["x86_64-linux"])
-                   (builtins.removeAttrs (compilers pkgs)
-                     [
-                     ]);
+                 # Windows cross-compilation disabled pending nixpkgs-2511
+                 # crossThreadsStdenv fix (mcfgthread/pthreads bootstrap).
+                 windows-compilers = _pkgs: {};
              in (builtins.mapAttrs (short-name: args:
                   import ./dynamic.nix (args // { withIOG = false; })
                   ) (compilers pkgs)
