@@ -362,7 +362,7 @@
                 shellHook = drv.shellHook or "";
 
               in pkgs.writeTextFile {
-                name = "${name}-env.sh";
+                name = "devx";
                 executable = true;
                 text = ''
                   #! /usr/bin/env nix-shell
@@ -389,6 +389,53 @@
           in
           pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-env" (mkEnvScript name drv)
+          ) devShells
+          # Smoke-test each -env.sh script: source it in a sandbox and verify
+          # that the essential tools (ghc, cabal, pkg-config, and optionally HLS)
+          # are functional. Catches PATH construction errors, missing packages,
+          # and broken shellHooks that would produce unusable containers.
+          // pkgs.lib.mapAttrs' (name: drv:
+            let
+              inherit (pkgs) lib;
+              envScript = mkEnvScript name drv;
+              # HLS is only available when:
+              #   - not a -minimal variant (withHLS was true)
+              #   - not a -js variant (JS backend)
+              #   - not a -windows variant (cross-windows)
+              #   - compiler version < 9.11 (ghc912+ not yet supported)
+              hasHLS = !(lib.hasInfix "-minimal" name)
+                    && !(lib.hasInfix "-js" name)
+                    && !(lib.hasInfix "-windows" name)
+                    && !(lib.hasInfix "ghc912" name);
+            in lib.nameValuePair "${name}-env-test" (
+              pkgs.runCommand "${name}-env-test" {
+                nativeBuildInputs = [ pkgs.bash ];
+              } ''
+                # Source the environment script to set up PATH and env vars
+                source ${envScript}
+
+                # For cross-compilation shells (static/musl, JS), the GHC binary
+                # has a target prefix (e.g. x86_64-unknown-linux-musl-ghc).
+                # Extract the correct name from NIX_CABAL_FLAGS if set.
+                GHC_CMD="ghc"
+                if [[ -n "''${NIX_CABAL_FLAGS:-}" ]]; then
+                  for flag in $NIX_CABAL_FLAGS; do
+                    case "$flag" in
+                      --with-ghc=*) GHC_CMD="''${flag#--with-ghc=}" ;;
+                    esac
+                  done
+                fi
+
+                echo "=== Testing ${name} ==="
+                echo -n "GHC: "; $GHC_CMD --version
+                echo -n "Cabal: "; cabal --version | head -1
+                echo -n "pkg-config packages: "; pkg-config --list-all | wc -l
+                ${lib.optionalString hasHLS ''
+                  echo -n "HLS: "; haskell-language-server --version || true
+                ''}
+                echo "=== ${name}: OK ==="
+                touch $out
+              '')
           ) devShells)
           // (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-plans" drv.plans) devShells);

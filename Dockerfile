@@ -28,7 +28,7 @@ if [ -n "\$VSCODE_IPC_HOOK_CLI" ]; then
     mkdir -p "\$(dirname "\$VSCODE_IPC_HOOK_CLI")"
 fi
 # This line is the one that actually brings DevX devshell ...
-source $(grep -m 1 -e '-env.sh$' store-paths.txt)
+source $(grep -m 1 -e 'devx$' store-paths.txt)
 EOF
 
 # This enforce those settings in DevContainer whatever "Settings Sync" user preferences ...
