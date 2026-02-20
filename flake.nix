@@ -201,57 +201,126 @@
       in {
         inherit devShells;
         hydraJobs = devShells // {
-          # *-dev sentinel job. Singals all -env have been built.
+          # *-dev sentinel job. Signals all -env have been built.
           required = pkgs.runCommand "required dependencies (${system})" {
               _hydraAggregate = true;
               constituents = map (name: "${system}.${name}-env") (builtins.attrNames devShellsWithEvalOnLinux);
             } "touch  $out";
-          } // (pkgs.lib.mapAttrs' (name: drv:
-            pkgs.lib.nameValuePair "${name}-env" (
-            # We need to use unsafeDiscardOutputDependency here, as it will otherwise
-            # pull in a bunch of dependenceis we don't care about at all from the .drvPath
-            # query.
-            let env = pkgs.runCommand "${name}-env.sh" {
-                requiredSystemFeatures = [ "recursive-nix" ];
-                nativeBuildInputs = [ pkgs.nix ];
-              } ''
-              nix --offline --extra-experimental-features "nix-command flakes" \
-                print-dev-env '${builtins.unsafeDiscardOutputDependency drv.drvPath}^*' >> $out
-            '';
-            # this needs to be linux.  It would be great if we could have this
-            # eval platform agnostic, but flakes don't permit this.  A the
-            # platform where we build the docker images is linux (github
-            # ubuntu runners), this needs to be evaluable on linux.
-            in (import nixpkgs { system = "x86_64-linux"; }).writeTextFile {
-              name = "devx";
-              executable = true;
-              # We use nix-shell to invoke bash, to work around some shells being just too ancient.
-              # This primarily happens on macOS. But as the sourced env may expect a bash version
-              # current with the current nix, using nix-shell to launch the bash is probably the
-              # most reliable option.
-              text = ''
-                #! /usr/bin/env nix-shell
-                #! nix-shell -i bash -p bash
+          } // (
+          # Generate environment wrapper scripts at evaluation time.
+          # This avoids:
+          # - IFD (Import From Derivation) which forces cross-platform builds during eval
+          # - recursive-nix which is not supported on remote builders
+          #
+          # We construct the PATH from buildInputs/nativeBuildInputs using lib.makeBinPath,
+          # and include other environment variables and the shellHook.
+          let
+            mkEnvScript = name: drv:
+              let
+                inherit (pkgs) lib;
 
-                set -euo pipefail
+                # Collect all input packages that should contribute to PATH
+                # This mirrors what stdenv's setup.sh does when setting up the shell
+                # Note: Some inputs may contain nested lists, so we flatten first
+                allBuildInputs = lib.flatten [
+                  (drv.buildInputs or [])
+                  (drv.nativeBuildInputs or [])
+                  (drv.propagatedBuildInputs or [])
+                  (drv.propagatedNativeBuildInputs or [])
+                ];
 
-                # Set up the environment
-                source ${env}
-                source "$1"
-              '';
-              meta = {
-                description = "DevX shell";
-                longDescription = ''
-                  The DevX shell is supposed to be used with GitHub Actions, and
-                  can be used by setting the default shell to:
+                # Construct PATH from all inputs' bin directories
+                # This is equivalent to what `nix develop` does internally
+                binPath = lib.makeBinPath allBuildInputs;
 
-                    shell: devx {0}
+                # Extract other environment variables from derivation attributes
+                drvEnv = pkgs.devShellTools.unstructuredDerivationInputEnv {
+                  inherit (drv) drvAttrs;
+                } // pkgs.devShellTools.derivationOutputEnv {
+                  outputList = drv.outputs;
+                  outputMap = drv;
+                };
+
+                # Filter to only include user-defined environment variables
+                # (variables explicitly set via mkShell { FOO = "bar"; })
+                filteredEnv = lib.filterAttrs (varName: value:
+                  # Skip internal nix build variables
+                  ! lib.elem varName [
+                    "out" "outputs" "args" "builder" "system" "name"
+                    "__structuredAttrs" "__ignoreNulls"
+                    "preferLocalBuild" "allowSubstitutes"
+                    "allowedReferences" "allowedRequisites"
+                    "disallowedReferences" "disallowedRequisites"
+                    "stdenv" "buildInputs" "nativeBuildInputs"
+                    "propagatedBuildInputs" "propagatedNativeBuildInputs"
+                    "depsBuildBuild" "depsBuildBuildPropagated"
+                    "depsBuildTarget" "depsBuildTargetPropagated"
+                    "depsHostHost" "depsHostHostPropagated"
+                    "depsTargetTarget" "depsTargetTargetPropagated"
+                    "strictDeps" "phases" "prePhases" "postPhases"
+                    "buildPhase" "installPhase" "checkPhase" "configurePhase"
+                    "unpackPhase" "patchPhase" "fixupPhase" "distPhase"
+                    "dontUnpack" "dontConfigure" "dontBuild" "dontInstall"
+                    "dontFixup" "dontStrip" "dontPatchELF" "dontPatchShebangs"
+                    "cmakeFlags" "mesonFlags" "configureFlags"
+                    "makeFlags" "buildFlags" "installFlags" "checkFlags"
+                    "doCheck" "doInstallCheck" "patches"
+                    # Also skip shellHook as we handle it separately
+                    "shellHook"
+                    # Skip darwin-specific internal vars
+                    "__darwinAllowLocalNetworking" "__sandboxProfile"
+                    "__propagatedSandboxProfile" "__impureHostDeps"
+                    "__propagatedImpureHostDeps"
+                  ]
+                  # Skip empty or null values
+                  && value != ""
+                  && value != null
+                  # Skip list/attrset values (can't be exported as shell vars directly)
+                  && ! lib.isList value
+                  && ! lib.isAttrs value
+                  # Skip functions
+                  && ! lib.isFunction value
+                ) drvEnv;
+
+                # Generate declare -x statements for user-defined environment variables
+                envExports = lib.concatStringsSep "\n" (
+                  lib.mapAttrsToList (varName: value:
+                    "declare -x ${varName}=${lib.escapeShellArg (toString value)}"
+                  ) filteredEnv
+                );
+
+                # Extract shellHook if present
+                shellHook = drv.shellHook or "";
+
+              in pkgs.writeTextFile {
+                name = "${name}-env.sh";
+                executable = true;
+                text = ''
+                  #! /usr/bin/env nix-shell
+                  #! nix-shell -i bash -p bash
+
+                  # Set PATH from mkShell's buildInputs
+                  # Prepend to existing PATH to include system tools
+                  export PATH="${binPath}''${PATH:+:$PATH}"
+
+                  # User-defined environment variables from mkShell
+                  ${envExports}
+
+                  # Shell hook from mkShell
+                  # Note: We don't use strict mode (set -euo pipefail) here because
+                  # the shellHook is user-provided code that may reference unset variables
+                  ${shellHook}
+
+                  # Source the user's script if provided
+                  if [ -n "''${1:-}" ]; then
+                    source "$1"
+                  fi
                 '';
-                homepage = "https://github.com/input-output-hk/devx";
-                license = pkgs.lib.licenses.asl20;
-                platforms = pkgs.lib.platforms.unix;
               };
-            })) devShells)
+          in
+          pkgs.lib.mapAttrs' (name: drv:
+            pkgs.lib.nameValuePair "${name}-env" (mkEnvScript name drv)
+          ) devShells)
           // (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-plans" drv.plans) devShells);
         packages.cabalProjectLocal-static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
