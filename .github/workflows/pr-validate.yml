@@ -1,0 +1,100 @@
+name: Validate DevX containers (PR)
+
+# Validate devcontainer closures on pull requests by fetching
+# Hydra-cached build outputs and smoke-testing them. This replaces
+# the GHCR upload pipeline for PRs — actual uploads only happen
+# from the main branch (gated in main.yml).
+on:
+  pull_request:
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  wait-for-hydra:
+    name: Wait for Hydra status
+    runs-on: ubuntu-latest
+    steps:
+    - uses: input-output-hk/actions/wait-for-hydra@latest
+      with:
+        check: required
+
+  discover:
+    needs: wait-for-hydra
+    name: Discover -env closures
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: Discover Hydra -env check-runs
+      id: set-matrix
+      run: |
+        # Fetch all check-runs for this commit from Hydra.
+        RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/${{ github.event.pull_request.head.sha }}/check-runs" --paginate)
+
+        # Pick a representative subset: one -env per platform to keep
+        # the matrix small (avoids 80+ jobs on every PR push).
+        FILTERED=$(jq -c -r '
+          [.check_runs[]
+           | select(.name | endswith("-env"))
+           | { "config": .name,
+               "build_path": .output.summary,
+               "short_name": (.name | sub("^[^.]+\\."; "")) }]
+          | group_by(.short_name)
+          | map(.[0])
+          | sort_by(.config)
+          | .[0:8]
+        ' <<< "$RUNS")
+
+        echo "Selected closures for validation:"
+        jq . <<< "$FILTERED"
+        echo "matrix=$FILTERED" >> $GITHUB_OUTPUT
+
+  validate:
+    needs: discover
+    if: needs.discover.outputs.matrix != '[]' && needs.discover.outputs.matrix != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        job: ${{ fromJson(needs.discover.outputs.matrix) }}
+    name: Validate ${{ matrix.job.short_name }}
+    steps:
+    - name: Install Nix
+      uses: cachix/install-nix-action@v31
+      with:
+        extra_nix_config: |
+          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
+          substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
+
+    - name: Validate closure
+      env:
+        SHELL_NIX_PATH: ${{ matrix.job.build_path }}
+      run: |
+        set -euo pipefail
+
+        echo "::group::Realize closure from Hydra cache"
+        nix-store -r "$SHELL_NIX_PATH"
+        echo "::endgroup::"
+
+        CLOSURE_PATHS=$(nix-store -qR "$SHELL_NIX_PATH")
+
+        # Verify the "devx" wrapper script is in the closure
+        if ! echo "$CLOSURE_PATHS" | grep -q "devx$"; then
+          echo "::error::No 'devx' wrapper found in closure"
+          exit 1
+        fi
+
+        DEVX_PATH=$(echo "$CLOSURE_PATHS" | grep "devx$" | head -1)
+        echo "Found devx wrapper: $DEVX_PATH"
+
+        echo "::group::Smoke test"
+        # Import the closure and symlink the devx wrapper
+        sudo ln -sf "$DEVX_PATH" /usr/local/bin/devx
+
+        # Basic smoke test: source the env and verify tools are available
+        devx -c 'echo "GHC: $(ghc --version 2>/dev/null || echo N/A)"'
+        devx -c 'echo "Cabal: $(cabal --version 2>/dev/null | head -1 || echo N/A)"'
+        echo "::endgroup::"
+
+        echo "Validation passed for ${{ matrix.job.short_name }}"

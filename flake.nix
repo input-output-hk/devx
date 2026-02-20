@@ -281,28 +281,22 @@
           # - IFD (Import From Derivation) which forces cross-platform builds during eval
           # - recursive-nix which is not supported on remote builders
           #
-          # We construct the PATH from buildInputs/nativeBuildInputs using lib.makeBinPath,
-          # and include other environment variables and the shellHook.
+          # Each wrapper exports the derivation's raw attributes (buildInputs,
+          # nativeBuildInputs, stdenv, etc.) then sources $stdenv/setup to run
+          # all setup hooks (cc-wrapper, pkg-config-wrapper, etc.). This gives
+          # the same environment as `nix develop`: full PATH, NIX_CFLAGS_COMPILE,
+          # NIX_LDFLAGS, PKG_CONFIG_PATH, and all other hook-computed variables.
           let
             mkEnvScript = name: drv:
               let
                 inherit (pkgs) lib;
 
-                # Collect all input packages that should contribute to PATH
-                # This mirrors what stdenv's setup.sh does when setting up the shell
-                # Note: Some inputs may contain nested lists, so we flatten first
-                allBuildInputs = lib.flatten [
-                  (drv.buildInputs or [])
-                  (drv.nativeBuildInputs or [])
-                  (drv.propagatedBuildInputs or [])
-                  (drv.propagatedNativeBuildInputs or [])
-                ];
-
-                # Construct PATH from all inputs' bin directories
-                # This is equivalent to what `nix develop` does internally
-                binPath = lib.makeBinPath allBuildInputs;
-
-                # Extract other environment variables from derivation attributes
+                # Extract all derivation attributes as string-valued env vars.
+                # This includes stdenv, buildInputs, nativeBuildInputs, initialPath,
+                # and all user-defined variables (NIX_CABAL_FLAGS, etc.).
+                # These seed stdenv's setup.sh which iterates over build inputs
+                # and runs their setup hooks to populate NIX_CFLAGS_COMPILE,
+                # NIX_LDFLAGS, PKG_CONFIG_PATH, PATH, etc.
                 drvEnv = pkgs.devShellTools.unstructuredDerivationInputEnv {
                   inherit (drv) drvAttrs;
                 } // pkgs.devShellTools.derivationOutputEnv {
@@ -310,74 +304,66 @@
                   outputMap = drv;
                 };
 
-                # Filter to only include user-defined environment variables
-                # (variables explicitly set via mkShell { FOO = "bar"; })
-                filteredEnv = lib.filterAttrs (varName: value:
-                  # Skip internal nix build variables
+                # Filter to exportable variables. We keep build-input variables
+                # (stdenv, buildInputs, nativeBuildInputs, initialPath, etc.)
+                # because setup.sh needs them to drive the setup hook machinery.
+                # Only truly internal nix plumbing is excluded.
+                exportableEnv = lib.filterAttrs (varName: value:
                   ! lib.elem varName [
-                    "out" "outputs" "args" "builder" "system" "name"
+                    # Nix builder internals (meaningless outside sandbox)
+                    "out" "outputs" "args" "builder"
                     "__structuredAttrs" "__ignoreNulls"
                     "preferLocalBuild" "allowSubstitutes"
                     "allowedReferences" "allowedRequisites"
                     "disallowedReferences" "disallowedRequisites"
-                    "stdenv" "buildInputs" "nativeBuildInputs"
-                    "propagatedBuildInputs" "propagatedNativeBuildInputs"
-                    "depsBuildBuild" "depsBuildBuildPropagated"
-                    "depsBuildTarget" "depsBuildTargetPropagated"
-                    "depsHostHost" "depsHostHostPropagated"
-                    "depsTargetTarget" "depsTargetTargetPropagated"
-                    "strictDeps" "phases" "prePhases" "postPhases"
-                    "buildPhase" "installPhase" "checkPhase" "configurePhase"
-                    "unpackPhase" "patchPhase" "fixupPhase" "distPhase"
-                    "dontUnpack" "dontConfigure" "dontBuild" "dontInstall"
-                    "dontFixup" "dontStrip" "dontPatchELF" "dontPatchShebangs"
-                    "cmakeFlags" "mesonFlags" "configureFlags"
-                    "makeFlags" "buildFlags" "installFlags" "checkFlags"
-                    "doCheck" "doInstallCheck" "patches"
-                    # Also skip shellHook as we handle it separately
+                    # Handled separately after setup.sh
                     "shellHook"
-                    # Skip darwin-specific internal vars
+                    # Darwin sandbox internals
                     "__darwinAllowLocalNetworking" "__sandboxProfile"
                     "__propagatedSandboxProfile" "__impureHostDeps"
                     "__propagatedImpureHostDeps"
                   ]
-                  # Skip empty or null values
                   && value != ""
                   && value != null
-                  # Skip list/attrset values (can't be exported as shell vars directly)
                   && ! lib.isList value
                   && ! lib.isAttrs value
-                  # Skip functions
                   && ! lib.isFunction value
                 ) drvEnv;
 
-                # Generate declare -x statements for user-defined environment variables
                 envExports = lib.concatStringsSep "\n" (
                   lib.mapAttrsToList (varName: value:
                     "declare -x ${varName}=${lib.escapeShellArg (toString value)}"
-                  ) filteredEnv
+                  ) exportableEnv
                 );
 
-                # Extract shellHook if present
                 shellHook = drv.shellHook or "";
 
               in pkgs.writeTextFile {
                 name = "devx";
                 executable = true;
                 text = ''
-                  #! /usr/bin/env nix-shell
-                  #! nix-shell -i bash -p bash
+                  #!/usr/bin/env bash
 
-                  # Set PATH from mkShell's buildInputs
-                  # Prepend to existing PATH to include system tools
-                  export PATH="${binPath}''${PATH:+:$PATH}"
-
-                  # User-defined environment variables from mkShell
+                  # Raw derivation environment variables. These seed stdenv's
+                  # setup.sh with build inputs, compiler paths, and other
+                  # attributes needed to initialize the full dev environment.
                   ${envExports}
 
+                  # Source stdenv's setup.sh to initialize the development
+                  # environment. This runs all setup hooks (cc-wrapper,
+                  # pkg-config-wrapper, etc.) and populates NIX_CFLAGS_COMPILE,
+                  # NIX_LDFLAGS, PKG_CONFIG_PATH, PATH, etc. — exactly like
+                  # `nix develop` does.
+                  _DEVX_HOME="''${HOME:-}"
+                  source "$stdenv/setup"
+
+                  # Restore settings for interactive / script use.
+                  # setup.sh enables strict mode and may reset HOME.
+                  set +eu +o pipefail
+                  [ -n "$_DEVX_HOME" ] && export HOME="$_DEVX_HOME"
+                  unset _DEVX_HOME
+
                   # Shell hook from mkShell
-                  # Note: We don't use strict mode (set -euo pipefail) here because
-                  # the shellHook is user-provided code that may reference unset variables
                   ${shellHook}
 
                   # Source the user's script if provided
@@ -408,10 +394,14 @@
                     && !(lib.hasInfix "-windows" name)
                     && !(lib.hasInfix "ghc912" name);
             in lib.nameValuePair "${name}-env-test" (
-              pkgs.runCommand "${name}-env-test" {
-                nativeBuildInputs = [ pkgs.bash ];
-              } ''
-                # Source the environment script to set up PATH and env vars
+              pkgs.runCommand "${name}-env-test" {} ''
+                # Save the test output path before sourcing the devshell
+                # environment — setup.sh resets output-related variables.
+                _TEST_OUT="$out"
+
+                # Source the environment script. This exports drvAttrs and
+                # runs source "$stdenv/setup", giving us the full development
+                # environment with all tools on PATH.
                 source ${envScript}
 
                 # For cross-compilation shells (static/musl, JS), the GHC binary
@@ -434,7 +424,7 @@
                   echo -n "HLS: "; haskell-language-server --version || true
                 ''}
                 echo "=== ${name}: OK ==="
-                touch $out
+                touch "$_TEST_OUT"
               '')
           ) devShells)
           // (pkgs.lib.mapAttrs' (name: drv:
