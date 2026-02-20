@@ -2,12 +2,12 @@
     description = "Minimal devshell flake for haskell";
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
-    inputs.nixpkgs.follows = "haskellNix/nixpkgs-2411";
+    inputs.nixpkgs.follows = "haskellNix/nixpkgs-2511";
     inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
     inputs.cabal.url = "github:stable-haskell/cabal";
     inputs.cabal.flake = false;
-    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=angerman/cross";
+    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=stable-haskell/feature/cross-compile";
     inputs.cabal-experimental.flake = false;
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix, ... }:
@@ -256,9 +256,9 @@
             })) devShells)
           // (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-plans" drv.plans) devShells);
-        packages.cabalProjectLocal.static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
-        packages.cabalProjectLocal.cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
-        packages.cabalProjectLocal.cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;
+        packages.cabalProjectLocal-static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
+        packages.cabalProjectLocal-cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
+        packages.cabalProjectLocal-cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;
        });
      # we use flake-outputs here to inject a required job that aggregates all required jobs.
      in flake-outputs // {
