@@ -30,12 +30,14 @@ jobs:
       id: set-matrix
       run: |
         # Fetch all check-runs for this commit from Hydra.
+        # --paginate returns multiple JSON objects (one per page),
+        # so we pipe through jq --slurp to merge them before filtering.
         RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/${{ github.event.pull_request.head.sha }}/check-runs" --paginate)
 
         # Pick a representative subset: one -env per platform to keep
         # the matrix small (avoids 80+ jobs on every PR push).
-        FILTERED=$(jq -c -r '
-          [.check_runs[]
+        FILTERED=$(echo "$RUNS" | jq -s -c '
+          [.[].check_runs[]
            | select(.name | endswith("-env"))
            | { "config": .name,
                "build_path": .output.summary,
@@ -44,10 +46,10 @@ jobs:
           | map(.[0])
           | sort_by(.config)
           | .[0:8]
-        ' <<< "$RUNS")
+        ')
 
         echo "Selected closures for validation:"
-        jq . <<< "$FILTERED"
+        echo "$FILTERED" | jq .
         echo "matrix=$FILTERED" >> $GITHUB_OUTPUT
 
   validate:
@@ -89,12 +91,15 @@ jobs:
         echo "Found devx wrapper: $DEVX_PATH"
 
         echo "::group::Smoke test"
-        # Import the closure and symlink the devx wrapper
-        sudo ln -sf "$DEVX_PATH" /usr/local/bin/devx
+        # Write smoke test commands to a temporary file — the devx
+        # wrapper sources $1 as a script, it doesn't support -c.
+        SMOKE_TEST=$(mktemp)
+        cat > "$SMOKE_TEST" << 'TESTEOF'
+        echo "GHC: $(ghc --version 2>/dev/null || echo N/A)"
+        echo "Cabal: $(cabal --version 2>/dev/null | head -1 || echo N/A)"
+        TESTEOF
 
-        # Basic smoke test: source the env and verify tools are available
-        devx -c 'echo "GHC: $(ghc --version 2>/dev/null || echo N/A)"'
-        devx -c 'echo "Cabal: $(cabal --version 2>/dev/null | head -1 || echo N/A)"'
+        "$DEVX_PATH" "$SMOKE_TEST"
         echo "::endgroup::"
 
         echo "Validation passed for ${{ matrix.job.short_name }}"
