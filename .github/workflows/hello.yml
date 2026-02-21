@@ -2,6 +2,7 @@ name: Test that we can build the hello world example form hackage
 
 on:
   push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -11,13 +12,11 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - x86_64-darwin
           - x86_64-linux
-          # Skipping because we do not have runners for these set up.
-          #- aarch64-darwin
-          #- aarch64-linux
+          - x86_64-darwin
+          - aarch64-darwin
+          - aarch64-linux
         compiler-nix-name:
-          - ghc810
           - ghc96
           - ghc98
           - ghc910
@@ -34,9 +33,6 @@ jobs:
           - false
           - true
         exclude:
-          # Just cross compiling javascript with ghc 9.6 and above
-          - compiler-nix-name: ghc810
-            target-platform: "-js"
           # Windows cross compilation only works on x86_64 right now.
           - platform: aarch64-darwin
             target-platform: "-windows"

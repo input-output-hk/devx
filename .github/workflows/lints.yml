@@ -42,7 +42,7 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
       - run: |
           nix profile install github:Kha/nixprof
-          nixprof record nix develop .#ghc8107 --accept-flake-config
+          nixprof record nix develop .#ghc96 --accept-flake-config
           nixprof report -p
           nixprof report -a
           nixprof report -s

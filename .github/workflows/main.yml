@@ -45,7 +45,10 @@ jobs:
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   # We need this process step in here, because we have in excess of 256 jobs.
+  # Only upload to GHCR from the main branch to prevent PR pushes from
+  # overwriting production container images.
   process:
+    if: github.ref == 'refs/heads/main'
     needs: discover
     runs-on: ubuntu-latest
     strategy:

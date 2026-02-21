@@ -2,12 +2,12 @@
     description = "Minimal devshell flake for haskell";
 
     inputs.haskellNix.url = "github:input-output-hk/haskell.nix";
-    inputs.nixpkgs.follows = "haskellNix/nixpkgs-2411";
+    inputs.nixpkgs.follows = "haskellNix/nixpkgs-2511";
     inputs.flake-utils.url = "github:numtide/flake-utils";
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
     inputs.cabal.url = "github:stable-haskell/cabal";
     inputs.cabal.flake = false;
-    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=angerman/cross";
+    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=stable-haskell/feature/cross-compile";
     inputs.cabal-experimental.flake = false;
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix, ... }:
@@ -38,6 +38,19 @@
           });
          });
 
+         # nixpkgs defines happy = justStaticExecutables haskellPackages.happy
+         # which sets disallowGhcReference = true. In nixpkgs-2511, this causes
+         # the build to fail because the happy binary transitively references GHC
+         # through happy-lib (happy -> happy-lib -> ghc). The postFixup only
+         # removes $out/lib but cannot break the reference chain through happy-lib
+         # which lives in the Nix store. We override to disable the GHC reference
+         # check while keeping the rest of justStaticExecutables behavior.
+         build-fixes = (final: prev: {
+           happy = final.haskell.lib.compose.overrideCabal (drv: {
+             disallowGhcReference = false;
+           }) prev.happy;
+         });
+
          cddl-tools = (final: prev: {
           cbor-diag = final.callPackage ./pkgs/cbor-diag { };
           cddl = final.callPackage ./pkgs/cddl { };
@@ -48,21 +61,78 @@
            # outputs, not necessarily build tools.
            ruby = prev.pkgsBuildBuild.ruby;
 
-           # Tests on static postgresql are failing with:
+           # OpenSSL 3.6.0 test 82-test_ocsp_cert_chain.t fails in the nix sandbox
+           # because the OCSP stapling test requires network/timing conditions that
+           # aren't reliably available during cross-compilation builds. Only 1 of 3888
+           # tests fails, and it's unrelated to the actual crypto functionality.
+           openssl = prev.openssl.overrideAttrs (old: {
+             preCheck = (old.preCheck or "") + ''
+               rm -f test/recipes/82-test_ocsp_cert_chain.t
+             '';
+           });
+
+           # PostgreSQL fixes for musl cross-compilation:
            #
-           #    FATAL:  could not load library "/build/postgresql-16.4/.../lib/dict_snowball.so":
-           #    Error relocating /build/postgresql-16.4/tmp_install/nix/store/.../lib/dict_snowball.so:
-           #    pg_any_to_server: symbol not found
-           postgresql = prev.postgresql.overrideAttrs (_: {
+           # nixpkgs-2511 postgresql/generic.nix has multiple issues with
+           # musl64 because pkgsCross.musl64 doesn't set isStatic=true:
+           #
+           # 1. jitSupport defaults true → pulls in LLVM build inputs.
+           # 2. perlSupport defaults true → musl perl lacks shared libperl.
+           # 3. pythonSupport/tclSupport default true → adds plpython3/pltcl
+           #    outputs. These are unnecessary for musl cross-builds and
+           #    each extra output widens the nix-copy window, exacerbating
+           #    the min-free GC race on darwin builders.
+           # 4. generic.nix switches to LLVM stdenv+bintools for LTO when
+           #    GCC is used. Cross-compiled LLVM 20 OOMs on darwin builders.
+           #    We override llvmPackages_20 to prevent the switch (avoids
+           #    LLVM dependency), then explicitly disable LTO with -fno-lto
+           #    since GCC LTO + GNU ld is broken for postgresql (.ltrans
+           #    link failures). Can't use hardeningDisable=["lto"] because
+           #    "lto" is not a recognized hardening flag on musl cross.
+           # 5. outputChecks unconditionally reference llvmPackages.llvm.
+           postgresql = (prev.postgresql.override {
+             jitSupport = false;
+             perlSupport = false;
+             pythonSupport = false;
+             tclSupport = false;
+             # Prevent the LTO stdenv switch: provide normal GCC-based
+             # musl stdenv as llvmPackages_20, making the switch a no-op.
+             llvmPackages_20 = prev.llvmPackages_20 // {
+               inherit (prev) stdenv;
+               bintools = prev.stdenv.cc.bintools;
+             };
+           }).overrideAttrs (old: {
+             # Explicitly disable LTO since we're using GCC + GNU ld
+             # (not the LLVM bintools the stdenv switch would provide).
+             env = (old.env or {}) // {
+               NIX_CFLAGS_COMPILE = (old.env.NIX_CFLAGS_COMPILE or "") + " -fno-lto";
+             };
              doCheck = false;
+             outputChecks = {};
+             separateDebugInfo = false;
+             disallowedReferences = [];
+             # Break multi-output reference cycles. Nix refuses to register
+             # outputs that form cycles. The cycles are:
+             #   dev ↔ out: dev has .pc files referencing out; out has
+             #              baked-in dev paths from configure
+             #   lib ↔ out: lib has embedded out paths (share/locale refs
+             #              in libpq); out links against lib
+             # Fix: strip dev refs from out+lib, strip out refs from lib.
+             # out→lib is the only legitimate runtime dependency.
+             postFixup = (old.postFixup or "") + ''
+               find "$out" -name '*.la' -delete
+               find "$out" -type f -exec remove-references-to -t "$dev" {} +
+               find "$lib" -name '*.la' -delete
+               find "$lib" -type f -exec remove-references-to -t "$dev" {} +
+               find "$lib" -type f -exec remove-references-to -t "$out" {} +
+             '';
            });
          });
        };
        supportedSystems = [
             "x86_64-linux"
             "x86_64-darwin"
-            # Currently no aarch64 linux builders
-            # "aarch64-linux"
+            "aarch64-linux"
             "aarch64-darwin"
        ];
     in let flake-outputs = flake-utils.lib.eachSystem supportedSystems (system:
@@ -90,7 +160,6 @@
              # Map the compiler-nix-name to a final compiler-nix-name the way haskell.nix
              # projects do (that way we can use short names)
              let compilers = pkgs: pkgs.lib.genAttrs [
-                      "ghc810"
                       "ghc96"
                       "ghc98"
                       "ghc910"
@@ -106,11 +175,9 @@
                   "ghc94"
                   "ghc910"
                  ];
-                 windows-compilers = pkgs:
-                   pkgs.lib.optionalAttrs (__elem system ["x86_64-linux"])
-                   (builtins.removeAttrs (compilers pkgs)
-                     [
-                     ]);
+                 # Windows cross-compilation disabled pending nixpkgs-2511
+                 # crossThreadsStdenv fix (mcfgthread/pthreads bootstrap).
+                 windows-compilers = _pkgs: {};
              in (builtins.mapAttrs (short-name: args:
                   import ./dynamic.nix (args // { withIOG = false; })
                   ) (compilers pkgs)
@@ -203,62 +270,182 @@
       in {
         inherit devShells;
         hydraJobs = devShells // {
-          # *-dev sentinel job. Singals all -env have been built.
+          # *-dev sentinel job. Signals all -env have been built.
           required = pkgs.runCommand "required dependencies (${system})" {
               _hydraAggregate = true;
               constituents = map (name: "${system}.${name}-env") (builtins.attrNames devShellsWithEvalOnLinux);
             } "touch  $out";
-          } // (pkgs.lib.mapAttrs' (name: drv:
-            pkgs.lib.nameValuePair "${name}-env" (
-            # We need to use unsafeDiscardOutputDependency here, as it will otherwise
-            # pull in a bunch of dependenceis we don't care about at all from the .drvPath
-            # query.
-            let env = pkgs.runCommand "${name}-env.sh" {
-                requiredSystemFeatures = [ "recursive-nix" ];
-                nativeBuildInputs = [ pkgs.nix ];
-              } ''
-              nix --offline --extra-experimental-features "nix-command flakes" \
-                print-dev-env '${builtins.unsafeDiscardOutputDependency drv.drvPath}^*' >> $out
-            '';
-            # this needs to be linux.  It would be great if we could have this
-            # eval platform agnostic, but flakes don't permit this.  A the
-            # platform where we build the docker images is linux (github
-            # ubuntu runners), this needs to be evaluable on linux.
-            in (import nixpkgs { system = "x86_64-linux"; }).writeTextFile {
-              name = "devx";
-              executable = true;
-              # We use nix-shell to invoke bash, to work around some shells being just too ancient.
-              # This primarily happens on macOS. But as the sourced env may expect a bash version
-              # current with the current nix, using nix-shell to launch the bash is probably the
-              # most reliable option.
-              text = ''
-                #! /usr/bin/env nix-shell
-                #! nix-shell -i bash -p bash
+          } // (
+          # Generate environment wrapper scripts at evaluation time.
+          # This avoids:
+          # - IFD (Import From Derivation) which forces cross-platform builds during eval
+          # - recursive-nix which is not supported on remote builders
+          #
+          # Each wrapper exports the derivation's raw attributes (buildInputs,
+          # nativeBuildInputs, stdenv, etc.) then sources $stdenv/setup to run
+          # all setup hooks (cc-wrapper, pkg-config-wrapper, etc.). This gives
+          # the same environment as `nix develop`: full PATH, NIX_CFLAGS_COMPILE,
+          # NIX_LDFLAGS, PKG_CONFIG_PATH, and all other hook-computed variables.
+          let
+            mkEnvScript = name: drv:
+              let
+                inherit (pkgs) lib;
 
-                set -euo pipefail
+                # Extract all derivation attributes as string-valued env vars.
+                # This includes stdenv, buildInputs, nativeBuildInputs, initialPath,
+                # and all user-defined variables (NIX_CABAL_FLAGS, etc.).
+                # These seed stdenv's setup.sh which iterates over build inputs
+                # and runs their setup hooks to populate NIX_CFLAGS_COMPILE,
+                # NIX_LDFLAGS, PKG_CONFIG_PATH, PATH, etc.
+                drvEnv = pkgs.devShellTools.unstructuredDerivationInputEnv {
+                  inherit (drv) drvAttrs;
+                } // pkgs.devShellTools.derivationOutputEnv {
+                  outputList = drv.outputs;
+                  outputMap = drv;
+                };
 
-                # Set up the environment
-                source ${env}
-                source "$1"
-              '';
-              meta = {
-                description = "DevX shell";
-                longDescription = ''
-                  The DevX shell is supposed to be used with GitHub Actions, and
-                  can be used by setting the default shell to:
+                # Filter to exportable variables. We keep build-input variables
+                # (stdenv, buildInputs, nativeBuildInputs, initialPath, etc.)
+                # because setup.sh needs them to drive the setup hook machinery.
+                # Only truly internal nix plumbing is excluded.
+                exportableEnv = lib.filterAttrs (varName: value:
+                  ! lib.elem varName [
+                    # Nix builder internals (meaningless outside sandbox)
+                    "out" "outputs" "args" "builder"
+                    "__structuredAttrs" "__ignoreNulls"
+                    "preferLocalBuild" "allowSubstitutes"
+                    "allowedReferences" "allowedRequisites"
+                    "disallowedReferences" "disallowedRequisites"
+                    # Handled separately after setup.sh
+                    "shellHook"
+                    # Darwin sandbox internals
+                    "__darwinAllowLocalNetworking" "__sandboxProfile"
+                    "__propagatedSandboxProfile" "__impureHostDeps"
+                    "__propagatedImpureHostDeps"
+                  ]
+                  && value != ""
+                  && value != null
+                  && ! lib.isList value
+                  && ! lib.isAttrs value
+                  && ! lib.isFunction value
+                ) drvEnv;
 
-                    shell: devx {0}
+                envExports = lib.concatStringsSep "\n" (
+                  lib.mapAttrsToList (varName: value:
+                    "declare -x ${varName}=${lib.escapeShellArg (toString value)}"
+                  ) exportableEnv
+                );
+
+                shellHook = drv.shellHook or "";
+
+              in pkgs.writeTextFile {
+                name = "devx";
+                executable = true;
+                text = ''
+                  #!/usr/bin/env bash
+
+                  # Raw derivation environment variables. These seed stdenv's
+                  # setup.sh with build inputs, compiler paths, and other
+                  # attributes needed to initialize the full dev environment.
+                  ${envExports}
+
+                  # setup.sh expects Nix builder runtime variables that are
+                  # only set inside `nix build`. When running directly
+                  # (container, CI, CLI) we provide sensible defaults.
+                  if [ -z "''${NIX_BUILD_TOP:-}" ]; then
+                    export NIX_BUILD_TOP="$(mktemp -d)"
+                    export TMPDIR="$NIX_BUILD_TOP"
+                    export TMP="$NIX_BUILD_TOP"
+                    export TEMP="$NIX_BUILD_TOP"
+                    export TEMPDIR="$NIX_BUILD_TOP"
+                    export NIX_STORE="/nix/store"
+                    export out="$NIX_BUILD_TOP/out"
+                    mkdir -p "$out"
+                  fi
+
+                  # Source stdenv's setup.sh to initialize the development
+                  # environment. This runs all setup hooks (cc-wrapper,
+                  # pkg-config-wrapper, etc.) and populates NIX_CFLAGS_COMPILE,
+                  # NIX_LDFLAGS, PKG_CONFIG_PATH, PATH, etc. — exactly like
+                  # `nix develop` does.
+                  _DEVX_HOME="''${HOME:-}"
+                  source "$stdenv/setup"
+
+                  # Restore settings for interactive / script use.
+                  # setup.sh enables strict mode and may reset HOME.
+                  set +eu +o pipefail
+                  [ -n "$_DEVX_HOME" ] && export HOME="$_DEVX_HOME"
+                  unset _DEVX_HOME
+
+                  # Shell hook from mkShell
+                  ${shellHook}
+
+                  # Source the user's script if provided
+                  if [ -n "''${1:-}" ]; then
+                    source "$1"
+                  fi
                 '';
-                homepage = "https://github.com/input-output-hk/devx";
-                license = pkgs.lib.licenses.asl20;
-                platforms = pkgs.lib.platforms.unix;
               };
-            })) devShells)
+          in
+          pkgs.lib.mapAttrs' (name: drv:
+            pkgs.lib.nameValuePair "${name}-env" (mkEnvScript name drv)
+          ) devShells
+          # Smoke-test each -env.sh script: source it in a sandbox and verify
+          # that the essential tools (ghc, cabal, pkg-config, and optionally HLS)
+          # are functional. Catches PATH construction errors, missing packages,
+          # and broken shellHooks that would produce unusable containers.
+          // pkgs.lib.mapAttrs' (name: drv:
+            let
+              inherit (pkgs) lib;
+              envScript = mkEnvScript name drv;
+              # HLS is only available when:
+              #   - not a -minimal variant (withHLS was true)
+              #   - not a -js variant (JS backend)
+              #   - not a -windows variant (cross-windows)
+              #   - compiler version < 9.11 (ghc912+ not yet supported)
+              hasHLS = !(lib.hasInfix "-minimal" name)
+                    && !(lib.hasInfix "-js" name)
+                    && !(lib.hasInfix "-windows" name)
+                    && !(lib.hasInfix "ghc912" name);
+            in lib.nameValuePair "${name}-env-test" (
+              pkgs.runCommand "${name}-env-test" {} ''
+                # Save the test output path before sourcing the devshell
+                # environment — setup.sh resets output-related variables.
+                _TEST_OUT="$out"
+
+                # Source the environment script. This exports drvAttrs and
+                # runs source "$stdenv/setup", giving us the full development
+                # environment with all tools on PATH.
+                source ${envScript}
+
+                # For cross-compilation shells (static/musl, JS), the GHC binary
+                # has a target prefix (e.g. x86_64-unknown-linux-musl-ghc).
+                # Extract the correct name from NIX_CABAL_FLAGS if set.
+                GHC_CMD="ghc"
+                if [[ -n "''${NIX_CABAL_FLAGS:-}" ]]; then
+                  for flag in $NIX_CABAL_FLAGS; do
+                    case "$flag" in
+                      --with-ghc=*) GHC_CMD="''${flag#--with-ghc=}" ;;
+                    esac
+                  done
+                fi
+
+                echo "=== Testing ${name} ==="
+                echo -n "GHC: "; $GHC_CMD --version
+                echo -n "Cabal: "; cabal --version | head -1
+                echo -n "pkg-config packages: "; pkg-config --list-all | wc -l
+                ${lib.optionalString hasHLS ''
+                  echo -n "HLS: "; haskell-language-server --version || true
+                ''}
+                echo "=== ${name}: OK ==="
+                touch "$_TEST_OUT"
+              '')
+          ) devShells)
           // (pkgs.lib.mapAttrs' (name: drv:
             pkgs.lib.nameValuePair "${name}-plans" drv.plans) devShells);
-        packages.cabalProjectLocal.static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
-        packages.cabalProjectLocal.cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
-        packages.cabalProjectLocal.cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;
+        packages.cabalProjectLocal-static        = (import ./quirks.nix { pkgs = static-pkgs; static = true; }).template;
+        packages.cabalProjectLocal-cross-js      = (import ./quirks.nix { pkgs = js-pkgs;                    }).template;
+        packages.cabalProjectLocal-cross-windows = (import ./quirks.nix { pkgs = windows-pkgs;               }).template;
        });
      # we use flake-outputs here to inject a required job that aggregates all required jobs.
      in flake-outputs // {

@@ -15,7 +15,7 @@ let
              f76d08be13e9a61a377a85e2fb63f4c5435d40f8feb3e12eb05905edb8cdea89
              26021a13b401500c8eb2761ca95c61f2d625bfef951b939a8124ed12ecf07329
              7541f32a4ccca4f97aea3b22f5e593ba2c0267546016b992dfadcd2fe944e55d
-          --sha256: sha256-+hzciiQqWb5oOzQ2JZ2lzJGfGuwA3ZigeWgAQ8Dz+kk=
+          --sha256: sha256-AO/vHIMSIBwjbp5GY561SmnPr5qTTyBt9ruy8D3lKZI=
 
         if impl(ghc < 9.13)
           active-repositories: hackage.haskell.org
@@ -37,7 +37,7 @@ compiler-nix-name: tool: {
       # Use the github source of HLS that is tested with haskell.nix CI
       src = { "ghc8107" = pkgs.haskell-nix.sources."hls-2.2";
               "ghc902"  = pkgs.haskell-nix.sources."hls-2.4";
-            }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.10";
+            }.${compiler-nix-name} or pkgs.haskell-nix.sources."hls-2.11";
       # `tool` normally ignores the `cabal.project` (if there is one in the hackage source).
       # We need to use the github one (since it has settings to make hls build).
       cabalProject = __readFile (src + "/cabal.project");
@@ -45,7 +45,7 @@ compiler-nix-name: tool: {
   };
   happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
   alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
-  cabal = {
+  cabal = rec {
     src = self.inputs.cabal;
     # We use the cabal.boostrap.project file, as we don't
     # want an of the cabal complexities they have. The
@@ -54,10 +54,10 @@ compiler-nix-name: tool: {
     #
     #    cabal = { src = { outPath = self.inputs.cabal; filterPath = { path, ... }: path; }; }
     #
-    cabalProjectFileName = "cabal.bootstrap.project";
-    cabalProjectLocal = ''
-      index-state: hackage.haskell.org 2025-03-17T00:00:00Z
-    '';
+    cabalProject = __replaceStrings
+      ["import: project-cabal/constraints.config"]
+      [(__readFile (src + "/project-cabal/constraints.config"))]
+      (__readFile (src + "/cabal.bootstrap.project"));
   };
   hlint = {
     cabalProjectLocal = ''
