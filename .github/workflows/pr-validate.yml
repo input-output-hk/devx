@@ -36,9 +36,14 @@ jobs:
 
         # Pick a representative subset: one -env per platform to keep
         # the matrix small (avoids 80+ jobs on every PR push).
+        # Only include successfully completed builds — Hydra posts
+        # check-runs at eval time before builds finish, so in-progress
+        # or failed builds would have store paths not yet in caches.
         FILTERED=$(echo "$RUNS" | jq -s -c '
           [.[].check_runs[]
            | select(.name | endswith("-env"))
+           | select(.conclusion == "success")
+           | select(.output.summary | . != null and startswith("/nix/store/"))
            | { "config": .name,
                "build_path": .output.summary,
                "short_name": (.name | sub("^[^.]+\\."; "")) }]
