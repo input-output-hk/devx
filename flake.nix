@@ -342,7 +342,7 @@
                 name = "devx";
                 executable = true;
                 text = ''
-                  #!/usr/bin/env bash
+                  #!${pkgs.bash}/bin/bash
 
                   # Raw derivation environment variables. These seed stdenv's
                   # setup.sh with build inputs, compiler paths, and other
@@ -362,6 +362,14 @@
                     export out="$NIX_BUILD_TOP/out"
                     mkdir -p "$out"
                   fi
+
+                  # Development shells must not enforce store-path purity.
+                  # The stdenv preHook defaults NIX_ENFORCE_PURITY to 1, which
+                  # causes the cc-wrapper to reject -I/-L flags pointing outside
+                  # /nix/store/ (e.g. the cabal package store at $CABAL_DIR/store/).
+                  # Setting it to empty before sourcing setup.sh makes the preHook's
+                  # ''${NIX_ENFORCE_PURITY-1} keep the empty value instead of defaulting.
+                  export NIX_ENFORCE_PURITY=
 
                   # Source stdenv's setup.sh to initialize the development
                   # environment. This runs all setup hooks (cc-wrapper,
