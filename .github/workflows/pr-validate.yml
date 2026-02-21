@@ -104,10 +104,17 @@ jobs:
         echo "Cabal: $(cabal --version 2>/dev/null | head -1 || echo N/A)"
         TESTEOF
 
-        # stdenv's setup.sh requires $out for output variable assignment.
-        # Inside a Nix build $out is set automatically; when running
-        # directly we must provide a dummy value.
-        export out=$(mktemp -d)
+        # stdenv's setup.sh expects Nix builder runtime variables
+        # (NIX_BUILD_TOP, out, etc.) that only exist inside nix build.
+        # Provide them so the devx wrapper can source setup.sh.
+        export NIX_BUILD_TOP="$(mktemp -d)"
+        export TMPDIR="$NIX_BUILD_TOP"
+        export TMP="$NIX_BUILD_TOP"
+        export TEMP="$NIX_BUILD_TOP"
+        export TEMPDIR="$NIX_BUILD_TOP"
+        export NIX_STORE="/nix/store"
+        export out="$NIX_BUILD_TOP/out"
+        mkdir -p "$out"
         "$DEVX_PATH" "$SMOKE_TEST"
         echo "::endgroup::"
 

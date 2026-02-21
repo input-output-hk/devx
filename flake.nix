@@ -349,12 +349,18 @@
                   # attributes needed to initialize the full dev environment.
                   ${envExports}
 
-                  # setup.sh requires $out for output variable assignment
-                  # (_assignFirst). Inside a Nix build $out is set by the
-                  # builder; when running directly (container, CLI) we
-                  # provide a temporary directory so setup.sh succeeds.
-                  if [ -z "''${out:-}" ]; then
-                    export out=$(mktemp -d)
+                  # setup.sh expects Nix builder runtime variables that are
+                  # only set inside `nix build`. When running directly
+                  # (container, CI, CLI) we provide sensible defaults.
+                  if [ -z "''${NIX_BUILD_TOP:-}" ]; then
+                    export NIX_BUILD_TOP="$(mktemp -d)"
+                    export TMPDIR="$NIX_BUILD_TOP"
+                    export TMP="$NIX_BUILD_TOP"
+                    export TEMP="$NIX_BUILD_TOP"
+                    export TEMPDIR="$NIX_BUILD_TOP"
+                    export NIX_STORE="/nix/store"
+                    export out="$NIX_BUILD_TOP/out"
+                    mkdir -p "$out"
                   fi
 
                   # Source stdenv's setup.sh to initialize the development
