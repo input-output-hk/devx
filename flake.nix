@@ -7,8 +7,6 @@
     inputs.iohk-nix.url = "github:input-output-hk/iohk-nix";
     inputs.cabal.url = "github:stable-haskell/cabal";
     inputs.cabal.flake = false;
-    inputs.cabal-experimental.url = "github:stable-haskell/cabal?ref=stable-haskell/feature/cross-compile";
-    inputs.cabal-experimental.flake = false;
 
     outputs = { self, nixpkgs, flake-utils, haskellNix, iohk-nix, ... }:
     let overlays = {
