@@ -74,9 +74,11 @@ let tool-version-map = (import ./tool-map.nix) self;
 
     # * wrapped tools:
     # A cabal-install wrapper that sets the appropriate static flags
-    wrapped-cabal = pkgs.pkgsBuildBuild.writeShellApplication {
+    wrapped-cabal = let
+        cabalRuntimeInputs = [ cabal-install curl ];
+      in (pkgs.pkgsBuildBuild.writeShellApplication {
         name = "cabal";
-        runtimeInputs = [ cabal-install curl ];
+        runtimeInputs = cabalRuntimeInputs;
         text = ''
         # We do not want to quote NIX_CABAL_FLAGS
         # it will leave an empty argument, if they are empty.
@@ -95,7 +97,13 @@ let tool-version-map = (import ./tool-map.nix) self;
             ;;
         esac
         '';
-    };
+      }).overrideAttrs (old: {
+        # Propagate runtimeInputs so $stdenv/setup adds them to PATH for the
+        # whole shell environment. writeShellApplication only injects them
+        # inside the wrapper script itself; without propagation, other programs
+        # in -env container scripts (e.g. GHC's bootstrap cabal) can't find them.
+        propagatedNativeBuildInputs = (old.propagatedNativeBuildInputs or []) ++ cabalRuntimeInputs;
+      });
     wrapped-hsc2hs = pkgs.pkgsBuildBuild.writeShellApplication {
         name = "${compiler.targetPrefix}hsc2hs";
         text = ''

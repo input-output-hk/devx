@@ -40,9 +40,11 @@ let tool-version-map = (import ./tool-map.nix) self;
     # have in the static configuration, and we may imagine needing to inject
     # some flags into cabal (temporarily), hence we'll keep this functionality
     # here.
-    wrapped-cabal = pkgs.writeShellApplication {
+    wrapped-cabal = let
+        cabalRuntimeInputs = [ cabal-install pkgs.curl ];
+      in (pkgs.writeShellApplication {
         name = "cabal";
-        runtimeInputs = [ cabal-install pkgs.curl ];
+        runtimeInputs = cabalRuntimeInputs;
         text = ''
         case "$1" in
             build) cabal "$@"
@@ -53,7 +55,13 @@ let tool-version-map = (import ./tool-map.nix) self;
             ;;
         esac
         '';
-    };
+      }).overrideAttrs (old: {
+        # Propagate runtimeInputs so $stdenv/setup adds them to PATH for the
+        # whole shell environment. writeShellApplication only injects them
+        # inside the wrapper script itself; without propagation, other programs
+        # in -env container scripts (e.g. GHC's bootstrap cabal) can't find them.
+        propagatedNativeBuildInputs = (old.propagatedNativeBuildInputs or []) ++ cabalRuntimeInputs;
+      });
     quirks = (import ./quirks.nix { inherit pkgs; });
 in
 pkgs.mkShell {
@@ -109,7 +117,6 @@ pkgs.mkShell {
         stdenv.cc.cc.lib
       ]
       ++ (with pkgs; [
-        curl
         openssl
         pcre
         pkg-config
