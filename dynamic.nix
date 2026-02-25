@@ -61,6 +61,12 @@ let tool-version-map = (import ./tool-map.nix) self;
     quirks = (import ./quirks.nix { inherit pkgs; });
 in
 pkgs.mkShell {
+    # curl's built-in CA bundle path is /no-cert-file.crt (a sentinel from
+    # nixpkgs when cacert is absent at build time). curl does NOT check
+    # SSL_CERT_FILE — only CURL_CA_BUNDLE and its built-in path. Set both
+    # so curl and OpenSSL-based tools find the CA bundle in containers.
+    CURL_CA_BUNDLE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+    SSL_CERT_FILE = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
     # The `cabal` overrride in this shell-hook doesn't do much yet. But
     # we may need to massage cabal a bit, so we'll leave it in here for
     # consistency with the one in static.nix.
