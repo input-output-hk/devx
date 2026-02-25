@@ -13,6 +13,8 @@ let tool-version-map = (import ./tool-map.nix) self;
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
+    writers = import ./writers.nix { inherit pkgs; };
+
     # * wrapped tools:
     # fixup-nix-deps allows us to drop dylibs from macOS executables that can be
     # linked directly.
@@ -40,7 +42,9 @@ let tool-version-map = (import ./tool-map.nix) self;
     # have in the static configuration, and we may imagine needing to inject
     # some flags into cabal (temporarily), hence we'll keep this functionality
     # here.
-    wrapped-cabal = pkgs.writeShellApplication {
+    #
+    # See writers.nix for why writeShellApplicationWithRuntime is needed.
+    wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
         runtimeInputs = [ cabal-install pkgs.curl ];
         text = ''
@@ -109,7 +113,6 @@ pkgs.mkShell {
         stdenv.cc.cc.lib
       ]
       ++ (with pkgs; [
-        curl
         openssl
         pcre
         pkg-config

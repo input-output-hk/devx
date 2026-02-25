@@ -72,9 +72,14 @@ let tool-version-map = (import ./tool-map.nix) self;
         kill $RISERV_PID
       '';
 
+    # Use pkgsBuildBuild for the writers helper — cross-windows wrappers must be
+    # build-platform executables, not target-platform (which is Windows).
+    writers = import ./writers.nix { pkgs = pkgs.pkgsBuildBuild; };
+
     # * wrapped tools:
-    # A cabal-install wrapper that sets the appropriate static flags
-    wrapped-cabal = pkgs.pkgsBuildBuild.writeShellApplication {
+    # A cabal-install wrapper that sets the appropriate static flags.
+    # See writers.nix for why writeShellApplicationWithRuntime is needed.
+    wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
         runtimeInputs = [ cabal-install curl ];
         text = ''
