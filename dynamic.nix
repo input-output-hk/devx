@@ -109,6 +109,7 @@ pkgs.mkShell {
         stdenv.cc.cc.lib
       ]
       ++ (with pkgs; [
+        curl
         openssl
         pcre
         pkg-config

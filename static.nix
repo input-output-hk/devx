@@ -148,6 +148,7 @@ pkgs.mkShell (rec {
         # products to be static.
         (compiler.override { enableShared = true; })
     ] ++ (with pkgs; [
+        curl
         (pkgs.pkg-config or pkgconfig)
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
