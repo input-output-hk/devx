@@ -31,7 +31,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-    - name: fetch all ci/hydra-build jobs
+    - name: Discover Hydra build check-runs
       id: set-matrix
       run: |
         # Group the output by platform.
