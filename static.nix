@@ -30,9 +30,11 @@ let tool-version-map = (import ./tool-map.nix) self;
       '';
     };
     # A cabal-install wrapper that sets the appropriate static flags
-    wrapped-cabal = pkgs.writeShellApplication {
+    wrapped-cabal = let
+        cabalRuntimeInputs = [ cabal-install pkgs.curl ];
+      in (pkgs.writeShellApplication {
         name = "cabal";
-        runtimeInputs = [ cabal-install pkgs.curl ];
+        runtimeInputs = cabalRuntimeInputs;
         text = with pkgs; ''
         # We do not want to quote NIX_CABAL_FLAGS
         # it will leave an empty argument, if they are empty.
@@ -57,7 +59,13 @@ let tool-version-map = (import ./tool-map.nix) self;
             ;;
         esac
         '';
-    };
+      }).overrideAttrs (old: {
+        # Propagate runtimeInputs so $stdenv/setup adds them to PATH for the
+        # whole shell environment. writeShellApplication only injects them
+        # inside the wrapper script itself; without propagation, other programs
+        # in -env container scripts (e.g. GHC's bootstrap cabal) can't find them.
+        propagatedNativeBuildInputs = (old.propagatedNativeBuildInputs or []) ++ cabalRuntimeInputs;
+      });
     quirks = (import ./quirks.nix { inherit pkgs; static = true; });
 in
 pkgs.mkShell (rec {
@@ -148,7 +156,6 @@ pkgs.mkShell (rec {
         # products to be static.
         (compiler.override { enableShared = true; })
     ] ++ (with pkgs; [
-        curl
         (pkgs.pkg-config or pkgconfig)
         stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
     ])
