@@ -38,11 +38,16 @@
 #   2. Write the $out/nix-support/propagated-native-build-inputs file
 #
 # Step 2 is critical: writeShellApplication uses writeTextFile internally,
-# which does NOT run stdenv.mkDerivation's fixupPhase. That fixupPhase is
-# what normally materializes the propagatedNativeBuildInputs derivation
+# which sets `buildCommand` in the derivation. When buildCommand is set,
+# stdenv's genericBuild skips the entire phase system — installPhase,
+# postInstall, fixupPhase — none of them run. The fixupPhase is what
+# normally materializes the propagatedNativeBuildInputs derivation
 # attribute into the $out/nix-support/propagated-native-build-inputs file
 # that setup.sh's findInputs reads at runtime. Without the file on disk,
 # setting the attribute alone has no effect — setup.sh never sees it.
+#
+# We therefore append the file creation directly to buildCommand, since
+# that is the only code path the builder actually executes.
 #
 # With the file in place, when stdenv's setup.sh processes the wrapper
 # from buildInputs or nativeBuildInputs, it:
@@ -86,11 +91,10 @@
       propagatedNativeBuildInputs =
         (old.propagatedNativeBuildInputs or []) ++ allPropagated;
 
-      # writeShellApplication (via writeTextFile) does NOT run stdenv's
-      # fixupPhase, so the propagatedNativeBuildInputs attribute is never
-      # materialized into the nix-support/ file that setup.sh reads.
-      # We create it explicitly in postInstall.
-      postInstall = (old.postInstall or "") + ''
+      # writeTextFile uses `buildCommand` which bypasses stdenv's entire
+      # phase system — neither postInstall nor fixupPhase ever runs.
+      # We must append our file creation directly to buildCommand.
+      buildCommand = (old.buildCommand or "") + ''
         mkdir -p $out/nix-support
         echo "${propagatedPathsStr}" > $out/nix-support/propagated-native-build-inputs
       '';
