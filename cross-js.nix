@@ -12,13 +12,14 @@ let tool-version-map = (import ./tool-map.nix) self;
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
+    writers = import ./writers.nix { inherit pkgs; };
+
     # * wrapped tools:
-    # A cabal-install wrapper that sets the appropriate static flags
-    wrapped-cabal = let
-        cabalRuntimeInputs = [ cabal-install pkgs.curl ];
-      in (pkgs.writeShellApplication {
+    # A cabal-install wrapper that sets the appropriate static flags.
+    # See writers.nix for why writeShellApplicationWithRuntime is needed.
+    wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
-        runtimeInputs = cabalRuntimeInputs;
+        runtimeInputs = [ cabal-install pkgs.curl ];
         text = with pkgs; ''
         # We do not want to quote NIX_CABAL_FLAGS
         # it will leave an empty argument, if they are empty.
@@ -37,13 +38,7 @@ let tool-version-map = (import ./tool-map.nix) self;
             ;;
         esac
         '';
-      }).overrideAttrs (old: {
-        # Propagate runtimeInputs so $stdenv/setup adds them to PATH for the
-        # whole shell environment. writeShellApplication only injects them
-        # inside the wrapper script itself; without propagation, other programs
-        # in -env container scripts (e.g. GHC's bootstrap cabal) can't find them.
-        propagatedNativeBuildInputs = (old.propagatedNativeBuildInputs or []) ++ cabalRuntimeInputs;
-      });
+    };
     wrapped-hsc2hs = pkgs.pkgsBuildBuild.writeShellApplication {
         name = "${compiler.targetPrefix}hsc2hs";
         text = ''

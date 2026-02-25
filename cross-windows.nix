@@ -72,13 +72,16 @@ let tool-version-map = (import ./tool-map.nix) self;
         kill $RISERV_PID
       '';
 
+    # Use pkgsBuildBuild for the writers helper — cross-windows wrappers must be
+    # build-platform executables, not target-platform (which is Windows).
+    writers = import ./writers.nix { pkgs = pkgs.pkgsBuildBuild; };
+
     # * wrapped tools:
-    # A cabal-install wrapper that sets the appropriate static flags
-    wrapped-cabal = let
-        cabalRuntimeInputs = [ cabal-install curl ];
-      in (pkgs.pkgsBuildBuild.writeShellApplication {
+    # A cabal-install wrapper that sets the appropriate static flags.
+    # See writers.nix for why writeShellApplicationWithRuntime is needed.
+    wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
-        runtimeInputs = cabalRuntimeInputs;
+        runtimeInputs = [ cabal-install curl ];
         text = ''
         # We do not want to quote NIX_CABAL_FLAGS
         # it will leave an empty argument, if they are empty.
@@ -97,13 +100,7 @@ let tool-version-map = (import ./tool-map.nix) self;
             ;;
         esac
         '';
-      }).overrideAttrs (old: {
-        # Propagate runtimeInputs so $stdenv/setup adds them to PATH for the
-        # whole shell environment. writeShellApplication only injects them
-        # inside the wrapper script itself; without propagation, other programs
-        # in -env container scripts (e.g. GHC's bootstrap cabal) can't find them.
-        propagatedNativeBuildInputs = (old.propagatedNativeBuildInputs or []) ++ cabalRuntimeInputs;
-      });
+    };
     wrapped-hsc2hs = pkgs.pkgsBuildBuild.writeShellApplication {
         name = "${compiler.targetPrefix}hsc2hs";
         text = ''

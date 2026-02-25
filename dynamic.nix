@@ -13,6 +13,8 @@ let tool-version-map = (import ./tool-map.nix) self;
     # add a trace helper. This will trace a message about disabling a component despite requesting it, if it's not supported in that compiler.
     compiler-not-in = compiler-list: name: (if __elem compiler-nix-name compiler-list then __trace "No ${name}. Not yet compatible with ${compiler-nix-name}" false else true);
 
+    writers = import ./writers.nix { inherit pkgs; };
+
     # * wrapped tools:
     # fixup-nix-deps allows us to drop dylibs from macOS executables that can be
     # linked directly.
@@ -40,11 +42,11 @@ let tool-version-map = (import ./tool-map.nix) self;
     # have in the static configuration, and we may imagine needing to inject
     # some flags into cabal (temporarily), hence we'll keep this functionality
     # here.
-    wrapped-cabal = let
-        cabalRuntimeInputs = [ cabal-install pkgs.curl ];
-      in (pkgs.writeShellApplication {
+    #
+    # See writers.nix for why writeShellApplicationWithRuntime is needed.
+    wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
-        runtimeInputs = cabalRuntimeInputs;
+        runtimeInputs = [ cabal-install pkgs.curl ];
         text = ''
         case "$1" in
             build) cabal "$@"
@@ -55,13 +57,7 @@ let tool-version-map = (import ./tool-map.nix) self;
             ;;
         esac
         '';
-      }).overrideAttrs (old: {
-        # Propagate runtimeInputs so $stdenv/setup adds them to PATH for the
-        # whole shell environment. writeShellApplication only injects them
-        # inside the wrapper script itself; without propagation, other programs
-        # in -env container scripts (e.g. GHC's bootstrap cabal) can't find them.
-        propagatedNativeBuildInputs = (old.propagatedNativeBuildInputs or []) ++ cabalRuntimeInputs;
-      });
+    };
     quirks = (import ./quirks.nix { inherit pkgs; });
 in
 pkgs.mkShell {
