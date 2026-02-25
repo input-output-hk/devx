@@ -35,7 +35,7 @@ let tool-version-map = (import ./tool-map.nix) self;
     # See writers.nix for why writeShellApplicationWithRuntime is needed.
     wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
-        runtimeInputs = [ cabal-install pkgs.curl ];
+        runtimeInputs = [ cabal-install pkgs.curl pkgs.cacert ];
         text = with pkgs; ''
         # We do not want to quote NIX_CABAL_FLAGS
         # it will leave an empty argument, if they are empty.
