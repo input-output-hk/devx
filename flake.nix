@@ -383,6 +383,10 @@
                   [ -n "$_DEVX_HOME" ] && export HOME="$_DEVX_HOME"
                   unset _DEVX_HOME
 
+                  # Set TERM=dumb if not already set so tput and other
+                  # ncurses tools don't fail in CI/container environments.
+                  export TERM="''${TERM:-dumb}"
+
                   # Shell hook from mkShell
                   ${shellHook}
 
