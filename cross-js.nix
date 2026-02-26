@@ -100,7 +100,9 @@ pkgs.mkShell ({
         (pkgs.pkg-config or pkgconfig)
         (tool "happy")
         (tool "alex")
-        stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
+        stdenv.cc.cc.lib
+        which
+    ]) ++ (with pkgs.buildPackages; [
     ])
     ++ builtins.attrValues haskell-tools
     ++ pkgs.lib.optional withIOG

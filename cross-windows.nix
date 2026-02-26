@@ -205,7 +205,9 @@ pkgs.pkgsBuildBuild.mkShell ({
         (pkgsBuildBuild.pkg-config or pkgsBuildBuild.pkgconfig)
         (tool "happy")
         (tool "alex")
-        stdenv.cc.cc.lib ])
+        stdenv.cc.cc.lib
+        pkgsBuildBuild.which
+    ])
     ++ map pkgs.lib.getDev (with pkgs; [
         zlib pcre openssl
         windows.mcfgthreads

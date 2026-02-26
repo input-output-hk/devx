@@ -158,7 +158,9 @@ pkgs.mkShell (rec {
         (compiler.override { enableShared = true; })
     ] ++ (with pkgs; [
         (pkgs.pkg-config or pkgconfig)
-        stdenv.cc.cc.lib ]) ++ (with pkgs.buildPackages; [
+        stdenv.cc.cc.lib
+        which
+    ]) ++ (with pkgs.buildPackages; [
     ])
     ++ builtins.attrValues haskell-tools
     ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ])
