@@ -122,6 +122,7 @@ pkgs.mkShell {
         openssl
         pcre
         pkg-config
+        which
         zlib
       ])
       ++ optional stdenv.hostPlatform.isLinux pkgs.systemd
