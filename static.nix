@@ -158,6 +158,7 @@ pkgs.mkShell (rec {
         (compiler.override { enableShared = true; })
     ] ++ (with pkgs; [
         (pkgs.pkg-config or pkgconfig)
+        perl
         stdenv.cc.cc.lib
         which
     ]) ++ (with pkgs.buildPackages; [

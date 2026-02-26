@@ -100,6 +100,7 @@ pkgs.mkShell ({
         (pkgs.pkg-config or pkgconfig)
         (tool "happy")
         (tool "alex")
+        perl
         stdenv.cc.cc.lib
         which
     ]) ++ (with pkgs.buildPackages; [
