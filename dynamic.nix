@@ -120,6 +120,7 @@ pkgs.mkShell {
       ]
       ++ (with pkgs; [
         openssl
+        perl
         pcre
         pkg-config
         which

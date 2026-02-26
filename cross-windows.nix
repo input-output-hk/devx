@@ -205,6 +205,7 @@ pkgs.pkgsBuildBuild.mkShell ({
         (pkgsBuildBuild.pkg-config or pkgsBuildBuild.pkgconfig)
         (tool "happy")
         (tool "alex")
+        pkgsBuildBuild.perl
         stdenv.cc.cc.lib
         pkgsBuildBuild.which
     ])
