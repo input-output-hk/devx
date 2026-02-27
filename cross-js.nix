@@ -1,5 +1,6 @@
 { self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true  }:
-let tool-version-map = (import ./tool-map.nix) self;
+let iog = import ./iog-libs.nix { inherit pkgs; };
+    tool-version-map = (import ./tool-map.nix) self;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
     haskell-tools =
@@ -107,10 +108,7 @@ pkgs.mkShell ({
     ])
     ++ builtins.attrValues haskell-tools
     ++ pkgs.lib.optional withIOG
-        (with pkgs; [ cddl cbor-diag ]
-        ++ map pkgs.lib.getDev (with pkgs; [
-            libblst libsodium-vrf secp256k1
-        ]))
+        (iog.cross-tools ++ map pkgs.lib.getDev iog.crypto)
     ;
 
     passthru = {
