@@ -369,6 +369,16 @@
                   # ''${NIX_ENFORCE_PURITY-1} keep the empty value instead of defaulting.
                   export NIX_ENFORCE_PURITY=
 
+                  # Suppress the cc-wrapper --target mismatch warning on aarch64-darwin.
+                  # GNU config.sub normalises to "aarch64-apple-darwin" while Apple's
+                  # LLVM toolchain (and nix cc-wrapper's @defaultTarget@) uses
+                  # "arm64-apple-darwin". GHC passes --target=aarch64-apple-darwin which
+                  # triggers a noisy warning from cc-wrapper's add-clang-cc-cflags-before
+                  # hook. The warning itself is harmless — clang handles both triples
+                  # identically — but it pollutes stderr and causes thousands of GHC
+                  # testsuite failures via unexpected compiler output.
+                  export NIX_CC_WRAPPER_SUPPRESS_TARGET_WARNING=1
+
                   # Source stdenv's setup.sh to initialize the development
                   # environment. This runs all setup hooks (cc-wrapper,
                   # pkg-config-wrapper, etc.) and populates NIX_CFLAGS_COMPILE,
