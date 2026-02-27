@@ -34,6 +34,13 @@
             '';
             postFixup = "";
           });
+          # lmdb uses a plain Makefile (no autoconf), so we strip the .so
+          # target the same way nixpkgs does for isStatic platforms.
+          static-lmdb = final.lmdb.overrideAttrs (old: {
+            postPatch = (old.postPatch or "") + ''
+              sed 's/^ILIBS\>.*/ILIBS = liblmdb.a/' -i Makefile
+            '';
+          });
          });
 
          # nixpkgs defines happy = justStaticExecutables haskellPackages.happy

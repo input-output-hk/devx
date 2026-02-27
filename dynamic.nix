@@ -136,6 +136,7 @@ pkgs.mkShell {
           jq
           libblst
           libsodium-vrf
+          lmdb           # required by ouroboros-consensus (cardano-lmdb)
           secp256k1
           yq-go
         ]

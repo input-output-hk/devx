@@ -50,6 +50,7 @@ let tool-version-map = (import ./tool-map.nix) self;
                 --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
                 --ghc-option=-L${lib.getLib static-secp256k1}/lib \
                 --ghc-option=-L${lib.getLib static-libblst}/lib \
+                --ghc-option=-L${lib.getLib static-lmdb}/lib \
                 --ghc-option=-L${lib.getLib static-openssl}/lib
             ;;
             clean|unpack)
@@ -136,6 +137,7 @@ pkgs.mkShell (rec {
     ] ++ lib.optionals withIOG [
         static-libblst
         static-libsodium-vrf
+        static-lmdb           # required by ouroboros-consensus (cardano-lmdb)
         static-secp256k1
         icu           # for cardano-cli
         gh
