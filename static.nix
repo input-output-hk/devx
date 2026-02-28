@@ -34,6 +34,7 @@ let iog = import ./iog-libs.nix { inherit pkgs; static = true; };
       '';
     };
     # A cabal-install wrapper that sets the appropriate static flags.
+    # The -L flags below must cover all IOG crypto/data libs from iog-libs.nix.
     # See writers.nix for why writeShellApplicationWithRuntime is needed.
     wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
@@ -49,7 +50,6 @@ let iog = import ./iog-libs.nix { inherit pkgs; static = true; };
                 $NIX_CABAL_FLAGS \
                 --disable-shared --enable-static \
                 --ghc-option=-L${lib.getLib static-gmp}/lib \
-                # IOG crypto/data libs — keep in sync with iog-libs.nix
                 --ghc-option=-L${lib.getLib static-libsodium-vrf}/lib \
                 --ghc-option=-L${lib.getLib static-secp256k1}/lib \
                 --ghc-option=-L${lib.getLib static-libblst}/lib \
