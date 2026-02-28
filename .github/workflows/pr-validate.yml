@@ -18,6 +18,7 @@ jobs:
     - uses: input-output-hk/actions/wait-for-hydra@latest
       with:
         check: required
+        hydra-status-url: https://ci.zw3rk.com
 
   discover:
     needs: wait-for-hydra
