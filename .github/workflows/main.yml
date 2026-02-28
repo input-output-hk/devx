@@ -31,15 +31,40 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-    - name: Discover Hydra build check-runs
+    - name: Install Nix (for fallback discovery)
+      uses: cachix/install-nix-action@v20
+      with:
+        extra_nix_config: |
+          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
+          substituters = https://cache.iog.io/ https://cache.zw3rk.com/ https://cache.nixos.org/
+        nix_path: nixpkgs=channel:nixos-unstable
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Discover devShell -env closures
       id: set-matrix
       run: |
-        # Group the output by platform.
+        PLATFORM="${{ inputs.platform }}"
+
+        # Primary: discover from Hydra check-runs (fastest path).
+        # Each Hydra build check-run has the Nix store path in output.summary.
         RUNS=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" --paginate)
-        echo "checks..."
-        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("${{ inputs.platform }}")) | { "config": .name, "build_path": .output.summary, "short_name": .name | sub("${{ inputs.platform }}\\.";"") }' <<< "$RUNS")
-        jq . <<< "$FILTERED"
+        echo "Checking Hydra check-runs for -env closures..."
+        FILTERED=$(jq -c -r '.check_runs[] | select(.name | endswith("-env")) | select(.name | startswith("'"$PLATFORM"'")) | { "config": .name, "build_path": .output.summary, "short_name": .name | sub("'"$PLATFORM"'\\.";"") }' <<< "$RUNS")
         MATRIX=$(jq --slurp -c -r '.' <<< "$FILTERED")
+
+        if [ "$MATRIX" != "[]" ]; then
+          echo "Found $(echo "$MATRIX" | jq length) -env closures from Hydra check-runs."
+        else
+          # Fallback: evaluate store paths directly from the flake.
+          # When Hydra resolves builds from cache, it may not create
+          # individual GitHub check-runs — only the aggregate "required".
+          # In that case, we compute the -env store paths ourselves.
+          echo "::warning::No -env check-runs found. Evaluating store paths from flake..."
+          MATRIX=$(nix eval ".#hydraJobs.${PLATFORM}" --json \
+            --apply "import ./extra/discover-env.nix \"${PLATFORM}\"")
+          echo "Evaluated $(echo "$MATRIX" | jq length) -env closures from flake."
+        fi
+
         jq . <<< "$MATRIX"
         echo "creating result matrix."
         echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
