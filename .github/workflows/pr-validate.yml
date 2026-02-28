@@ -15,7 +15,7 @@ jobs:
     name: Wait for Hydra status
     runs-on: ubuntu-latest
     steps:
-    - uses: input-output-hk/actions/wait-for-hydra@wait-for-hydra/sse-support
+    - uses: input-output-hk/actions/wait-for-hydra@latest
       with:
         check: required
         hydra-status-url: https://ci.zw3rk.com
