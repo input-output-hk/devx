@@ -1,5 +1,7 @@
 { self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false }:
-let tool-version-map = (import ./tool-map.nix) self;
+let iog = import ./iog-libs.nix { inherit pkgs; static = true; };
+    iog-tools = import ./iog-libs.nix { inherit pkgs; };
+    tool-version-map = (import ./tool-map.nix) self;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
     haskell-tools =
@@ -32,6 +34,7 @@ let tool-version-map = (import ./tool-map.nix) self;
       '';
     };
     # A cabal-install wrapper that sets the appropriate static flags.
+    # The -L flags below must cover all IOG crypto/data libs from iog-libs.nix.
     # See writers.nix for why writeShellApplicationWithRuntime is needed.
     wrapped-cabal = writers.writeShellApplicationWithRuntime {
         name = "cabal";
@@ -134,16 +137,11 @@ pkgs.mkShell (rec {
         static-gmp
         static-openssl
         static-zlib
-    ] ++ lib.optionals withIOG [
-        static-libblst
-        static-libsodium-vrf
-        static-lmdb           # required by ouroboros-consensus (cardano-lmdb)
-        static-secp256k1
-        icu           # for cardano-cli
-        gh
-        jq
-        yq-go
-    ] ++ lib.optionals withIOGFull [
+    ] ++ lib.optionals withIOG (
+        # IOG crypto/data libs — keep in sync with iog-libs.nix
+        iog.crypto ++ iog.data
+        ++ [ icu gh jq yq-go ]  # dev tools (non-static, through getDev)
+    ) ++ lib.optionals withIOGFull [
         # for plutus; but unavailable for static/aarch64, or static even.
         # R fails in almost any direction. For now, we just disable it.
         (if (pkgs.stdenv.hostPlatform.isAarch64 || pkgs.stdenv.hostPlatform.isMusl) then null else R)
@@ -166,7 +164,7 @@ pkgs.mkShell (rec {
     ]) ++ (with pkgs.buildPackages; [
     ])
     ++ builtins.attrValues haskell-tools
-    ++ pkgs.lib.optional withIOG (with pkgs; [ cddl cbor-diag ])
+    ++ pkgs.lib.optional withIOG iog-tools.cross-tools
     ;
 
     passthru = {

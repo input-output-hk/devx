@@ -1,6 +1,7 @@
 # define a development shell for dynamically linked applications (default)
 { self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false, withGHCTooling ? false }:
-let tool-version-map = (import ./tool-map.nix) self;
+let iog = import ./iog-libs.nix { inherit pkgs; };
+    tool-version-map = (import ./tool-map.nix) self;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
     cabal-install = tool "cabal";
     haskell-tools =
@@ -127,21 +128,9 @@ pkgs.mkShell {
         zlib
       ])
       ++ optional stdenv.hostPlatform.isLinux pkgs.systemd
-      ++ optionals withIOG (
-        with pkgs; [
-          cbor-diag
-          cddl
-          gh
-          icu
-          jq
-          libblst
-          libsodium-vrf
-          lmdb           # required by ouroboros-consensus (cardano-lmdb)
-          secp256k1
-          yq-go
-        ]
+      ++ optionals withIOG (iog.tools ++ iog.crypto ++ iog.data
         ++ optionals withIOGFull (
-          [ postgresql ] ++ (optional stdenv.hostPlatform.isAarch64 R)
+          with pkgs; [ postgresql ] ++ (optional stdenv.hostPlatform.isAarch64 R)
         )
       )
       ++ attrValues haskell-tools
