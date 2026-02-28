@@ -31,15 +31,15 @@ Then, (on Linux, macOS, windows WSL) you can use:
 nix develop github:input-output-hk/devx#ghc96 --no-write-lock-file --refresh
 ```
 
-To obtain a haskell development shell for GHC 8.10.7 including `cabal-install`,
+To obtain a Haskell development shell for GHC 9.6 including `cabal-install`,
 as well as `hls` and `hlint`. If you are on macOS on an Apple Silicon chip
 (M1, M2, ...), and want to switch between Intel (x86_64) and Apple Silicon
 (aarch64), you can do this by simply passing the corresponding
 `--system` argument:
 ```bash
-nix develop github:input-output-hk/devx#ghc810 --no-write-lock-file --refresh --system x86_64-darwin
+nix develop github:input-output-hk/devx#ghc96 --no-write-lock-file --refresh --system x86_64-darwin
 # ... or:
-nix develop github:input-output-hk/devx#ghc810 --no-write-lock-file --refresh --system aarch64-darwin
+nix develop github:input-output-hk/devx#ghc96 --no-write-lock-file --refresh --system aarch64-darwin
 ```
 
 ## `direnv` integration
@@ -51,7 +51,7 @@ if ! has nix_direnv_version || ! nix_direnv_version 2.3.0; then
   source_url "https://raw.githubusercontent.com/nix-community/nix-direnv/2.3.0/direnvrc" "sha256-Dmd+j63L84wuzgyjITIfSxSD57Tx7v51DMxVZOsiUD8="
 fi
 # https://github.com/input-output-hk/devx Slightly opinionated shared GitHub Action for Cardano-Haskell projects 
-use flake "github:input-output-hk/devx#ghc810-iog"
+use flake "github:input-output-hk/devx#ghc96-iog"
 ```
 
 Refer to [`direnv` and `devx`](./docs/direnv.md) guide for more information.
@@ -77,7 +77,10 @@ This configuration will work immediately in GitHub CodeSpace! For local VSCode D
 
 It's also advised to enable GitHub CodeSpace prebuilds in your repository settings, follow the instructions provided in the [GitHub documentation](https://docs.github.com/en/codespaces/prebuilding-your-codespaces/configuring-prebuilds). This will significantly enhance your development experience by reducing the setup time when opening a new CodeSpace.
 
-List of images available: `ghc810-iog`, `ghc96-iog`, `ghc810-js-iog`, `ghc96-js-iog`, `ghc810-windows-iog`, `ghc96-windows-iog`.
+List of images available: `ghc96-iog`, `ghc98-iog`, `ghc910-iog`, `ghc912-iog`, `ghc96-js-iog`, `ghc98-js-iog`.
+
+> [!NOTE]
+> Windows cross-compilation images are currently disabled pending a nixpkgs-2511 fix for the `crossThreadsStdenv` bootstrap (mcfgthread/pthreads).
 
 > [!TIP]
 > If you wish to utilize the DevContainer as a normal Docker container outside of GitHub or VSCode, remember to prefix your commands with `bash -ic`. This is necessary because the Nix developer environment is loaded through `~/.bashrc`.
@@ -86,25 +89,25 @@ List of images available: `ghc810-iog`, `ghc96-iog`, `ghc810-js-iog`, `ghc96-js-
 ## Compilers and Flavors
 
 There are multiple compilers available, and usually the latest for each series
-from 8.10 to 9.6 (a slight delay between the official release announcement and
+from 9.6 to 9.12 (a slight delay between the official release announcement and
 the compiler showing up in the devx shell is expected due to integration work
-necessary). The current available ones are: `ghc810`, `ghc90`, `ghc92`, `ghc94`, and
-`ghc96` (these are the same ones as in [haskell.nix](https://github.com/input-output-hk/haskell.nix) and may contain patches for defects in the official releases).
+necessary). The current available ones are: `ghc96`, `ghc98`, `ghc910`, and
+`ghc912` (these are the same ones as in [haskell.nix](https://github.com/input-output-hk/haskell.nix) and may contain patches for defects in the official releases).
 
 ### Flavors
 
-There are various flavors available as suffixes to the compiler names (e.g. `#ghc810-minimal-iog`).
+There are various flavors available as suffixes to the compiler names (e.g. `#ghc96-minimal-iog`).
 
 | Flavor | Description | Example | Included |
 | - | - | - | - |
-| empty | General Haskell Dev | `#ghc810` | `ghc`, `cabal-install`, `hls`, `hlint` |
-| `-iog` | IOG Haskell Dev | `#ghc810` | adds `sodium-vrf`, `blst`, `secp256k1` |
-| `-iog-full` | IOG Haskell Dev | `#ghc810` | adds `sodium-vrf`, `blst`, `secp256k1`, `R`, `postgresql` |
-| `-minimal` | Only GHC, and Cabal | `#ghc810-minimal` | drops `hls`, `hlint` |
-| `-static` | Building static binaries | `#ghc810-static` | Static Haskell Cross-Compiler |
-| `-js` | JavaScript Cross-Compiler | `#ghc810-js` | JavaScript Haskell Cross-Compiler |
-| `-windows` | Windows Cross-Compiler | `#ghc810-windows` | Windows Haskell Cross-Compiler |
-| `-ghc` | GHC Development | `#ghc810-ghc` | GHC Development Compiler |
+| empty | General Haskell Dev | `#ghc96` | `ghc`, `cabal-install`, `hls`, `hlint` |
+| `-iog` | IOG Haskell Dev | `#ghc96-iog` | adds `sodium-vrf`, `blst`, `secp256k1`, `lmdb` |
+| `-iog-full` | IOG Haskell Dev | `#ghc96-iog-full` | adds `sodium-vrf`, `blst`, `secp256k1`, `lmdb`, `R`, `postgresql` |
+| `-minimal` | Only GHC, and Cabal | `#ghc96-minimal` | drops `hls`, `hlint` |
+| `-static` | Building static binaries | `#ghc96-static` | Static Haskell Cross-Compiler |
+| `-js` | JavaScript Cross-Compiler | `#ghc96-js` | JavaScript Haskell Cross-Compiler |
+| `-windows` | Windows Cross-Compiler | `#ghc96-windows` | Windows Haskell Cross-Compiler (currently disabled) |
+| `-ghc` | GHC Development | `#ghc96-ghc` | GHC Development Compiler |
 
 These can then be combined following this schema:
 ```
@@ -112,9 +115,9 @@ These can then be combined following this schema:
 ```
 For example:
 ```bash
-nix develop github:input-output-hk/devx#ghc810-windows-minimal-iog --no-write-lock-file --refresh
+nix develop github:input-output-hk/devx#ghc96-static-minimal-iog --no-write-lock-file --refresh
 ```
-... would provide a development shell with a windows cross-compiler as well as cabal, and the IOG specific libraries, but no Haskell Language Server (`hls`), and no HLint.
+... would provide a development shell for building static binaries with cabal and the IOG specific libraries, but no Haskell Language Server (`hls`), and no HLint.
 
 A full list of all available `devShells` can be seen with:
 ```bash
