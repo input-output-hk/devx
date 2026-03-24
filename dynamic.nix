@@ -125,6 +125,7 @@ pkgs.mkShell {
         pcre
         pkg-config
         which
+        gitMinimal
         zlib
       ])
       ++ optional stdenv.hostPlatform.isLinux pkgs.systemd
@@ -135,7 +136,7 @@ pkgs.mkShell {
       )
       ++ attrValues haskell-tools
       ++ optionals withGHCTooling (
-        with pkgs; [ python3 automake autoconf alex happy git libffi.dev ]
+        with pkgs; [ python3 automake autoconf alex happy libffi.dev ]
       )
     ;
 

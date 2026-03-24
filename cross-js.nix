@@ -104,6 +104,7 @@ pkgs.mkShell ({
         perl
         stdenv.cc.cc.lib
         which
+        gitMinimal
     ]) ++ (with pkgs.buildPackages; [
     ])
     ++ builtins.attrValues haskell-tools
