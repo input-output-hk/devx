@@ -25,6 +25,7 @@
           static-openssl = (final.openssl.override { static = true; });
           static-zlib = final.zlib.override { shared = false; };
           static-pcre = final.pcre.override { shared = false; };
+          static-snappy = final.snappy.override { static = true; };
           static-libblst = final.libblst.overrideDerivation (old: {
             configureFlags = old.configureFlags ++ [ "--enable-static" "--disable-shared" ];
             buildPhase = ''
@@ -39,6 +40,36 @@
           static-lmdb = final.lmdb.overrideAttrs (old: {
             postPatch = (old.postPatch or "") + ''
               sed 's/^ILIBS\>.*/ILIBS = liblmdb.a/' -i Makefile
+            '';
+          });
+          # liburing always builds both static and dynamic libraries, so we remove the .so
+          # target the same way nixpkgs does for isStatic platforms.
+          static-liburing = final.liburing.overrideAttrs (old: {
+            dontdisableStatic = true;
+            # There are several files in man/ that have the same filename but with
+            # different case. When building on macOS, Nix renames these files with a
+            # "~nix~case~hack~" suffix, and then the Makefile won't be able to find them
+            # during the installPhase. Copy these back over the original. This should not
+            # cause any case conflicts, because it will be built in a Linux VM.
+            preInstall = ''
+              # Rename any case-hacked files back to their original names
+              for f in man/*~nix~case~hack~*; do
+                if [ -f "$f" ]; then
+                  mv "$f" "''${f%~nix~case~hack~*}"
+                fi
+              done
+            '';
+
+            postInstall = ''
+              # Always builds both static and dynamic libraries, so we need to remove the
+              # dynamic libraries.
+              rm $out/lib/liburing*.so*
+
+              # Copy the examples into $bin. Most reverse dependency of
+              # this package should reference only the $out output
+              for file in $(find ./examples -executable -type f); do
+                install -Dm555 -t "$bin/bin" "$file"
+              done
             '';
           });
          });
