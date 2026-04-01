@@ -22,13 +22,16 @@ in {
   # Present in ALL shell types (dynamic, static, cross-js, cross-windows).
   crypto = map resolve [ "libblst" "libsodium-vrf" "secp256k1" ];
 
-  # Data-storage libraries (ouroboros-consensus / cardano-lmdb).
+  # Data-storage libraries (ouroboros-consensus / cardano-lmdb / cardano-rpc).
   # Dynamic and static shells only — not meaningful for JS/Windows cross.
-  data = map resolve [ "lmdb" ];
+  data = 
+    map resolve ([ "lmdb" "snappy" ] 
+    # liburing is Linux-only (io_uring is a Linux kernel feature).
+    ++ pkgs.lib.optionals pkgs.stdenv.isLinux [ "liburing" ]);
 
   # Development/CI tools (not linked into builds). Dynamic and static only.
-  tools = with pkgs; [ cbor-diag cddl gh icu jq yq-go ];
+  tools = with pkgs; [ cbor-diag cddl gh icu jq protobuf yq-go ];
 
-  # Minimal tool set for cross-compilation targets (CDDL/CBOR validation).
-  cross-tools = with pkgs; [ cbor-diag cddl ];
+  # Build tools for cross-compilation targets (validation / code generation).
+  cross-tools = with pkgs; [ cbor-diag cddl protobuf ];
 }
