@@ -211,6 +211,7 @@ pkgs.pkgsBuildBuild.mkShell ({
         pkgsBuildBuild.perl
         stdenv.cc.cc.lib
         pkgsBuildBuild.which
+        pkgsBuildBuild.gitMinimal
     ])
     ++ map pkgs.lib.getDev (with pkgs; [
         zlib pcre openssl
