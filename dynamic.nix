@@ -135,7 +135,24 @@ pkgs.mkShell {
       )
       ++ attrValues haskell-tools
       ++ optionals withGHCTooling (
-        with pkgs; [ python3 automake autoconf alex happy git libffi.dev ]
+        # `pkgs.alex` and `pkgs.happy` from nixpkgs are built with a different
+        # GHC than the shell's `compiler` (currently ghc-9.10.3 in nixpkgs
+        # haskellPackages), and their library outputs anchor that foreign GHC
+        # in the closure (~2.15 GB on Darwin). Use haskell.nix's `tool` builder
+        # — same pattern as cross-js.nix and cross-windows.nix — to build them
+        # with the shell's `compiler-nix-name`, so library outputs reference
+        # the GHC that's already in the closure rather than dragging in a
+        # second one. `gitMinimal` swaps out heavyweight git (saves ~150 MB
+        # of perl-modules + git-doc that aren't used inside the shell).
+        with pkgs; [
+          python3
+          automake
+          autoconf
+          (tool "alex")
+          (tool "happy")
+          gitMinimal
+          libffi.dev
+        ]
       )
     ;
 

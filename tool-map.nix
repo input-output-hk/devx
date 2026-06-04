@@ -43,8 +43,11 @@ compiler-nix-name: tool: {
       cabalProject = __readFile (src + "/cabal.project");
       configureArgs = "--disable-benchmarks --disable-tests";
   };
-  happy = { version = "1.20.1.1"; inherit cabalProjectLocal; };
-  alex = { version = "3.2.7.3"; inherit cabalProjectLocal; };
+  # happy/alex don't need head.hackage (they're standard mainline packages and
+  # build cleanly from regular hackage). Dropping `inherit cabalProjectLocal`
+  # also avoids depending on the head.hackage SHA pin going stale.
+  happy = { version = "2.1.7"; };
+  alex = { version = "3.5.4.0"; };
   cabal = rec {
     src = self.inputs.cabal;
     # We use the cabal.boostrap.project file, as we don't
