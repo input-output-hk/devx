@@ -1,5 +1,5 @@
 # define a development shell for dynamically linked applications (default)
-{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false, withGHCTooling ? false }:
+{ self, pkgs, compiler, compiler-nix-name, toolsModule, withHLS ? true, withHlint ? true, withIOG ? true, withIOGFull ? false, withGHCTooling ? false, withWebTooling ? false }:
 let iog = import ./iog-libs.nix { inherit pkgs; };
     tool-version-map = (import ./tool-map.nix) self;
     tool = tool-name: pkgs.pkgsBuildBuild.haskell-nix.tool compiler-nix-name tool-name [(tool-version-map compiler-nix-name tool-name) toolsModule];
@@ -78,6 +78,7 @@ pkgs.mkShell {
                    + lib.optionalString withIOG                  "-iog"
                    + lib.optionalString withIOGFull              "-full"
                    + lib.optionalString withGHCTooling           "-ghc"
+                   + lib.optionalString withWebTooling           "-web"
                    ;
         in ''
         export PS1="\[\033[01;33m\][\w]$\[\033[00m\] "
@@ -152,6 +153,27 @@ pkgs.mkShell {
           (tool "happy")
           gitMinimal
           libffi.dev
+        ]
+      )
+      ++ optionals withWebTooling (
+        # Tooling for the wasm and JavaScript backends. wasi-sdk itself is
+        # deliberately not bundled — its version needs to match the
+        # wasm32-wasi-ghc cross-compiler bundle, which ghc-wasm-meta owns
+        # (https://gitlab.haskell.org/ghc/ghc-wasm-meta). Users still bootstrap
+        # wasi-sdk via ghc-wasm-meta's installer for wasm32-wasi cross-builds.
+        # What we DO bundle here:
+        #   * nodejs_22  — required for post-link.mjs (uses import.meta.filename
+        #                  added in Node 20.11; Ubuntu's apt nodejs is 18.x)
+        #                  and for JSFFI host execution
+        #   * wabt       — wasm-objdump for inspecting wasm modules
+        #   * wasmtime   — pure-WASI runtime (when no JSFFI imports)
+        #   * emscripten — the JavaScript backend's C toolchain (emcc / em++
+        #                  / emar / emnm / emranlib / emstrip)
+        with pkgs; [
+          nodejs_22
+          wabt
+          wasmtime
+          emscripten
         ]
       )
     ;
