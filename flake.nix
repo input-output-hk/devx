@@ -226,6 +226,10 @@
                     import ./dynamic.nix (args // { withHLS = false; withHlint = false; withIOG = false; withGHCTooling = true; })
                   )) (compilers pkgs)
               // pkgs.lib.mapAttrs' (short-name: args:
+                  pkgs.lib.nameValuePair "${short-name}-minimal-ghc-web" (
+                    import ./dynamic.nix (args // { withHLS = false; withHlint = false; withIOG = false; withGHCTooling = true; withWebTooling = true; })
+                  )) (compilers pkgs)
+              // pkgs.lib.mapAttrs' (short-name: args:
                   pkgs.lib.nameValuePair "${short-name}-static" (
                     import ./static.nix (args // { withIOG = false; })
                   )) (compilers static-pkgs)
